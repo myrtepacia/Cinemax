@@ -8,13 +8,8 @@
 
   <style>
 
-    /* ==========================================================
-       PART 1: styles that every page of the website uses
-       ========================================================== */
+    /* Styles that every page of the website uses */
 
-    /* The * means "every element on the page".
-       border-box makes padding and border count inside the width,
-       so boxes never get bigger than the size we set. */
     * {
       box-sizing: border-box;
     }
@@ -47,9 +42,8 @@
       max-width: 100%;
     }
 
-    /* ---------- Buttons ---------- */
+    /* Buttons */
 
-    /* Every button starts with this class, then we add a colour class. */
     .button {
       display: inline-block;
       padding: 10px 16px;
@@ -83,27 +77,23 @@
       background-color: #f9fafb;
     }
 
-    /* Grey button for movies you cannot book yet. */
     .button-grey {
       background-color: #e5e7eb;
       color: #99a1af;
     }
 
-    /* Makes a button as wide as the box it sits in. */
     .button-wide {
       display: block;
       width: 100%;
     }
 
-    /* ---------- Top bar ---------- */
+    /* Top bar */
 
     .top-bar {
       background-color: #ffffff;
       border-bottom: 1px solid #f3f4f6;
     }
 
-    /* display: flex puts the logo, the menu and the buttons in one row.
-       justify-content: space-between spreads them left, middle and right. */
     .top-bar-inner {
       display: flex;
       align-items: center;
@@ -146,7 +136,7 @@
       gap: 8px;
     }
 
-    /* ---------- Footer ---------- */
+    /* Footer */
 
     .site-footer {
       background-color: #ffffff;
@@ -178,8 +168,6 @@
       font-size: 12px;
     }
 
-    /* On a small screen (like a phone) let the top bar wrap
-       onto two lines instead of squeezing everything in. */
     @media (max-width: 620px) {
       .top-bar-inner {
         height: auto;
@@ -189,9 +177,7 @@
       }
     }
 
-    /* ==========================================================
-       PART 2: styles used on the two staff pages
-       ========================================================== */
+    /* Styles used on the two staff pages */
 
     .admin-page {
       max-width: 900px;
@@ -211,7 +197,7 @@
       margin-bottom: 20px;
     }
 
-    /* ---------- The staff menu ---------- */
+    /* The staff menu */
 
     .admin-menu {
       display: flex;
@@ -236,15 +222,12 @@
       color: #fb2c36;
     }
 
-    /* The page you are on is the red one. */
     .admin-menu a.current {
       background-color: #fb2c36;
       border-color: #fb2c36;
       color: #ffffff;
     }
 
-    /* The round camera button at the right end of the staff menu.
-       margin-left: auto pushes it all the way to the right. */
     .scan-button {
       display: flex;
       align-items: center;
@@ -267,7 +250,7 @@
       height: 22px;
     }
 
-    /* ---------- The white boxes ---------- */
+    /* The white boxes */
 
     .panel {
       padding: 24px;
@@ -288,10 +271,8 @@
       margin-bottom: 20px;
     }
 
-    /* ---------- The number boxes across the top ---------- */
+    /* The number boxes across the top */
 
-    /* flex-wrap lets the boxes drop to a second line
-       when the screen is too narrow for all of them. */
     .stat-row {
       display: flex;
       flex-wrap: wrap;
@@ -299,7 +280,6 @@
       margin-bottom: 24px;
     }
 
-    /* flex: 1 makes every box share the space equally. */
     .stat {
       flex: 1;
       min-width: 180px;
@@ -328,7 +308,6 @@
       font-size: 12px;
     }
 
-    /* The money box is red instead of white. */
     .stat-money {
       background-color: #fef2f2;
       border-color: #ffd5d7;
@@ -339,9 +318,8 @@
       color: #fb2c36;
     }
 
-    /* ---------- The table of movies ---------- */
+    /* The table of movies */
 
-    /* border-collapse joins the cell borders into one thin line. */
     .movie-table {
       width: 100%;
       border-collapse: collapse;
@@ -365,12 +343,10 @@
       vertical-align: middle;
     }
 
-    /* Take the line off the very last row. */
     .movie-table tr:last-child td {
       border-bottom: none;
     }
 
-    /* Numbers and buttons look better pushed to the right. */
     .right {
       text-align: right;
     }
@@ -382,7 +358,6 @@
       border-radius: 6px;
     }
 
-    /* Puts the small poster and the title side by side. */
     .cell-with-poster {
       display: flex;
       align-items: center;
@@ -401,7 +376,7 @@
       line-height: 1.4;
     }
 
-    /* ---------- The little status labels ---------- */
+    /* The little status labels */
 
     .label-showing,
     .label-soon {
@@ -441,7 +416,7 @@
       color: #fb2c36;
     }
 
-    /* ---------- The "add a movie" form ---------- */
+    /* The "add a movie" form */
 
     .add-form {
       display: grid;
@@ -449,7 +424,6 @@
       gap: 16px;
     }
 
-    /* This box takes up both columns instead of one. */
     .full-width {
       grid-column: span 2;
     }
@@ -479,15 +453,12 @@
       font-weight: 500;
     }
 
-    /* The red border shows which box you are typing in. */
     .form-field input:focus,
     .form-field select:focus {
       outline: none;
       border-color: #fb2c36;
     }
 
-    /* On a phone, hide the less important columns
-       and put the form in one column. */
     @media (max-width: 620px) {
       .hide-small {
         display: none;
@@ -505,7 +476,7 @@
 </head>
 <body>
 
-  <!-- ===== TOP BAR (the same on every page) ===== -->
+  <!-- Top bar -->
   <header class="top-bar">
     <div class="top-bar-inner">
 
@@ -514,8 +485,7 @@
       <nav class="menu">
         <a href="index.html#now-showing">Now Showing</a>
         <a href="index.html#coming-soon">Upcoming Shows</a>
-        <!-- The staff page is hidden from customers. To show it in the
-             menu, delete this comment line and the closing line below.
+        <!-- Staff page link, hidden from customers
         <a href="admin.html">Admin</a>
         -->
       </nav>
@@ -533,13 +503,12 @@
     <h1>Movies</h1>
     <p class="admin-intro">Add a movie, upload its poster, or take one off the listings.</p>
 
-    <!-- ===== THE STAFF MENU ===== -->
+    <!-- Staff menu -->
     <nav class="admin-menu">
       <a href="admin.html">Staff Dashboard</a>
       <a href="admin-movies.html" class="current">Movies</a>
 
       <span class="scan-button" title="Scan a ticket QR code">
-        <!-- A camera drawing made with SVG. -->
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
           <circle cx="12" cy="13" r="4"></circle>
@@ -547,7 +516,7 @@
       </span>
     </nav>
 
-    <!-- ===== THE COUNTS ===== -->
+    <!-- Counts -->
     <div class="stat-row">
 
       <div class="stat">
@@ -576,7 +545,7 @@
 
     </div>
 
-    <!-- ===== THE MOVIE LIST ===== -->
+    <!-- Movie list -->
     <section class="panel">
 
       <h2>All movies</h2>
@@ -678,7 +647,6 @@
           <tr>
             <td>
               <span class="cell-with-poster">
-                <!-- %5B and %5D are the web-address codes for the [ and ] in the file name. -->
                 <img class="table-poster" src="photo/Broken-%5Bof%5D-Love.jpg" alt="Broken [of] Love poster">
                 <span>
                   <span class="movie-name">Broken [of] Love</span>
@@ -696,7 +664,7 @@
       </table>
     </section>
 
-    <!-- ===== ADD A MOVIE ===== -->
+    <!-- Add a movie -->
     <section class="panel">
 
       <h2>Add a movie</h2>
@@ -758,7 +726,7 @@
 
   </main>
 
-  <!-- ===== FOOTER (the same on every page) ===== -->
+  <!-- Footer -->
   <footer class="site-footer">
     <div class="footer-inner">
 

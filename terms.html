@@ -8,13 +8,8 @@
 
   <style>
 
-    /* ==========================================================
-       PART 1: styles that every page of the website uses
-       ========================================================== */
+    /* Styles that every page of the website uses */
 
-    /* The * means "every element on the page".
-       border-box makes padding and border count inside the width,
-       so boxes never get bigger than the size we set. */
     * {
       box-sizing: border-box;
     }
@@ -47,9 +42,8 @@
       max-width: 100%;
     }
 
-    /* ---------- Buttons ---------- */
+    /* Buttons */
 
-    /* Every button starts with this class, then we add a colour class. */
     .button {
       display: inline-block;
       padding: 10px 16px;
@@ -83,27 +77,23 @@
       background-color: #f9fafb;
     }
 
-    /* Grey button for movies you cannot book yet. */
     .button-grey {
       background-color: #e5e7eb;
       color: #99a1af;
     }
 
-    /* Makes a button as wide as the box it sits in. */
     .button-wide {
       display: block;
       width: 100%;
     }
 
-    /* ---------- Top bar ---------- */
+    /* Top bar */
 
     .top-bar {
       background-color: #ffffff;
       border-bottom: 1px solid #f3f4f6;
     }
 
-    /* display: flex puts the logo, the menu and the buttons in one row.
-       justify-content: space-between spreads them left, middle and right. */
     .top-bar-inner {
       display: flex;
       align-items: center;
@@ -146,7 +136,7 @@
       gap: 8px;
     }
 
-    /* ---------- Footer ---------- */
+    /* Footer */
 
     .site-footer {
       background-color: #ffffff;
@@ -178,8 +168,6 @@
       font-size: 12px;
     }
 
-    /* On a small screen (like a phone) let the top bar wrap
-       onto two lines instead of squeezing everything in. */
     @media (max-width: 620px) {
       .top-bar-inner {
         height: auto;
@@ -189,9 +177,7 @@
       }
     }
 
-    /* ==========================================================
-       PART 2: styles used only on this terms page
-       ========================================================== */
+    /* Styles used only on this terms page */
 
     .terms-page {
       max-width: 768px;
@@ -211,8 +197,6 @@
       margin-bottom: 28px;
     }
 
-    /* One white box for each rule. The bottom padding is smaller
-       because the last paragraph already adds 10px below itself. */
     .terms-block {
       padding: 24px 24px 14px 24px;
       background-color: #ffffff;
@@ -231,7 +215,6 @@
       margin-bottom: 6px;
     }
 
-    /* The snack rules use purple instead of red. */
     .terms-kind-snack {
       color: #4f39f6;
     }
@@ -250,7 +233,7 @@
 </head>
 <body>
 
-  <!-- ===== TOP BAR (the same on every page) ===== -->
+  <!-- Top bar -->
   <header class="top-bar">
     <div class="top-bar-inner">
 
@@ -259,8 +242,7 @@
       <nav class="menu">
         <a href="index.html#now-showing">Now Showing</a>
         <a href="index.html#coming-soon">Upcoming Shows</a>
-        <!-- The staff page is hidden from customers. To show it in the
-             menu, delete this comment line and the closing line below.
+        <!-- Staff page link, hidden from customers
         <a href="admin.html">Admin</a>
         -->
       </nav>
@@ -320,7 +302,7 @@
 
   </main>
 
-  <!-- ===== FOOTER (the same on every page) ===== -->
+  <!-- Footer -->
   <footer class="site-footer">
     <div class="footer-inner">
 

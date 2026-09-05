@@ -8,13 +8,8 @@
 
   <style>
 
-    /* ==========================================================
-       PART 1: styles that every page of the website uses
-       ========================================================== */
+    /* Styles that every page of the website uses */
 
-    /* The * means "every element on the page".
-       border-box makes padding and border count inside the width,
-       so boxes never get bigger than the size we set. */
     * {
       box-sizing: border-box;
     }
@@ -47,9 +42,8 @@
       max-width: 100%;
     }
 
-    /* ---------- Buttons ---------- */
+    /* Buttons */
 
-    /* Every button starts with this class, then we add a colour class. */
     .button {
       display: inline-block;
       padding: 10px 16px;
@@ -83,27 +77,23 @@
       background-color: #f9fafb;
     }
 
-    /* Grey button for movies you cannot book yet. */
     .button-grey {
       background-color: #e5e7eb;
       color: #99a1af;
     }
 
-    /* Makes a button as wide as the box it sits in. */
     .button-wide {
       display: block;
       width: 100%;
     }
 
-    /* ---------- Top bar ---------- */
+    /* Top bar */
 
     .top-bar {
       background-color: #ffffff;
       border-bottom: 1px solid #f3f4f6;
     }
 
-    /* display: flex puts the logo, the menu and the buttons in one row.
-       justify-content: space-between spreads them left, middle and right. */
     .top-bar-inner {
       display: flex;
       align-items: center;
@@ -146,7 +136,7 @@
       gap: 8px;
     }
 
-    /* ---------- Footer ---------- */
+    /* Footer */
 
     .site-footer {
       background-color: #ffffff;
@@ -178,8 +168,6 @@
       font-size: 12px;
     }
 
-    /* On a small screen (like a phone) let the top bar wrap
-       onto two lines instead of squeezing everything in. */
     @media (max-width: 620px) {
       .top-bar-inner {
         height: auto;
@@ -189,9 +177,7 @@
       }
     }
 
-    /* ==========================================================
-       PART 2: styles used on the two staff pages
-       ========================================================== */
+    /* Styles used on the two staff pages */
 
     .admin-page {
       max-width: 900px;
@@ -211,7 +197,7 @@
       margin-bottom: 20px;
     }
 
-    /* ---------- The staff menu ---------- */
+    /* The staff menu */
 
     .admin-menu {
       display: flex;
@@ -236,15 +222,12 @@
       color: #fb2c36;
     }
 
-    /* The page you are on is the red one. */
     .admin-menu a.current {
       background-color: #fb2c36;
       border-color: #fb2c36;
       color: #ffffff;
     }
 
-    /* The round camera button at the right end of the staff menu.
-       margin-left: auto pushes it all the way to the right. */
     .scan-button {
       display: flex;
       align-items: center;
@@ -267,7 +250,7 @@
       height: 22px;
     }
 
-    /* ---------- The white boxes ---------- */
+    /* The white boxes */
 
     .panel {
       padding: 24px;
@@ -288,10 +271,8 @@
       margin-bottom: 20px;
     }
 
-    /* ---------- The number boxes across the top ---------- */
+    /* The number boxes across the top */
 
-    /* flex-wrap lets the boxes drop to a second line
-       when the screen is too narrow for all of them. */
     .stat-row {
       display: flex;
       flex-wrap: wrap;
@@ -299,7 +280,6 @@
       margin-bottom: 24px;
     }
 
-    /* flex: 1 makes every box share the space equally. */
     .stat {
       flex: 1;
       min-width: 180px;
@@ -328,7 +308,6 @@
       font-size: 12px;
     }
 
-    /* The money box is red instead of white. */
     .stat-money {
       background-color: #fef2f2;
       border-color: #ffd5d7;
@@ -339,7 +318,7 @@
       color: #fb2c36;
     }
 
-    /* ---------- The list of snack orders ---------- */
+    /* The list of snack orders */
 
     .order-row {
       display: flex;
@@ -350,8 +329,6 @@
       font-size: 14px;
     }
 
-    /* flex: 1 makes the left part grow, so the price and the
-       status label are pushed over to the right edge. */
     .order-left {
       flex: 1;
     }
@@ -369,7 +346,7 @@
       font-weight: 900;
     }
 
-    /* ---------- The little status labels ---------- */
+    /* The little status labels */
 
     .status {
       padding: 2px 10px;
@@ -396,7 +373,7 @@
 </head>
 <body>
 
-  <!-- ===== TOP BAR (the same on every page) ===== -->
+  <!-- Top bar -->
   <header class="top-bar">
     <div class="top-bar-inner">
 
@@ -405,8 +382,7 @@
       <nav class="menu">
         <a href="index.html#now-showing">Now Showing</a>
         <a href="index.html#coming-soon">Upcoming Shows</a>
-        <!-- The staff page is hidden from customers. To show it in the
-             menu, delete this comment line and the closing line below.
+        <!-- Staff page link, hidden from customers
         <a href="admin.html">Admin</a>
         -->
       </nav>
@@ -424,13 +400,12 @@
     <h1>Staff Dashboard</h1>
     <p class="admin-intro">Earnings, ticket scanning, and snack orders.</p>
 
-    <!-- ===== THE STAFF MENU ===== -->
+    <!-- Staff menu -->
     <nav class="admin-menu">
       <a href="admin.html" class="current">Staff Dashboard</a>
       <a href="admin-movies.html">Movies</a>
 
       <span class="scan-button" title="Scan a ticket QR code">
-        <!-- A camera drawing made with SVG. -->
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
           <circle cx="12" cy="13" r="4"></circle>
@@ -438,7 +413,7 @@
       </span>
     </nav>
 
-    <!-- ===== TODAY'S EARNINGS ===== -->
+    <!-- Earnings -->
     <div class="stat-row">
 
       <div class="stat stat-money">
@@ -461,7 +436,7 @@
 
     </div>
 
-    <!-- ===== SNACK ORDERS ===== -->
+    <!-- Snack orders -->
     <section class="panel">
 
       <h2>Snack orders to prepare</h2>
@@ -516,7 +491,7 @@
 
   </main>
 
-  <!-- ===== FOOTER (the same on every page) ===== -->
+  <!-- Footer -->
   <footer class="site-footer">
     <div class="footer-inner">
 

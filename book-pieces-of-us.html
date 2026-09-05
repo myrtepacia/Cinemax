@@ -8,13 +8,8 @@
 
   <style>
 
-    /* ==========================================================
-       PART 1: styles that every page of the website uses
-       ========================================================== */
+    /* Styles that every page of the website uses */
 
-    /* The * means "every element on the page".
-       border-box makes padding and border count inside the width,
-       so boxes never get bigger than the size we set. */
     * {
       box-sizing: border-box;
     }
@@ -47,9 +42,8 @@
       max-width: 100%;
     }
 
-    /* ---------- Buttons ---------- */
+    /* Buttons */
 
-    /* Every button starts with this class, then we add a colour class. */
     .button {
       display: inline-block;
       padding: 10px 16px;
@@ -83,27 +77,23 @@
       background-color: #f9fafb;
     }
 
-    /* Grey button for movies you cannot book yet. */
     .button-grey {
       background-color: #e5e7eb;
       color: #99a1af;
     }
 
-    /* Makes a button as wide as the box it sits in. */
     .button-wide {
       display: block;
       width: 100%;
     }
 
-    /* ---------- Top bar ---------- */
+    /* Top bar */
 
     .top-bar {
       background-color: #ffffff;
       border-bottom: 1px solid #f3f4f6;
     }
 
-    /* display: flex puts the logo, the menu and the buttons in one row.
-       justify-content: space-between spreads them left, middle and right. */
     .top-bar-inner {
       display: flex;
       align-items: center;
@@ -146,7 +136,7 @@
       gap: 8px;
     }
 
-    /* ---------- Footer ---------- */
+    /* Footer */
 
     .site-footer {
       background-color: #ffffff;
@@ -178,8 +168,6 @@
       font-size: 12px;
     }
 
-    /* On a small screen (like a phone) let the top bar wrap
-       onto two lines instead of squeezing everything in. */
     @media (max-width: 620px) {
       .top-bar-inner {
         height: auto;
@@ -189,11 +177,9 @@
       }
     }
 
-    /* ==========================================================
-       PART 2: styles used only on this booking page
-       ========================================================== */
+    /* Styles used only on this booking page */
 
-    /* ---------- Page layout ---------- */
+    /* Page layout */
 
     .booking {
       max-width: 1024px;
@@ -211,7 +197,6 @@
       margin-bottom: 24px;
     }
 
-    /* Two columns: the movie on the left, the seats on the right. */
     .booking-layout {
       display: grid;
       grid-template-columns: 2fr 3fr;
@@ -219,8 +204,6 @@
       align-items: start;
     }
 
-    /* aspect-ratio keeps the poster 3 wide by 4 tall,
-       the same shape as a real movie poster. */
     .booking-poster {
       width: 100%;
       aspect-ratio: 3 / 4;
@@ -229,7 +212,6 @@
       margin-bottom: 20px;
     }
 
-    /* One box on the left column: the film info, the date, the showtime. */
     .booking-block {
       margin-bottom: 20px;
     }
@@ -244,13 +226,7 @@
       margin-top: 4px;
     }
 
-    /* ---------- How the choosing works ----------
-
-       Every date, showtime, seat and snack is a <label> with a
-       tick box inside it. We hide the real tick box, and colour the
-       <span> next to it instead. Clicking the label ticks the hidden box,
-       and the rule "input:checked + span" then paints that span red.
-       No JavaScript needed. */
+    /* Hide the real tick boxes */
     .booking input {
       display: none;
     }
@@ -265,7 +241,7 @@
       margin-bottom: 8px;
     }
 
-    /* ---------- Date and showtime buttons ---------- */
+    /* Date and showtime buttons */
 
     .choice-grid {
       display: grid;
@@ -294,7 +270,6 @@
       color: #fb2c36;
     }
 
-    /* The chosen date or showtime turns red. */
     .choice input:checked + .choice-box {
       background-color: #fb2c36;
       border-color: #fb2c36;
@@ -314,14 +289,13 @@
       font-weight: 900;
     }
 
-    /* ---------- The seat map ---------- */
+    /* The seat map */
 
     .seat-area h3 {
       font-size: 18px;
       margin-bottom: 20px;
     }
 
-    /* A soft purple glow that stands for the cinema screen. */
     .screen-curve {
       height: 12px;
       margin: 0 24px 0 24px;
@@ -338,13 +312,11 @@
       margin: 4px 0 24px 0;
     }
 
-    /* If the phone screen is too narrow, the map can slide sideways. */
     .seat-map {
       overflow-x: auto;
       padding-bottom: 8px;
     }
 
-    /* One row of seats. 20px letter + 10 seats of 28px + the gaps = 340px. */
     .seat-row {
       display: flex;
       width: 340px;
@@ -377,19 +349,16 @@
       font-weight: 900;
     }
 
-    /* A seat you picked turns red. */
     .seat input:checked + .seat-box {
       background-color: #fb2c36;
       color: #ffffff;
     }
 
-    /* A grey seat is already taken by someone else. */
     .seat-box-sold {
       background-color: #e5e7eb;
       color: #99a1af;
     }
 
-    /* The small colour guide under the seat map. */
     .seat-key {
       display: flex;
       justify-content: center;
@@ -424,7 +393,7 @@
       background-color: #e5e7eb;
     }
 
-    /* ---------- The snacks ---------- */
+    /* The snacks */
 
     .snacks {
       margin-top: 28px;
@@ -477,7 +446,6 @@
       border-color: #fb2c36;
     }
 
-    /* A snack you ticked gets a light red background. */
     .snack input:checked + .snack-box {
       background-color: #fef2f2;
       border-color: #fb2c36;
@@ -501,7 +469,7 @@
       font-weight: 900;
     }
 
-    /* ---------- The total at the bottom ---------- */
+    /* The total at the bottom */
 
     .order-summary {
       margin-top: 24px;
@@ -541,7 +509,6 @@
       font-weight: 900;
     }
 
-    /* On a narrow screen put the two columns on top of each other. */
     @media (max-width: 1000px) {
       .booking-layout {
         grid-template-columns: 1fr;
@@ -561,7 +528,7 @@
 </head>
 <body>
 
-  <!-- ===== TOP BAR (the same on every page) ===== -->
+  <!-- Top bar -->
   <header class="top-bar">
     <div class="top-bar-inner">
 
@@ -570,8 +537,7 @@
       <nav class="menu">
         <a href="index.html#now-showing">Now Showing</a>
         <a href="index.html#coming-soon">Upcoming Shows</a>
-        <!-- The staff page is hidden from customers. To show it in the
-             menu, delete this comment line and the closing line below.
+        <!-- Staff page link, hidden from customers
         <a href="admin.html">Admin</a>
         -->
       </nav>
@@ -590,7 +556,7 @@
 
     <div class="booking-layout">
 
-      <!-- ===== LEFT SIDE: the movie, the date and the showtime ===== -->
+      <!-- Movie, date and showtime -->
       <div class="booking-left">
 
         <img class="booking-poster" src="photo/Pieces-of-us.jpg" alt="Pieces of Us poster">
@@ -600,8 +566,6 @@
           <p class="film-details">Romance, Drama, 1h 52m, PG-13</p>
         </div>
 
-        <!-- Pick one date. All five have name="date",
-             so ticking one unticks the others. -->
         <div class="booking-block">
           <span class="field-label">Date</span>
           <div class="choice-grid">
@@ -649,7 +613,6 @@
           </div>
         </div>
 
-        <!-- Pick one showtime, the same way as the date. -->
         <div class="booking-block">
           <span class="field-label">Showtime</span>
           <div class="choice-grid">
@@ -684,7 +647,7 @@
 
       </div>
 
-      <!-- ===== RIGHT SIDE: the seats and the snacks ===== -->
+      <!-- Seats and snacks -->
       <div class="seat-area">
 
         <h3>Choose Your Seats</h3>
@@ -694,8 +657,7 @@
 
         <div class="seat-map">
 
-          <!-- Row A. Seats 1 and 2 are already sold, so they are plain
-               grey boxes with no tick box inside them. -->
+          <!-- Row A, seats 1 and 2 are sold -->
           <div class="seat-row">
             <span class="row-letter">A</span>
             <span class="seat-box seat-box-sold">1</span>
@@ -802,14 +764,13 @@
 
         </div>
 
-        <!-- What the seat colours mean. -->
         <div class="seat-key">
           <div><span class="key-colour key-free"></span> Available</div>
           <div><span class="key-colour key-picked"></span> Selected</div>
           <div><span class="key-colour key-sold"></span> Unavailable</div>
         </div>
 
-        <!-- ===== SNACKS ===== -->
+        <!-- Snacks -->
         <div class="snacks">
 
           <h3>Pre-order Your Snacks</h3>
@@ -928,7 +889,7 @@
 
         </div>
 
-        <!-- ===== THE TOTAL ===== -->
+        <!-- Total -->
         <div class="order-summary">
 
           <div class="summary-line">
@@ -955,7 +916,7 @@
     </div>
   </main>
 
-  <!-- ===== FOOTER (the same on every page) ===== -->
+  <!-- Footer -->
   <footer class="site-footer">
     <div class="footer-inner">
 

@@ -8,13 +8,8 @@
 
   <style>
 
-    /* ==========================================================
-       PART 1: styles that every page of the website uses
-       ========================================================== */
+    /* Styles that every page of the website uses */
 
-    /* The * means "every element on the page".
-       border-box makes padding and border count inside the width,
-       so boxes never get bigger than the size we set. */
     * {
       box-sizing: border-box;
     }
@@ -47,9 +42,8 @@
       max-width: 100%;
     }
 
-    /* ---------- Buttons ---------- */
+    /* Buttons */
 
-    /* Every button starts with this class, then we add a colour class. */
     .button {
       display: inline-block;
       padding: 10px 16px;
@@ -83,27 +77,23 @@
       background-color: #f9fafb;
     }
 
-    /* Grey button for movies you cannot book yet. */
     .button-grey {
       background-color: #e5e7eb;
       color: #99a1af;
     }
 
-    /* Makes a button as wide as the box it sits in. */
     .button-wide {
       display: block;
       width: 100%;
     }
 
-    /* ---------- Top bar ---------- */
+    /* Top bar */
 
     .top-bar {
       background-color: #ffffff;
       border-bottom: 1px solid #f3f4f6;
     }
 
-    /* display: flex puts the logo, the menu and the buttons in one row.
-       justify-content: space-between spreads them left, middle and right. */
     .top-bar-inner {
       display: flex;
       align-items: center;
@@ -146,7 +136,7 @@
       gap: 8px;
     }
 
-    /* ---------- Footer ---------- */
+    /* Footer */
 
     .site-footer {
       background-color: #ffffff;
@@ -178,8 +168,6 @@
       font-size: 12px;
     }
 
-    /* On a small screen (like a phone) let the top bar wrap
-       onto two lines instead of squeezing everything in. */
     @media (max-width: 620px) {
       .top-bar-inner {
         height: auto;
@@ -189,11 +177,9 @@
       }
     }
 
-    /* ==========================================================
-       PART 2: styles used only on this home page
-       ========================================================== */
+    /* Styles used only on this home page */
 
-    /* ---------- The two movie sections ---------- */
+    /* The two movie sections */
 
     .section {
       max-width: 1280px;
@@ -202,7 +188,6 @@
       padding: 44px 0 44px 0;
     }
 
-    /* A grey line above the "Upcoming Shows" heading. */
     .section-line {
       border-top: 1px solid #e5e7eb;
       padding-top: 44px;
@@ -225,7 +210,6 @@
       font-weight: 700;
     }
 
-    /* The upcoming count is purple instead of red. */
     .film-count-soon {
       color: #4f39f6;
     }
@@ -236,9 +220,8 @@
       margin-bottom: 28px;
     }
 
-    /* ---------- The row of movie cards ---------- */
+    /* The row of movie cards */
 
-    /* A grid with 4 equal columns. 1fr means "one equal share". */
     .movie-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -254,23 +237,18 @@
       overflow: hidden;
     }
 
-    /* position: relative lets us place the labels on top of the poster.
-       aspect-ratio keeps it 3 wide by 4 tall, like a real movie poster. */
     .movie-poster {
       position: relative;
       aspect-ratio: 3 / 4;
       background-color: #e5e7eb;
     }
 
-    /* object-fit: cover fills the box without squashing the picture. */
     .movie-poster img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
 
-    /* A dark fade over the bottom half of the poster,
-       so the white movie title is easy to read. */
     .poster-fade {
       position: absolute;
       left: 0;
@@ -291,7 +269,6 @@
       line-height: 1.35;
     }
 
-    /* The age rating, in the bottom right corner of the poster. */
     .tag-rated {
       position: absolute;
       right: 10px;
@@ -304,7 +281,6 @@
       font-weight: 700;
     }
 
-    /* "Showing" or "Soon", in the top right corner of the poster. */
     .tag-status {
       position: absolute;
       right: 10px;
@@ -324,7 +300,7 @@
       background-color: #4f39f6;
     }
 
-    /* ---------- The writing under the poster ---------- */
+    /* The writing under the poster */
 
     .movie-info {
       display: flex;
@@ -351,13 +327,10 @@
       margin-bottom: 12px;
     }
 
-    /* margin-top: auto pushes the button down to the bottom,
-       so the buttons on every card line up neatly. */
     .movie-info .button {
       margin-top: auto;
     }
 
-    /* Fewer columns on smaller screens. */
     @media (max-width: 1000px) {
       .movie-grid {
         grid-template-columns: 1fr 1fr 1fr;
@@ -373,7 +346,7 @@
 </head>
 <body>
 
-  <!-- ===== TOP BAR (the same on every page) ===== -->
+  <!-- Top bar -->
   <header class="top-bar">
     <div class="top-bar-inner">
 
@@ -382,8 +355,7 @@
       <nav class="menu">
         <a href="index.html#now-showing">Now Showing</a>
         <a href="index.html#coming-soon">Upcoming Shows</a>
-        <!-- The staff page is hidden from customers. To show it in the
-             menu, delete this comment line and the closing line below.
+        <!-- Staff page link, hidden from customers
         <a href="admin.html">Admin</a>
         -->
       </nav>
@@ -398,7 +370,7 @@
 
   <main>
 
-    <!-- ===== NOW SHOWING ===== -->
+    <!-- Now Showing -->
     <section class="section" id="now-showing">
 
       <div class="section-title-row">
@@ -480,7 +452,7 @@
       </div>
     </section>
 
-    <!-- ===== UPCOMING SHOWS ===== -->
+    <!-- Upcoming Shows -->
     <section class="section section-line" id="coming-soon">
 
       <div class="section-title-row">
@@ -509,7 +481,6 @@
         <!-- Upcoming movie 2 -->
         <div class="movie-card">
           <div class="movie-poster">
-            <!-- %5B and %5D are the web-address codes for the [ and ] in the file name. -->
             <img src="photo/Broken-%5Bof%5D-Love.jpg" alt="Broken [of] Love poster">
             <span class="poster-fade"></span>
             <span class="tag-status tag-soon">Soon</span>
@@ -527,7 +498,7 @@
 
   </main>
 
-  <!-- ===== FOOTER (the same on every page) ===== -->
+  <!-- Footer -->
   <footer class="site-footer">
     <div class="footer-inner">
 

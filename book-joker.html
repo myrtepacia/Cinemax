@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Joker - Cinemax</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+  <style>
+
+    /* ==========================================================
+       PART 1: styles that every page of the website uses
+       ========================================================== */
+
+    /* The * means "every element on the page".
+       border-box makes padding and border count inside the width,
+       so boxes never get bigger than the size we set. */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background-color: #f9fafb;
+      color: #101828;
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    a {
+      color: #fb2c36;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    /* ---------- Buttons ---------- */
+
+    /* Every button starts with this class, then we add a colour class. */
+    .button {
+      display: inline-block;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .button-red {
+      background-color: #fb2c36;
+      color: #ffffff;
+    }
+
+    .button-red:hover {
+      background-color: #e7000b;
+    }
+
+    .button-outline {
+      background-color: #ffffff;
+      color: #101828;
+      border: 1px solid #e5e7eb;
+      font-weight: 600;
+    }
+
+    .button-outline:hover {
+      background-color: #f9fafb;
+    }
+
+    /* Grey button for movies you cannot book yet. */
+    .button-grey {
+      background-color: #e5e7eb;
+      color: #99a1af;
+    }
+
+    /* Makes a button as wide as the box it sits in. */
+    .button-wide {
+      display: block;
+      width: 100%;
+    }
+
+    /* ---------- Top bar ---------- */
+
+    .top-bar {
+      background-color: #ffffff;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    /* display: flex puts the logo, the menu and the buttons in one row.
+       justify-content: space-between spreads them left, middle and right. */
+    .top-bar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      max-width: 1280px;
+      width: 96%;
+      height: 64px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      color: #101828;
+      font-size: 20px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .menu {
+      display: flex;
+      gap: 2px;
+    }
+
+    .menu a {
+      padding: 8px 16px;
+      border-radius: 12px;
+      color: #6a7282;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .menu a:hover {
+      background-color: #f9fafb;
+      color: #101828;
+    }
+
+    .auth-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* ---------- Footer ---------- */
+
+    .site-footer {
+      background-color: #ffffff;
+      border-top: 1px solid #e5e7eb;
+      padding: 36px 20px 28px 20px;
+    }
+
+    .footer-inner {
+      max-width: 620px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .footer-inner .logo {
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+
+    .footer-text {
+      color: #6a7282;
+      font-size: 13px;
+    }
+
+    .footer-copyright {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #f3f4f6;
+      color: #99a1af;
+      font-size: 12px;
+    }
+
+    /* On a small screen (like a phone) let the top bar wrap
+       onto two lines instead of squeezing everything in. */
+    @media (max-width: 620px) {
+      .top-bar-inner {
+        height: auto;
+        padding: 12px 0 12px 0;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+
+    /* ==========================================================
+       PART 2: styles used only on this booking page
+       ========================================================== */
+
+    /* ---------- Page layout ---------- */
+
+    .booking {
+      max-width: 1024px;
+      width: 92%;
+      margin: 0 auto;
+      padding: 40px 0 40px 0;
+    }
+
+    .back-link {
+      display: inline-block;
+      color: #99a1af;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      margin-bottom: 24px;
+    }
+
+    /* Two columns: the movie on the left, the seats on the right. */
+    .booking-layout {
+      display: grid;
+      grid-template-columns: 2fr 3fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    /* aspect-ratio keeps the poster 3 wide by 4 tall,
+       the same shape as a real movie poster. */
+    .booking-poster {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    /* One box on the left column: the film info, the date, the showtime. */
+    .booking-block {
+      margin-bottom: 20px;
+    }
+
+    .film-title {
+      font-size: 20px;
+    }
+
+    .film-details {
+      color: #6a7282;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    /* ---------- How the choosing works ----------
+
+       Every date, showtime, seat and snack is a <label> with a
+       tick box inside it. We hide the real tick box, and colour the
+       <span> next to it instead. Clicking the label ticks the hidden box,
+       and the rule "input:checked + span" then paints that span red.
+       No JavaScript needed. */
+    .booking input {
+      display: none;
+    }
+
+    .field-label {
+      display: block;
+      color: #99a1af;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    /* ---------- Date and showtime buttons ---------- */
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .choice {
+      cursor: pointer;
+    }
+
+    .choice-box {
+      display: block;
+      padding: 10px 8px;
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      color: #6a7282;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .choice-box:hover {
+      border-color: #fb2c36;
+      color: #fb2c36;
+    }
+
+    /* The chosen date or showtime turns red. */
+    .choice input:checked + .choice-box {
+      background-color: #fb2c36;
+      border-color: #fb2c36;
+      color: #ffffff;
+    }
+
+    .day-name {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      opacity: 0.75;
+    }
+
+    .day-date {
+      display: block;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    /* ---------- The seat map ---------- */
+
+    .seat-area h3 {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+
+    /* A soft purple glow that stands for the cinema screen. */
+    .screen-curve {
+      height: 12px;
+      margin: 0 24px 0 24px;
+      border-radius: 12px 12px 0 0;
+      background: linear-gradient(to bottom, rgba(79, 57, 246, 0.35), rgba(79, 57, 246, 0));
+    }
+
+    .screen-word {
+      color: #99a1af;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 5px;
+      text-align: center;
+      margin: 4px 0 24px 0;
+    }
+
+    /* If the phone screen is too narrow, the map can slide sideways. */
+    .seat-map {
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    /* One row of seats. 20px letter + 10 seats of 28px + the gaps = 340px. */
+    .seat-row {
+      display: flex;
+      width: 340px;
+      gap: 4px;
+      margin: 0 auto 8px auto;
+    }
+
+    .row-letter {
+      width: 20px;
+      color: #99a1af;
+      font-size: 12px;
+      font-weight: 900;
+      text-align: right;
+    }
+
+    .seat {
+      cursor: pointer;
+    }
+
+    .seat-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px 8px 2px 2px;
+      background-color: #e0e7ff;
+      color: #4f39f6;
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    /* A seat you picked turns red. */
+    .seat input:checked + .seat-box {
+      background-color: #fb2c36;
+      color: #ffffff;
+    }
+
+    /* A grey seat is already taken by someone else. */
+    .seat-box-sold {
+      background-color: #e5e7eb;
+      color: #99a1af;
+    }
+
+    /* The small colour guide under the seat map. */
+    .seat-key {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 22px;
+      color: #6a7282;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .seat-key div {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .key-colour {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+    }
+
+    .key-free {
+      background-color: #e0e7ff;
+    }
+
+    .key-picked {
+      background-color: #fb2c36;
+    }
+
+    .key-sold {
+      background-color: #e5e7eb;
+    }
+
+    /* ---------- The snacks ---------- */
+
+    .snacks {
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .snacks h3 {
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+
+    .snacks-note {
+      color: #6a7282;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+
+    .snack-heading {
+      color: #99a1af;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin: 16px 0 8px 0;
+    }
+
+    .snack-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .snack {
+      cursor: pointer;
+    }
+
+    .snack-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 11px 14px;
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+    }
+
+    .snack-box:hover {
+      border-color: #fb2c36;
+    }
+
+    /* A snack you ticked gets a light red background. */
+    .snack input:checked + .snack-box {
+      background-color: #fef2f2;
+      border-color: #fb2c36;
+    }
+
+    .snack-name {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .snack-detail {
+      display: block;
+      color: #6a7282;
+      font-size: 12px;
+    }
+
+    .snack-price {
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    /* ---------- The total at the bottom ---------- */
+
+    .order-summary {
+      margin-top: 24px;
+      padding: 20px;
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+    }
+
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .summary-name {
+      color: #6a7282;
+      font-weight: 600;
+    }
+
+    .summary-total {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .summary-amount {
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    .order-summary .button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    /* On a narrow screen put the two columns on top of each other. */
+    @media (max-width: 1000px) {
+      .booking-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .booking-poster {
+        max-width: 240px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .snack-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== TOP BAR (the same on every page) ===== -->
+  <header class="top-bar">
+    <div class="top-bar-inner">
+
+      <a class="logo" href="index.html">CINEMAX</a>
+
+      <nav class="menu">
+        <a href="index.html#now-showing">Now Showing</a>
+        <a href="index.html#coming-soon">Upcoming Shows</a>
+        <!-- The staff page is hidden from customers. To show it in the
+             menu, delete this comment line and the closing line below.
+        <a href="admin.html">Admin</a>
+        -->
+      </nav>
+
+      <div class="auth-buttons">
+        <a class="button button-outline" href="signin.html">Sign In</a>
+        <a class="button button-red" href="signup.html">Sign Up</a>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="booking">
+
+    <a class="back-link" href="index.html">← Back to movies</a>
+
+    <div class="booking-layout">
+
+      <!-- ===== LEFT SIDE: the movie, the date and the showtime ===== -->
+      <div class="booking-left">
+
+        <img class="booking-poster" src="photo/Joker.jpg" alt="Joker poster">
+
+        <div class="booking-block">
+          <h1 class="film-title">Joker</h1>
+          <p class="film-details">Crime, Thriller, 2h 2m, R-16</p>
+        </div>
+
+        <!-- Pick one date. All five have name="date",
+             so ticking one unticks the others. -->
+        <div class="booking-block">
+          <span class="field-label">Date</span>
+          <div class="choice-grid">
+
+            <label class="choice">
+              <input type="radio" name="date">
+              <span class="choice-box">
+                <span class="day-name">Sat</span>
+                <span class="day-date">5 Sep</span>
+              </span>
+            </label>
+
+            <label class="choice">
+              <input type="radio" name="date">
+              <span class="choice-box">
+                <span class="day-name">Sun</span>
+                <span class="day-date">6 Sep</span>
+              </span>
+            </label>
+
+            <label class="choice">
+              <input type="radio" name="date">
+              <span class="choice-box">
+                <span class="day-name">Mon</span>
+                <span class="day-date">7 Sep</span>
+              </span>
+            </label>
+
+            <label class="choice">
+              <input type="radio" name="date">
+              <span class="choice-box">
+                <span class="day-name">Tue</span>
+                <span class="day-date">8 Sep</span>
+              </span>
+            </label>
+
+            <label class="choice">
+              <input type="radio" name="date">
+              <span class="choice-box">
+                <span class="day-name">Wed</span>
+                <span class="day-date">9 Sep</span>
+              </span>
+            </label>
+
+          </div>
+        </div>
+
+        <!-- Pick one showtime, the same way as the date. -->
+        <div class="booking-block">
+          <span class="field-label">Showtime</span>
+          <div class="choice-grid">
+
+            <label class="choice">
+              <input type="radio" name="showtime">
+              <span class="choice-box">10:00 AM</span>
+            </label>
+
+            <label class="choice">
+              <input type="radio" name="showtime">
+              <span class="choice-box">1:00 PM</span>
+            </label>
+
+            <label class="choice">
+              <input type="radio" name="showtime">
+              <span class="choice-box">4:00 PM</span>
+            </label>
+
+            <label class="choice">
+              <input type="radio" name="showtime">
+              <span class="choice-box">7:00 PM</span>
+            </label>
+
+            <label class="choice">
+              <input type="radio" name="showtime">
+              <span class="choice-box">10:00 PM</span>
+            </label>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===== RIGHT SIDE: the seats and the snacks ===== -->
+      <div class="seat-area">
+
+        <h3>Choose Your Seats</h3>
+
+        <div class="screen-curve"></div>
+        <p class="screen-word">SCREEN</p>
+
+        <div class="seat-map">
+
+          <!-- Row A. Seats 1 and 2 are already sold, so they are plain
+               grey boxes with no tick box inside them. -->
+          <div class="seat-row">
+            <span class="row-letter">A</span>
+            <span class="seat-box seat-box-sold">1</span>
+            <span class="seat-box seat-box-sold">2</span>
+            <label class="seat"><input type="checkbox"><span class="seat-box">3</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">4</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">5</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">6</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">7</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">8</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">9</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">10</span></label>
+          </div>
+
+          <!-- Row B -->
+          <div class="seat-row">
+            <span class="row-letter">B</span>
+            <label class="seat"><input type="checkbox"><span class="seat-box">1</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">2</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">3</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">4</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">5</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">6</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">7</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">8</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">9</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">10</span></label>
+          </div>
+
+          <!-- Row C -->
+          <div class="seat-row">
+            <span class="row-letter">C</span>
+            <label class="seat"><input type="checkbox"><span class="seat-box">1</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">2</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">3</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">4</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">5</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">6</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">7</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">8</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">9</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">10</span></label>
+          </div>
+
+          <!-- Row D -->
+          <div class="seat-row">
+            <span class="row-letter">D</span>
+            <label class="seat"><input type="checkbox"><span class="seat-box">1</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">2</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">3</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">4</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">5</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">6</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">7</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">8</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">9</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">10</span></label>
+          </div>
+
+          <!-- Row E -->
+          <div class="seat-row">
+            <span class="row-letter">E</span>
+            <label class="seat"><input type="checkbox"><span class="seat-box">1</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">2</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">3</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">4</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">5</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">6</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">7</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">8</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">9</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">10</span></label>
+          </div>
+
+          <!-- Row F -->
+          <div class="seat-row">
+            <span class="row-letter">F</span>
+            <label class="seat"><input type="checkbox"><span class="seat-box">1</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">2</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">3</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">4</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">5</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">6</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">7</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">8</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">9</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">10</span></label>
+          </div>
+
+          <!-- Row G -->
+          <div class="seat-row">
+            <span class="row-letter">G</span>
+            <label class="seat"><input type="checkbox"><span class="seat-box">1</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">2</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">3</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">4</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">5</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">6</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">7</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">8</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">9</span></label>
+            <label class="seat"><input type="checkbox"><span class="seat-box">10</span></label>
+          </div>
+
+        </div>
+
+        <!-- What the seat colours mean. -->
+        <div class="seat-key">
+          <div><span class="key-colour key-free"></span> Available</div>
+          <div><span class="key-colour key-picked"></span> Selected</div>
+          <div><span class="key-colour key-sold"></span> Unavailable</div>
+        </div>
+
+        <!-- ===== SNACKS ===== -->
+        <div class="snacks">
+
+          <h3>Pre-order Your Snacks</h3>
+          <p class="snacks-note">
+            Add food and drinks now and skip the concession line. Show your QR code at the
+            counter and staff hand them over. Snacks must be ordered with your ticket, not after.
+          </p>
+
+          <p class="snack-heading">Popcorn</p>
+          <div class="snack-list">
+
+            <label class="snack">
+              <input type="checkbox">
+              <span class="snack-box">
+                <span>
+                  <span class="snack-name">Popcorn, Regular</span>
+                  <span class="snack-detail">Salted, 64 oz</span>
+                </span>
+                <span class="snack-price">₱120</span>
+              </span>
+            </label>
+
+            <label class="snack">
+              <input type="checkbox">
+              <span class="snack-box">
+                <span>
+                  <span class="snack-name">Popcorn, Large</span>
+                  <span class="snack-detail">Cheese or Caramel, 85 oz</span>
+                </span>
+                <span class="snack-price">₱160</span>
+              </span>
+            </label>
+
+          </div>
+
+          <p class="snack-heading">Drinks</p>
+          <div class="snack-list">
+
+            <label class="snack">
+              <input type="checkbox">
+              <span class="snack-box">
+                <span>
+                  <span class="snack-name">Soda, Regular</span>
+                  <span class="snack-detail">16 oz</span>
+                </span>
+                <span class="snack-price">₱70</span>
+              </span>
+            </label>
+
+            <label class="snack">
+              <input type="checkbox">
+              <span class="snack-box">
+                <span>
+                  <span class="snack-name">Soda, Large</span>
+                  <span class="snack-detail">22 oz, free refill</span>
+                </span>
+                <span class="snack-price">₱95</span>
+              </span>
+            </label>
+
+          </div>
+
+          <p class="snack-heading">Candy</p>
+          <div class="snack-list">
+
+            <label class="snack">
+              <input type="checkbox">
+              <span class="snack-box">
+                <span>
+                  <span class="snack-name">Chocolate Bar</span>
+                  <span class="snack-detail">90 g</span>
+                </span>
+                <span class="snack-price">₱60</span>
+              </span>
+            </label>
+
+            <label class="snack">
+              <input type="checkbox">
+              <span class="snack-box">
+                <span>
+                  <span class="snack-name">Gummy Candy</span>
+                  <span class="snack-detail">Assorted, 100 g</span>
+                </span>
+                <span class="snack-price">₱55</span>
+              </span>
+            </label>
+
+          </div>
+
+          <p class="snack-heading">Combos</p>
+          <div class="snack-list">
+
+            <label class="snack">
+              <input type="checkbox">
+              <span class="snack-box">
+                <span>
+                  <span class="snack-name">Solo Combo</span>
+                  <span class="snack-detail">Regular popcorn and regular soda</span>
+                </span>
+                <span class="snack-price">₱180</span>
+              </span>
+            </label>
+
+            <label class="snack">
+              <input type="checkbox">
+              <span class="snack-box">
+                <span>
+                  <span class="snack-name">Barkada Combo</span>
+                  <span class="snack-detail">2 large popcorn and 2 large sodas</span>
+                </span>
+                <span class="snack-price">₱480</span>
+              </span>
+            </label>
+
+          </div>
+
+        </div>
+
+        <!-- ===== THE TOTAL ===== -->
+        <div class="order-summary">
+
+          <div class="summary-line">
+            <span class="summary-name">Selected seats</span>
+            <span>Tap the seats above</span>
+          </div>
+
+          <div class="summary-line">
+            <span class="summary-name">Snacks</span>
+            <span>Tick any items above</span>
+          </div>
+
+          <div class="summary-line summary-total">
+            <span class="summary-name">1 ticket × ₱250</span>
+            <span class="summary-amount">₱250</span>
+          </div>
+
+          <a class="button button-red" href="signin.html">Confirm Booking</a>
+
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ===== FOOTER (the same on every page) ===== -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+
+      <a class="logo" href="index.html">CINEMAX</a>
+
+      <p class="footer-text">
+        Your next movie experience starts here. <br>
+        Book your seats, enjoy your snacks, and let the show begin.
+      </p>
+
+      <p class="footer-copyright">© 2026 Cinemax. All rights reserved.</p>
+
+    </div>
+  </footer>
+
+</body>
+</html>

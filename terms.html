@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms of Service - Cinemax</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+  <style>
+
+    /* ==========================================================
+       PART 1: styles that every page of the website uses
+       ========================================================== */
+
+    /* The * means "every element on the page".
+       border-box makes padding and border count inside the width,
+       so boxes never get bigger than the size we set. */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background-color: #f9fafb;
+      color: #101828;
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    a {
+      color: #fb2c36;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    /* ---------- Buttons ---------- */
+
+    /* Every button starts with this class, then we add a colour class. */
+    .button {
+      display: inline-block;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .button-red {
+      background-color: #fb2c36;
+      color: #ffffff;
+    }
+
+    .button-red:hover {
+      background-color: #e7000b;
+    }
+
+    .button-outline {
+      background-color: #ffffff;
+      color: #101828;
+      border: 1px solid #e5e7eb;
+      font-weight: 600;
+    }
+
+    .button-outline:hover {
+      background-color: #f9fafb;
+    }
+
+    /* Grey button for movies you cannot book yet. */
+    .button-grey {
+      background-color: #e5e7eb;
+      color: #99a1af;
+    }
+
+    /* Makes a button as wide as the box it sits in. */
+    .button-wide {
+      display: block;
+      width: 100%;
+    }
+
+    /* ---------- Top bar ---------- */
+
+    .top-bar {
+      background-color: #ffffff;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    /* display: flex puts the logo, the menu and the buttons in one row.
+       justify-content: space-between spreads them left, middle and right. */
+    .top-bar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      max-width: 1280px;
+      width: 96%;
+      height: 64px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      color: #101828;
+      font-size: 20px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .menu {
+      display: flex;
+      gap: 2px;
+    }
+
+    .menu a {
+      padding: 8px 16px;
+      border-radius: 12px;
+      color: #6a7282;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .menu a:hover {
+      background-color: #f9fafb;
+      color: #101828;
+    }
+
+    .auth-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* ---------- Footer ---------- */
+
+    .site-footer {
+      background-color: #ffffff;
+      border-top: 1px solid #e5e7eb;
+      padding: 36px 20px 28px 20px;
+    }
+
+    .footer-inner {
+      max-width: 620px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .footer-inner .logo {
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+
+    .footer-text {
+      color: #6a7282;
+      font-size: 13px;
+    }
+
+    .footer-copyright {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #f3f4f6;
+      color: #99a1af;
+      font-size: 12px;
+    }
+
+    /* On a small screen (like a phone) let the top bar wrap
+       onto two lines instead of squeezing everything in. */
+    @media (max-width: 620px) {
+      .top-bar-inner {
+        height: auto;
+        padding: 12px 0 12px 0;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+
+    /* ==========================================================
+       PART 2: styles used only on this terms page
+       ========================================================== */
+
+    .terms-page {
+      max-width: 768px;
+      width: 92%;
+      margin: 0 auto;
+      padding: 48px 0 64px 0;
+    }
+
+    .terms-page h1 {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .terms-intro {
+      color: #6a7282;
+      font-size: 15px;
+      margin-bottom: 28px;
+    }
+
+    /* One white box for each rule. The bottom padding is smaller
+       because the last paragraph already adds 10px below itself. */
+    .terms-block {
+      padding: 24px 24px 14px 24px;
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      margin-bottom: 14px;
+    }
+
+    .terms-kind {
+      display: block;
+      color: #fb2c36;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    /* The snack rules use purple instead of red. */
+    .terms-kind-snack {
+      color: #4f39f6;
+    }
+
+    .terms-block h2 {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .terms-block p {
+      color: #6a7282;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== TOP BAR (the same on every page) ===== -->
+  <header class="top-bar">
+    <div class="top-bar-inner">
+
+      <a class="logo" href="index.html">CINEMAX</a>
+
+      <nav class="menu">
+        <a href="index.html#now-showing">Now Showing</a>
+        <a href="index.html#coming-soon">Upcoming Shows</a>
+        <!-- The staff page is hidden from customers. To show it in the
+             menu, delete this comment line and the closing line below.
+        <a href="admin.html">Admin</a>
+        -->
+      </nav>
+
+      <div class="auth-buttons">
+        <a class="button button-outline" href="signin.html">Sign In</a>
+        <a class="button button-red" href="signup.html">Sign Up</a>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="terms-page">
+
+    <h1>Terms of Service</h1>
+    <p class="terms-intro">These are the terms you agree to when using Cinemax's online booking system.</p>
+
+    <div class="terms-block">
+      <span class="terms-kind">Account and Booking</span>
+      <h2>Your account and your seats</h2>
+      <p>You must provide accurate details when creating an account. Your e-ticket is issued under the name on your account.</p>
+      <p>A chosen seat is held for 10 minutes only. Unpaid reservations are automatically released back to the seat map so other customers can book them.</p>
+    </div>
+
+    <div class="terms-block">
+      <span class="terms-kind">Payment and Cancellation</span>
+      <h2>How you pay, and how to cancel</h2>
+      <p>Payments are processed securely through PayMongo (GCash, Maya, debit or credit card) in Philippine Peso only. Cinemax does not store your card details.</p>
+      <p>Bookings may be cancelled before showtime.</p>
+    </div>
+
+    <div class="terms-block">
+      <span class="terms-kind">Ticket Use and Privacy</span>
+      <h2>Your QR code</h2>
+      <p>The QR code issued after payment is the only valid proof of purchase, and it may be scanned once.</p>
+      <p>Your personal and booking data is stored securely and used only for reservation and verification.</p>
+    </div>
+
+    <div class="terms-block">
+      <span class="terms-kind terms-kind-snack">Snacks: Menu and Pricing</span>
+      <h2>What you see is what you pay</h2>
+      <p>You can view every available concession item and its price before adding it to your order. Prices are locked at the time of purchase.</p>
+    </div>
+
+    <div class="terms-block">
+      <span class="terms-kind terms-kind-snack">Snacks: Pre-Order</span>
+      <h2>Order with your ticket</h2>
+      <p>You can choose item size and quantity. Pre-orders must be placed at the time of ticket purchase, not after.</p>
+    </div>
+
+    <div class="terms-block">
+      <span class="terms-kind terms-kind-snack">Snacks: Pickup</span>
+      <h2>Collecting your order</h2>
+      <p>Pre-ordered snacks are prepared during the showing and are available for pickup at the concession counter once your QR code is scanned.</p>
+      <p>Pickup must happen before or after the movie, not during.</p>
+    </div>
+
+  </main>
+
+  <!-- ===== FOOTER (the same on every page) ===== -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+
+      <a class="logo" href="index.html">CINEMAX</a>
+
+      <p class="footer-text">
+        Your next movie experience starts here. <br>
+        Book your seats, enjoy your snacks, and let the show begin.
+      </p>
+
+      <p class="footer-copyright">© 2026 Cinemax. All rights reserved.</p>
+
+    </div>
+  </footer>
+
+</body>
+</html>

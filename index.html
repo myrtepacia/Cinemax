@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cinemax</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+  <style>
+
+    /* ==========================================================
+       PART 1: styles that every page of the website uses
+       ========================================================== */
+
+    /* The * means "every element on the page".
+       border-box makes padding and border count inside the width,
+       so boxes never get bigger than the size we set. */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background-color: #f9fafb;
+      color: #101828;
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    a {
+      color: #fb2c36;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    /* ---------- Buttons ---------- */
+
+    /* Every button starts with this class, then we add a colour class. */
+    .button {
+      display: inline-block;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .button-red {
+      background-color: #fb2c36;
+      color: #ffffff;
+    }
+
+    .button-red:hover {
+      background-color: #e7000b;
+    }
+
+    .button-outline {
+      background-color: #ffffff;
+      color: #101828;
+      border: 1px solid #e5e7eb;
+      font-weight: 600;
+    }
+
+    .button-outline:hover {
+      background-color: #f9fafb;
+    }
+
+    /* Grey button for movies you cannot book yet. */
+    .button-grey {
+      background-color: #e5e7eb;
+      color: #99a1af;
+    }
+
+    /* Makes a button as wide as the box it sits in. */
+    .button-wide {
+      display: block;
+      width: 100%;
+    }
+
+    /* ---------- Top bar ---------- */
+
+    .top-bar {
+      background-color: #ffffff;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    /* display: flex puts the logo, the menu and the buttons in one row.
+       justify-content: space-between spreads them left, middle and right. */
+    .top-bar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      max-width: 1280px;
+      width: 96%;
+      height: 64px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      color: #101828;
+      font-size: 20px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .menu {
+      display: flex;
+      gap: 2px;
+    }
+
+    .menu a {
+      padding: 8px 16px;
+      border-radius: 12px;
+      color: #6a7282;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .menu a:hover {
+      background-color: #f9fafb;
+      color: #101828;
+    }
+
+    .auth-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* ---------- Footer ---------- */
+
+    .site-footer {
+      background-color: #ffffff;
+      border-top: 1px solid #e5e7eb;
+      padding: 36px 20px 28px 20px;
+    }
+
+    .footer-inner {
+      max-width: 620px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .footer-inner .logo {
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+
+    .footer-text {
+      color: #6a7282;
+      font-size: 13px;
+    }
+
+    .footer-copyright {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #f3f4f6;
+      color: #99a1af;
+      font-size: 12px;
+    }
+
+    /* On a small screen (like a phone) let the top bar wrap
+       onto two lines instead of squeezing everything in. */
+    @media (max-width: 620px) {
+      .top-bar-inner {
+        height: auto;
+        padding: 12px 0 12px 0;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+
+    /* ==========================================================
+       PART 2: styles used only on this home page
+       ========================================================== */
+
+    /* ---------- The two movie sections ---------- */
+
+    .section {
+      max-width: 1280px;
+      width: 92%;
+      margin: 0 auto;
+      padding: 44px 0 44px 0;
+    }
+
+    /* A grey line above the "Upcoming Shows" heading. */
+    .section-line {
+      border-top: 1px solid #e5e7eb;
+      padding-top: 44px;
+    }
+
+    .section-title-row {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .section-title {
+      font-size: 24px;
+    }
+
+    .film-count {
+      color: #fb2c36;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    /* The upcoming count is purple instead of red. */
+    .film-count-soon {
+      color: #4f39f6;
+    }
+
+    .section-note {
+      color: #6a7282;
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+
+    /* ---------- The row of movie cards ---------- */
+
+    /* A grid with 4 equal columns. 1fr means "one equal share". */
+    .movie-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 20px;
+    }
+
+    .movie-card {
+      display: flex;
+      flex-direction: column;
+      background-color: #ffffff;
+      border: 1px solid #f3f4f6;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    /* position: relative lets us place the labels on top of the poster.
+       aspect-ratio keeps it 3 wide by 4 tall, like a real movie poster. */
+    .movie-poster {
+      position: relative;
+      aspect-ratio: 3 / 4;
+      background-color: #e5e7eb;
+    }
+
+    /* object-fit: cover fills the box without squashing the picture. */
+    .movie-poster img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* A dark fade over the bottom half of the poster,
+       so the white movie title is easy to read. */
+    .poster-fade {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 50%;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+    }
+
+    .poster-title {
+      position: absolute;
+      left: 12px;
+      right: 64px;
+      bottom: 12px;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    /* The age rating, in the bottom right corner of the poster. */
+    .tag-rated {
+      position: absolute;
+      right: 10px;
+      bottom: 12px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background-color: rgba(0, 0, 0, 0.55);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    /* "Showing" or "Soon", in the top right corner of the poster. */
+    .tag-status {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .tag-showing {
+      background-color: #00bc7d;
+    }
+
+    .tag-soon {
+      background-color: #4f39f6;
+    }
+
+    /* ---------- The writing under the poster ---------- */
+
+    .movie-info {
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+    }
+
+    .movie-genre {
+      color: #6a7282;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .movie-last-day {
+      color: #00bc7d;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .movie-price {
+      font-size: 16px;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+
+    /* margin-top: auto pushes the button down to the bottom,
+       so the buttons on every card line up neatly. */
+    .movie-info .button {
+      margin-top: auto;
+    }
+
+    /* Fewer columns on smaller screens. */
+    @media (max-width: 1000px) {
+      .movie-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .movie-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== TOP BAR (the same on every page) ===== -->
+  <header class="top-bar">
+    <div class="top-bar-inner">
+
+      <a class="logo" href="index.html">CINEMAX</a>
+
+      <nav class="menu">
+        <a href="index.html#now-showing">Now Showing</a>
+        <a href="index.html#coming-soon">Upcoming Shows</a>
+        <!-- The staff page is hidden from customers. To show it in the
+             menu, delete this comment line and the closing line below.
+        <a href="admin.html">Admin</a>
+        -->
+      </nav>
+
+      <div class="auth-buttons">
+        <a class="button button-outline" href="signin.html">Sign In</a>
+        <a class="button button-red" href="signup.html">Sign Up</a>
+      </div>
+
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ===== NOW SHOWING ===== -->
+    <section class="section" id="now-showing">
+
+      <div class="section-title-row">
+        <h2 class="section-title">Now Showing</h2>
+        <span class="film-count">4 Films</span>
+      </div>
+      <p class="section-note">Reserve your seat and pre-order your snacks. Tickets from ₱220.</p>
+
+      <div class="movie-grid">
+
+        <!-- Movie card 1 -->
+        <div class="movie-card">
+          <div class="movie-poster">
+            <img src="photo/eternal-sunshine.jpg" alt="Eternal Sunshine of the Spotless Mind poster">
+            <span class="poster-fade"></span>
+            <span class="tag-status tag-showing">Showing</span>
+            <p class="poster-title">Eternal Sunshine of the Spotless Mind</p>
+            <span class="tag-rated">PG-13</span>
+          </div>
+          <div class="movie-info">
+            <p class="movie-genre">Romance, Drama, 1h 48m</p>
+            <p class="movie-last-day">Until Oct 30, 2026</p>
+            <p class="movie-price">₱220</p>
+            <a class="button button-red button-wide" href="book-eternal-sunshine.html">Book Now</a>
+          </div>
+        </div>
+
+        <!-- Movie card 2 -->
+        <div class="movie-card">
+          <div class="movie-poster">
+            <img src="photo/Pieces-of-us.jpg" alt="Pieces of Us poster">
+            <span class="poster-fade"></span>
+            <span class="tag-status tag-showing">Showing</span>
+            <p class="poster-title">Pieces of Us</p>
+            <span class="tag-rated">PG-13</span>
+          </div>
+          <div class="movie-info">
+            <p class="movie-genre">Romance, Drama, 1h 52m</p>
+            <p class="movie-last-day">Until Nov 14, 2026</p>
+            <p class="movie-price">₱220</p>
+            <a class="button button-red button-wide" href="book-pieces-of-us.html">Book Now</a>
+          </div>
+        </div>
+
+        <!-- Movie card 3 -->
+        <div class="movie-card">
+          <div class="movie-poster">
+            <img src="photo/Joker.jpg" alt="Joker poster">
+            <span class="poster-fade"></span>
+            <span class="tag-status tag-showing">Showing</span>
+            <p class="poster-title">Joker</p>
+            <span class="tag-rated">R-16</span>
+          </div>
+          <div class="movie-info">
+            <p class="movie-genre">Crime, Thriller, 2h 2m</p>
+            <p class="movie-last-day">Until Nov 28, 2026</p>
+            <p class="movie-price">₱250</p>
+            <a class="button button-red button-wide" href="book-joker.html">Book Now</a>
+          </div>
+        </div>
+
+        <!-- Movie card 4 -->
+        <div class="movie-card">
+          <div class="movie-poster">
+            <img src="photo/The-Reckoning.jpg" alt="The Reckoning poster">
+            <span class="poster-fade"></span>
+            <span class="tag-status tag-showing">Showing</span>
+            <p class="poster-title">The Reckoning</p>
+            <span class="tag-rated">R-16</span>
+          </div>
+          <div class="movie-info">
+            <p class="movie-genre">Action, Thriller, 1h 58m</p>
+            <p class="movie-last-day">Until Dec 12, 2026</p>
+            <p class="movie-price">₱250</p>
+            <a class="button button-red button-wide" href="book-the-reckoning.html">Book Now</a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===== UPCOMING SHOWS ===== -->
+    <section class="section section-line" id="coming-soon">
+
+      <div class="section-title-row">
+        <h2 class="section-title">Upcoming Shows</h2>
+        <span class="film-count film-count-soon">2 Films</span>
+      </div>
+      <p class="section-note">Coming soon to CINEMAX. Mark your calendar.</p>
+
+      <div class="movie-grid">
+
+        <!-- Upcoming movie 1 -->
+        <div class="movie-card">
+          <div class="movie-poster">
+            <img src="photo/Hush.jpg" alt="Hush poster">
+            <span class="poster-fade"></span>
+            <span class="tag-status tag-soon">Soon</span>
+            <p class="poster-title">Hush</p>
+            <span class="tag-rated">R-16</span>
+          </div>
+          <div class="movie-info">
+            <p class="movie-genre">Horror, Thriller, 1h 22m</p>
+            <span class="button button-grey button-wide">Opens Sep 26</span>
+          </div>
+        </div>
+
+        <!-- Upcoming movie 2 -->
+        <div class="movie-card">
+          <div class="movie-poster">
+            <!-- %5B and %5D are the web-address codes for the [ and ] in the file name. -->
+            <img src="photo/Broken-%5Bof%5D-Love.jpg" alt="Broken [of] Love poster">
+            <span class="poster-fade"></span>
+            <span class="tag-status tag-soon">Soon</span>
+            <p class="poster-title">Broken [of] Love</p>
+            <span class="tag-rated">PG-13</span>
+          </div>
+          <div class="movie-info">
+            <p class="movie-genre">Romance, Drama, 1h 45m</p>
+            <span class="button button-grey button-wide">Opens Oct 17</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== FOOTER (the same on every page) ===== -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+
+      <a class="logo" href="index.html">CINEMAX</a>
+
+      <p class="footer-text">
+        Your next movie experience starts here. <br>
+        Book your seats, enjoy your snacks, and let the show begin.
+      </p>
+
+      <p class="footer-copyright">© 2026 Cinemax. All rights reserved.</p>
+
+    </div>
+  </footer>
+
+</body>
+</html>

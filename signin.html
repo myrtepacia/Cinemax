@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In - Cinemax</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+  <style>
+
+    /* ==========================================================
+       PART 1: styles that every page of the website uses
+       ========================================================== */
+
+    /* The * means "every element on the page".
+       border-box makes padding and border count inside the width,
+       so boxes never get bigger than the size we set. */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background-color: #f9fafb;
+      color: #101828;
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    a {
+      color: #fb2c36;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    /* ---------- Buttons ---------- */
+
+    /* Every button starts with this class, then we add a colour class. */
+    .button {
+      display: inline-block;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .button-red {
+      background-color: #fb2c36;
+      color: #ffffff;
+    }
+
+    .button-red:hover {
+      background-color: #e7000b;
+    }
+
+    .button-outline {
+      background-color: #ffffff;
+      color: #101828;
+      border: 1px solid #e5e7eb;
+      font-weight: 600;
+    }
+
+    .button-outline:hover {
+      background-color: #f9fafb;
+    }
+
+    /* Grey button for movies you cannot book yet. */
+    .button-grey {
+      background-color: #e5e7eb;
+      color: #99a1af;
+    }
+
+    /* Makes a button as wide as the box it sits in. */
+    .button-wide {
+      display: block;
+      width: 100%;
+    }
+
+    /* ---------- Top bar ---------- */
+
+    .top-bar {
+      background-color: #ffffff;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    /* display: flex puts the logo, the menu and the buttons in one row.
+       justify-content: space-between spreads them left, middle and right. */
+    .top-bar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      max-width: 1280px;
+      width: 96%;
+      height: 64px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      color: #101828;
+      font-size: 20px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .menu {
+      display: flex;
+      gap: 2px;
+    }
+
+    .menu a {
+      padding: 8px 16px;
+      border-radius: 12px;
+      color: #6a7282;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .menu a:hover {
+      background-color: #f9fafb;
+      color: #101828;
+    }
+
+    .auth-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* ---------- Footer ---------- */
+
+    .site-footer {
+      background-color: #ffffff;
+      border-top: 1px solid #e5e7eb;
+      padding: 36px 20px 28px 20px;
+    }
+
+    .footer-inner {
+      max-width: 620px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .footer-inner .logo {
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+
+    .footer-text {
+      color: #6a7282;
+      font-size: 13px;
+    }
+
+    .footer-copyright {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #f3f4f6;
+      color: #99a1af;
+      font-size: 12px;
+    }
+
+    /* On a small screen (like a phone) let the top bar wrap
+       onto two lines instead of squeezing everything in. */
+    @media (max-width: 620px) {
+      .top-bar-inner {
+        height: auto;
+        padding: 12px 0 12px 0;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+
+    /* ==========================================================
+       PART 2: styles for the sign in and sign up boxes
+       ========================================================== */
+
+    .form-page {
+      padding: 56px 20px 80px 20px;
+    }
+
+    /* margin: 0 auto puts the white card in the middle of the page. */
+    .form-card {
+      max-width: 448px;
+      margin: 0 auto;
+      padding: 32px;
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 24px;
+    }
+
+    .form-card h1 {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+
+    .form-intro {
+      color: #6a7282;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    /* ---------- One question in the form ---------- */
+
+    .form-field {
+      margin-bottom: 16px;
+    }
+
+    .form-field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .form-field input {
+      width: 100%;
+      padding: 12px 16px;
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      color: #101828;
+    }
+
+    /* The grey example text inside an empty box. */
+    .form-field input::placeholder {
+      color: #99a1af;
+      font-weight: 500;
+    }
+
+    /* The red border shows which box you are typing in. */
+    .form-field input:focus {
+      outline: none;
+      border-color: #fb2c36;
+    }
+
+    /* ---------- The "I agree" tick box ---------- */
+
+    .agree-line {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      color: #6a7282;
+      font-size: 13px;
+      margin: 18px 0 18px 0;
+    }
+
+    .agree-line input {
+      width: 16px;
+      height: 16px;
+      margin-top: 3px;
+      accent-color: #fb2c36;
+    }
+
+    /* ---------- The big button and the link below it ---------- */
+
+    .form-card .button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 900;
+      border-radius: 16px;
+    }
+
+    .form-switch {
+      text-align: center;
+      color: #6a7282;
+      font-size: 14px;
+      margin-top: 16px;
+    }
+
+    .form-switch a {
+      font-weight: 700;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== TOP BAR (the same on every page) ===== -->
+  <header class="top-bar">
+    <div class="top-bar-inner">
+
+      <a class="logo" href="index.html">CINEMAX</a>
+
+      <nav class="menu">
+        <a href="index.html#now-showing">Now Showing</a>
+        <a href="index.html#coming-soon">Upcoming Shows</a>
+        <!-- The staff page is hidden from customers. To show it in the
+             menu, delete this comment line and the closing line below.
+        <a href="admin.html">Admin</a>
+        -->
+      </nav>
+
+      <div class="auth-buttons">
+        <a class="button button-outline" href="signin.html">Sign In</a>
+        <a class="button button-red" href="signup.html">Sign Up</a>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="form-page">
+    <div class="form-card">
+
+      <h1>Welcome back</h1>
+      <p class="form-intro">Sign in to book your seats.</p>
+
+      <!-- When you press the button, the browser opens ticket.html. -->
+      <form action="ticket.html" method="get">
+
+        <div class="form-field">
+          <label for="email">Email address</label>
+          <input id="email" name="email" type="email" placeholder="juandelacruz@gmail.com" required>
+        </div>
+
+        <div class="form-field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" placeholder="juan1234" required>
+        </div>
+
+        <button class="button button-red" type="submit">Sign In</button>
+
+      </form>
+
+      <p class="form-switch">Don't have an account? <a href="signup.html">Create account</a></p>
+
+    </div>
+  </main>
+
+  <!-- ===== FOOTER (the same on every page) ===== -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+
+      <a class="logo" href="index.html">CINEMAX</a>
+
+      <p class="footer-text">
+        Your next movie experience starts here. <br>
+        Book your seats, enjoy your snacks, and let the show begin.
+      </p>
+
+      <p class="footer-copyright">© 2026 Cinemax. All rights reserved.</p>
+
+    </div>
+  </footer>
+
+</body>
+</html>

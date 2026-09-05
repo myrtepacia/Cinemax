@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your E-Ticket - Cinemax</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+  <style>
+
+    /* ==========================================================
+       PART 1: styles that every page of the website uses
+       ========================================================== */
+
+    /* The * means "every element on the page".
+       border-box makes padding and border count inside the width,
+       so boxes never get bigger than the size we set. */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background-color: #f9fafb;
+      color: #101828;
+      font-family: 'Outfit', Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    a {
+      color: #fb2c36;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    /* ---------- Buttons ---------- */
+
+    /* Every button starts with this class, then we add a colour class. */
+    .button {
+      display: inline-block;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .button-red {
+      background-color: #fb2c36;
+      color: #ffffff;
+    }
+
+    .button-red:hover {
+      background-color: #e7000b;
+    }
+
+    .button-outline {
+      background-color: #ffffff;
+      color: #101828;
+      border: 1px solid #e5e7eb;
+      font-weight: 600;
+    }
+
+    .button-outline:hover {
+      background-color: #f9fafb;
+    }
+
+    /* Grey button for movies you cannot book yet. */
+    .button-grey {
+      background-color: #e5e7eb;
+      color: #99a1af;
+    }
+
+    /* Makes a button as wide as the box it sits in. */
+    .button-wide {
+      display: block;
+      width: 100%;
+    }
+
+    /* ---------- Top bar ---------- */
+
+    .top-bar {
+      background-color: #ffffff;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    /* display: flex puts the logo, the menu and the buttons in one row.
+       justify-content: space-between spreads them left, middle and right. */
+    .top-bar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      max-width: 1280px;
+      width: 96%;
+      height: 64px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      color: #101828;
+      font-size: 20px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .menu {
+      display: flex;
+      gap: 2px;
+    }
+
+    .menu a {
+      padding: 8px 16px;
+      border-radius: 12px;
+      color: #6a7282;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .menu a:hover {
+      background-color: #f9fafb;
+      color: #101828;
+    }
+
+    .auth-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* ---------- Footer ---------- */
+
+    .site-footer {
+      background-color: #ffffff;
+      border-top: 1px solid #e5e7eb;
+      padding: 36px 20px 28px 20px;
+    }
+
+    .footer-inner {
+      max-width: 620px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .footer-inner .logo {
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+
+    .footer-text {
+      color: #6a7282;
+      font-size: 13px;
+    }
+
+    .footer-copyright {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #f3f4f6;
+      color: #99a1af;
+      font-size: 12px;
+    }
+
+    /* On a small screen (like a phone) let the top bar wrap
+       onto two lines instead of squeezing everything in. */
+    @media (max-width: 620px) {
+      .top-bar-inner {
+        height: auto;
+        padding: 12px 0 12px 0;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+
+    /* ==========================================================
+       PART 2: styles used only on this e-ticket page
+       ========================================================== */
+
+    .ticket-page {
+      max-width: 448px;
+      width: 92%;
+      margin: 0 auto;
+      padding: 48px 0 48px 0;
+    }
+
+    /* ---------- The green tick at the top ---------- */
+
+    .confirm-box {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    /* border-radius: 50% turns the square into a circle. */
+    .confirm-tick {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px auto;
+      border-radius: 50%;
+      background-color: #dcfce7;
+      color: #00bc7d;
+      font-size: 30px;
+      font-weight: 900;
+    }
+
+    .confirm-box h1 {
+      font-size: 24px;
+    }
+
+    .confirm-box p {
+      color: #6a7282;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    /* ---------- The ticket itself ---------- */
+
+    /* overflow: hidden keeps the purple header inside the rounded corners. */
+    .ticket {
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 24px;
+      overflow: hidden;
+    }
+
+    .ticket-header {
+      padding: 28px;
+      color: #ffffff;
+      background: linear-gradient(135deg, #312e81, #6d28d9, #9333ea);
+    }
+
+    .ticket-brand {
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+    }
+
+    .ticket-header h2 {
+      font-size: 20px;
+    }
+
+    .ticket-when {
+      color: #ddd6ff;
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    /* The dashed line, like a real ticket you tear. */
+    .ticket-tear {
+      border-top: 1px dashed #e5e7eb;
+    }
+
+    .ticket-body {
+      padding: 24px 28px;
+    }
+
+    /* Two details side by side. */
+    .ticket-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .ticket-label {
+      color: #99a1af;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .ticket-value {
+      font-size: 20px;
+      font-weight: 900;
+      margin-top: 4px;
+    }
+
+    /* The booking number is red. */
+    .ticket-reference {
+      color: #fb2c36;
+      letter-spacing: 1px;
+    }
+
+    /* Longer answers use smaller writing so they fit. */
+    .ticket-value-small {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* ---------- The QR code ---------- */
+
+    .ticket-qr {
+      padding: 20px;
+      background-color: #f9fafb;
+      border-radius: 16px;
+      text-align: center;
+    }
+
+    .ticket-qr img {
+      width: 180px;
+      height: 180px;
+      margin: 0 auto 10px auto;
+    }
+
+    .ticket-qr p {
+      color: #99a1af;
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+
+    /* ---------- The two buttons under the ticket ---------- */
+
+    .ticket-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    /* flex: 1 gives both buttons the same width. */
+    .ticket-actions .button {
+      flex: 1;
+      padding: 12px;
+    }
+
+    /* On a phone, stack the buttons instead. */
+    @media (max-width: 620px) {
+      .ticket-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== TOP BAR (the same on every page) ===== -->
+  <header class="top-bar">
+    <div class="top-bar-inner">
+
+      <a class="logo" href="index.html">CINEMAX</a>
+
+      <nav class="menu">
+        <a href="index.html#now-showing">Now Showing</a>
+        <a href="index.html#coming-soon">Upcoming Shows</a>
+        <!-- The staff page is hidden from customers. To show it in the
+             menu, delete this comment line and the closing line below.
+        <a href="admin.html">Admin</a>
+        -->
+      </nav>
+
+      <div class="auth-buttons">
+        <a class="button button-outline" href="signin.html">Sign In</a>
+        <a class="button button-red" href="signup.html">Sign Up</a>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="ticket-page">
+
+    <!-- ===== THE "IT WORKED" MESSAGE ===== -->
+    <div class="confirm-box">
+      <div class="confirm-tick">✓</div>
+      <h1>Booking Confirmed!</h1>
+      <p>Your e-ticket is ready below.</p>
+    </div>
+
+    <!-- ===== THE E-TICKET ===== -->
+    <div class="ticket">
+
+      <div class="ticket-header">
+        <p class="ticket-brand">CINEMAX</p>
+        <h2>The Reckoning</h2>
+        <p class="ticket-when">7:00 PM, Saturday, September 5, 2026</p>
+      </div>
+
+      <div class="ticket-tear"></div>
+
+      <div class="ticket-body">
+
+        <div class="ticket-pair">
+          <div>
+            <p class="ticket-label">Reference No.</p>
+            <p class="ticket-value ticket-reference">CX-8F3K92LM</p>
+          </div>
+          <div>
+            <p class="ticket-label">Seat(s)</p>
+            <p class="ticket-value">D5, D6</p>
+          </div>
+        </div>
+
+        <div class="ticket-pair">
+          <div>
+            <p class="ticket-label">Name</p>
+            <p class="ticket-value ticket-value-small">Juan Dela Cruz</p>
+          </div>
+          <div>
+            <p class="ticket-label">Total Paid</p>
+            <p class="ticket-value">₱735</p>
+          </div>
+        </div>
+
+        <div class="ticket-pair">
+          <div>
+            <p class="ticket-label">Snacks</p>
+            <p class="ticket-value ticket-value-small">Solo Combo, Gummy Candy</p>
+          </div>
+          <div>
+            <p class="ticket-label">Pickup</p>
+            <p class="ticket-value ticket-value-small">Concession counter</p>
+          </div>
+        </div>
+
+        <!-- Staff scan this at the door. It holds: CINEMAX:CX-8F3K92LM -->
+        <div class="ticket-qr">
+          <img src="photo/ticket-qr.png" alt="QR code for booking CX-8F3K92LM">
+          <p>CX-8F3K92LM</p>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="ticket-actions">
+      <a class="button button-outline" href="index.html">Back to Movies</a>
+      <a class="button button-red" href="book-the-reckoning.html">Book Another</a>
+    </div>
+
+  </main>
+
+  <!-- ===== FOOTER (the same on every page) ===== -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+
+      <a class="logo" href="index.html">CINEMAX</a>
+
+      <p class="footer-text">
+        Your next movie experience starts here. <br>
+        Book your seats, enjoy your snacks, and let the show begin.
+      </p>
+
+      <p class="footer-copyright">© 2026 Cinemax. All rights reserved.</p>
+
+    </div>
+  </footer>
+
+</body>
+</html>

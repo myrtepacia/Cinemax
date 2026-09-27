@@ -1426,17 +1426,21 @@ button.button:disabled {
   grid-area: left;
 }
 
+/* Ready, Picked Up and Sold each fill the whole column, so they come out
+   one size, one height, and centred on the same line as the price. */
 .order-row .order-action-btn,
 .order-row .sold-tag {
   grid-area: action;
-  justify-self: end;
+  width: 100%;
+  line-height: 20px;
+  text-align: center;
 }
 
-/* On a phone the price sits over its button on the right, and the order
-   details are centred beside the pair. */
+/* On a phone the price sits centred over its button on the right, and the
+   order details are centred beside the pair. */
 @media (max-width: 620px) {
   .order-row {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) 104px;
     grid-template-areas:
       "left price"
       "left action";
@@ -1465,7 +1469,7 @@ button.button:disabled {
 
 .order-price {
   grid-area: price;
-  justify-self: end;
+  justify-self: center;
   font-size: 16px;
   font-weight: 900;
   white-space: nowrap;

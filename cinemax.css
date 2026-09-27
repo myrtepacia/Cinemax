@@ -1426,34 +1426,39 @@ button.button:disabled {
   grid-area: left;
 }
 
-/* Ready, Picked Up and Sold each fill the whole column, so they come out
-   one size, one height, and centred on the same line as the price. */
+/* Ready, Picked Up and Sold keep their own size, centred in their column so
+   they sit on one line down the queue, like the prices beside them. */
 .order-row .order-action-btn,
 .order-row .sold-tag {
   grid-area: action;
-  width: 100%;
-  line-height: 20px;
-  text-align: center;
+  justify-self: center;
 }
 
-/* On a phone the price sits centred over its button on the right, and the
-   order details are centred beside the pair. */
+/* On a phone the button stays at the right edge with its price centred
+   above it, and the order details are centred beside the pair. */
 @media (max-width: 620px) {
   .order-row {
-    grid-template-columns: minmax(0, 1fr) 104px;
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
       "left price"
       "left action";
     column-gap: 12px;
   }
 
-  .order-price {
+  /* Each price gets the same small box at the right edge, about as wide as
+     a Ready or Sold button, so every price sits on one line down the queue
+     and the wider Picked Up button does not pull its price out of line. */
+  .order-row .order-price {
     align-self: end;
+    justify-self: end;
+    min-width: 62px;
+    text-align: center;
   }
 
   .order-row .order-action-btn,
   .order-row .sold-tag {
     align-self: start;
+    justify-self: end;
   }
 }
 
@@ -1833,10 +1838,11 @@ button.button:disabled {
     grid-area: movie;
   }
 
+  /* Centred above the Remove button, like the prices on the Dashboard */
   .movie-table .sold-cell {
     grid-area: sold;
     align-self: end;
-    justify-self: end;
+    justify-self: center;
     font-weight: 900;
     white-space: nowrap;
   }

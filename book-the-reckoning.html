@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Reckoning - Cinemax</title>
+  <title>The Reckoning</title>
+  <link rel="icon" type="image/png" href="photo/logo.png">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
 
   <style>
@@ -90,6 +91,9 @@
     /* Top bar */
 
     .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
       background-color: #ffffff;
       border-bottom: 1px solid #f3f4f6;
     }
@@ -106,10 +110,21 @@
     }
 
     .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
       color: #101828;
       font-size: 20px;
       font-weight: 900;
       text-decoration: none;
+    }
+
+    /* logo.png has clear space around the film strip, so the negative margin
+       lines the strip itself up with the edge of the page. */
+    .logo-mark {
+      width: 49px;
+      height: 44px;
+      margin-left: -6px;
     }
 
     .menu {
@@ -151,7 +166,7 @@
     }
 
     .footer-inner .logo {
-      display: inline-block;
+      display: inline-flex;
       margin-bottom: 10px;
     }
 
@@ -170,10 +185,151 @@
 
     @media (max-width: 620px) {
       .top-bar-inner {
-        height: auto;
-        padding: 12px 0 12px 0;
-        flex-wrap: wrap;
-        justify-content: center;
+        width: 94%;
+        height: 58px;
+      }
+
+      .logo {
+        font-size: 15px;
+      }
+
+      .logo-mark {
+        width: 40px;
+        height: 36px;
+        margin-left: -5px;
+      }
+    }
+
+    /* Phone menu: the same rules as section 4 of cinemax.css. Below 760px
+       the links fold away behind a hamburger and drop down under the bar. */
+
+    .menu-checkbox {
+      display: none;
+    }
+
+    /* display: contents makes .bar-nav itself vanish from the layout, so the nav
+       and the buttons inside it sit in the bar's own flex row. Below 760px it
+       becomes a real box again and turns into the drawer. */
+    .bar-nav {
+      display: contents;
+    }
+
+    .menu-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background-color: #ffffff;
+      cursor: pointer;
+    }
+    .menu-toggle:hover {
+      border-color: #fb2c36;
+    }
+
+    .menu-toggle span {
+      position: relative;
+      display: block;
+      width: 18px;
+      height: 2px;
+      border-radius: 2px;
+      background-color: #101828;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+
+    .menu-toggle span::before,
+    .menu-toggle span::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      width: 18px;
+      height: 2px;
+      border-radius: 2px;
+      background-color: #101828;
+      transition: transform 0.18s ease;
+    }
+
+    .menu-toggle span::before {
+      transform: translateY(-6px);
+    }
+    .menu-toggle span::after {
+      transform: translateY(6px);
+    }
+
+    /* Open: the middle bar goes transparent and the outer two cross into an X. */
+    .menu-checkbox:checked ~ .menu-toggle span {
+      background-color: transparent;
+    }
+    .menu-checkbox:checked ~ .menu-toggle span::before {
+      transform: rotate(45deg);
+    }
+    .menu-checkbox:checked ~ .menu-toggle span::after {
+      transform: rotate(-45deg);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .menu-toggle span,
+      .menu-toggle span::before,
+      .menu-toggle span::after {
+        transition: none;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .menu-toggle {
+        display: inline-flex;
+      }
+
+      /* .top-bar is position: sticky, so it is already a positioning parent and
+         the drawer drops directly beneath it. */
+      .bar-nav {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 20;
+        display: none;
+        flex-direction: column;
+        gap: 4px;
+        padding: 12px;
+        background-color: #ffffff;
+        border-bottom: 1px solid #e5e7eb;
+        box-shadow: 0 12px 24px rgba(16, 24, 40, 0.08);
+      }
+
+      .menu-checkbox:checked ~ .bar-nav {
+        display: flex;
+      }
+
+      .bar-nav .menu {
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      /* The words sit in the middle, in line with the buttons below them */
+      .bar-nav .menu a {
+        padding: 12px 14px;
+        font-size: 15px;
+        text-align: center;
+      }
+
+      .bar-nav .auth-buttons {
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 4px;
+        padding-top: 12px;
+        border-top: 1px solid #f3f4f6;
+      }
+
+      .bar-nav .auth-buttons .button {
+        width: 100%;
+        padding: 12px;
+        font-size: 15px;
+        line-height: 24px;
+        text-align: center;
       }
     }
 
@@ -695,19 +851,26 @@
   <header class="top-bar">
     <div class="top-bar-inner">
 
-      <a class="logo" href="index.html">CINEMAX</a>
+      <a class="logo" href="index.html"><img class="logo-mark" src="photo/logo.png" alt="" width="49" height="44">CINEMAX</a>
 
-      <nav class="menu">
-        <a href="index.html#now-showing">Now Showing</a>
-        <a href="index.html#coming-soon">Upcoming Shows</a>
-        <!-- Staff page link, hidden from customers
-        <a href="admin.html">Admin</a>
-        -->
-      </nav>
+      <input class="menu-checkbox" type="checkbox" id="menu-open" aria-label="Menu">
+      <label class="menu-toggle" for="menu-open"><span></span></label>
 
-      <div class="auth-buttons">
-        <a class="button button-outline" href="signin.html">Sign In</a>
-        <a class="button button-red" href="signup.html">Sign Up</a>
+      <div class="bar-nav">
+
+        <nav class="menu">
+          <a href="index.html#now-showing">Now Showing</a>
+          <a href="index.html#coming-soon">Upcoming Shows</a>
+          <!-- Staff page link, hidden from customers
+          <a href="admin.html">Admin</a>
+          -->
+        </nav>
+
+        <div class="auth-buttons">
+          <a class="button button-outline" href="signin.html">Sign In</a>
+          <a class="button button-red" href="signup.html">Sign Up</a>
+        </div>
+
       </div>
 
     </div>
@@ -1113,7 +1276,7 @@
   <footer class="site-footer">
     <div class="footer-inner">
 
-      <a class="logo" href="index.html">CINEMAX</a>
+      <a class="logo" href="index.html"><img class="logo-mark" src="photo/logo.png" alt="" width="49" height="44">CINEMAX</a>
 
       <p class="footer-text">
         Your next movie experience starts here. <br>

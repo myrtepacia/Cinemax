@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Movies - Cinemax</title>
+  <title>Movies</title>
+  <link rel="icon" type="image/png" href="photo/logo.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,11 +15,17 @@
 
   <header class="top-bar">
     <div class="top-bar-inner">
-      <a class="logo" href="index.html">CINEMAX</a>
+      <a class="logo" href="index.html"><img class="logo-mark" src="photo/logo.png" alt="" width="49" height="44">CINEMAX</a>
       <input class="menu-checkbox" type="checkbox" id="menu-open" aria-label="Menu">
       <label class="menu-toggle" for="menu-open"><span></span></label>
       <div class="bar-nav">
-        <nav class="menu"></nav>
+        <nav class="menu menu-staff">
+          <a href="admin.html">Dashboard</a>
+          <a href="admin-movies.html" class="current">Movies</a>
+          <a href="admin-add-movie.html">Add Movie</a>
+          <a href="admin-tickets.html">Tickets</a>
+          <a href="admin-scanner.html">Scanner</a>
+        </nav>
         <div class="auth-buttons">
           <button class="button button-red" type="button" id="sign-out">Sign Out</button>
         </div>
@@ -34,6 +41,7 @@
         <a href="admin.html">Dashboard</a>
         <a href="admin-movies.html" class="current">Movies</a>
         <a href="admin-add-movie.html">Add Movie</a>
+        <a href="admin-tickets.html">Tickets</a>
         <a href="admin-scanner.html">Scanner</a>
       </nav>
     </aside>
@@ -41,39 +49,11 @@
     <div class="admin-head">
       <h1>Movies</h1>
       <p class="admin-intro">Everything on the listings. Take a movie off, or add a new one.</p>
-
-      <p class="form-message hidden" id="page-message"></p>
-
-      <div class="stat-row">
-
-        <div class="stat">
-          <p class="stat-name">Movies Listed</p>
-          <p class="stat-figure" id="count-total">6</p>
-          <p class="stat-extra" id="count-showing-note">4 showing now</p>
-        </div>
-
-        <div class="stat">
-          <p class="stat-name">Now Showing</p>
-          <p class="stat-figure" id="count-showing">4</p>
-          <p class="stat-extra">On sale today</p>
-        </div>
-
-        <div class="stat">
-          <p class="stat-name">Upcoming</p>
-          <p class="stat-figure" id="count-upcoming">2</p>
-          <p class="stat-extra">Not on sale yet</p>
-        </div>
-
-        <div class="stat">
-          <p class="stat-name">Tickets Sold</p>
-          <p class="stat-figure" id="count-tickets">180</p>
-          <p class="stat-extra">Across all movies</p>
-        </div>
-
-      </div>
     </div>
 
     <main class="admin-page">
+
+      <p class="form-message hidden" id="page-message"></p>
 
       <section class="panel">
 
@@ -117,7 +97,7 @@
 
               <td class="hide-small"><span class="label-showing">Now Showing</span></td>
               <td class="right hide-small">&#8369;220</td>
-              <td class="right">52</td>
+              <td class="right sold-cell">52</td>
               <td class="right"><button class="remove-button" type="button">Remove</button></td>
 
             </tr>
@@ -135,7 +115,7 @@
               </td>
               <td class="hide-small"><span class="label-showing">Now Showing</span></td>
               <td class="right hide-small">&#8369;220</td>
-              <td class="right">44</td>
+              <td class="right sold-cell">44</td>
               <td class="right"><button class="remove-button" type="button">Remove</button></td>
             </tr>
 
@@ -152,7 +132,7 @@
               </td>
               <td class="hide-small"><span class="label-showing">Now Showing</span></td>
               <td class="right hide-small">&#8369;220</td>
-              <td class="right">61</td>
+              <td class="right sold-cell">61</td>
               <td class="right"><button class="remove-button" type="button">Remove</button></td>
             </tr>
 
@@ -169,7 +149,7 @@
               </td>
               <td class="hide-small"><span class="label-showing">Now Showing</span></td>
               <td class="right hide-small">&#8369;250</td>
-              <td class="right">23</td>
+              <td class="right sold-cell">23</td>
               <td class="right"><button class="remove-button" type="button">Remove</button></td>
             </tr>
 
@@ -186,7 +166,7 @@
               </td>
               <td class="hide-small"><span class="label-soon">Upcoming</span></td>
               <td class="right hide-small">&#8369;220</td>
-              <td class="right">0</td>
+              <td class="right sold-cell">0</td>
               <td class="right"><button class="remove-button" type="button">Remove</button></td>
             </tr>
 
@@ -203,7 +183,7 @@
               </td>
               <td class="hide-small"><span class="label-soon">Upcoming</span></td>
               <td class="right hide-small">&#8369;220</td>
-              <td class="right">0</td>
+              <td class="right sold-cell">0</td>
               <td class="right"><button class="remove-button" type="button">Remove</button></td>
             </tr>
 
@@ -218,7 +198,7 @@
 
   <footer class="site-footer">
     <div class="footer-inner">
-      <a class="logo" href="index.html">CINEMAX</a>
+      <a class="logo" href="index.html"><img class="logo-mark" src="photo/logo.png" alt="" width="49" height="44">CINEMAX</a>
       <p class="footer-text">
         Your next movie experience starts here. <br>
         Book your seats, enjoy your snacks, and let the show begin.

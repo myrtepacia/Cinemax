@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cinemax</title>
+  <link rel="icon" type="image/png" href="photo/logo.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +17,7 @@
   <header class="top-bar">
     <div class="top-bar-inner">
 
-      <a class="logo" href="index.html">CINEMAX</a>
+      <a class="logo" href="index.html"><img class="logo-mark" src="photo/logo.png" alt="" width="49" height="44">CINEMAX</a>
 
       <input class="menu-checkbox" type="checkbox" id="menu-open" aria-label="Menu">
       <label class="menu-toggle" for="menu-open"><span></span></label>
@@ -171,7 +172,7 @@
   <footer class="site-footer">
     <div class="footer-inner">
 
-      <a class="logo" href="index.html">CINEMAX</a>
+      <a class="logo" href="index.html"><img class="logo-mark" src="photo/logo.png" alt="" width="49" height="44">CINEMAX</a>
 
       <p class="footer-text">
         Your next movie experience starts here. <br>
@@ -182,6 +183,16 @@
 
     </div>
   </footer>
+
+  <script>
+    // These menu links jump down this same page rather than opening a new
+    // one, so on a phone the drop-down menu has to be shut by hand.
+    document.querySelectorAll('.menu a').forEach(function (link) {
+      link.addEventListener('click', function () {
+        document.getElementById('menu-open').checked = false;
+      });
+    });
+  </script>
 
 </body>
 </html>

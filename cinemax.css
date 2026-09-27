@@ -102,10 +102,21 @@ button.button:disabled {
 }
 
 .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   color: #101828;
   font-size: 20px;
   font-weight: 900;
   text-decoration: none;
+}
+
+/* logo.png has clear space around the film strip, so the negative margin
+   lines the strip itself up with the edge of the page. */
+.logo-mark {
+  width: 49px;
+  height: 44px;
+  margin-left: -6px;
 }
 
 .menu {
@@ -145,6 +156,12 @@ button.button:disabled {
 
   .logo {
     font-size: 15px;
+  }
+
+  .logo-mark {
+    width: 40px;
+    height: 36px;
+    margin-left: -5px;
   }
 
   .menu a {
@@ -194,6 +211,12 @@ button.button:disabled {
    becomes a real box again and turns into the drawer. */
 .bar-nav {
   display: contents;
+}
+
+/* The staff pages have their links in the sidebar on a wide screen, so their
+   copy of the links in the bar only shows up inside the drawer. */
+.menu-staff {
+  display: none;
 }
 
 .menu-toggle {
@@ -291,9 +314,15 @@ button.button:disabled {
     gap: 2px;
   }
 
+  .bar-nav .menu-staff {
+    display: flex;
+  }
+
+  /* The words sit in the middle, in line with the buttons below them */
   .bar-nav .menu a {
     padding: 12px 14px;
     font-size: 15px;
+    text-align: center;
   }
 
   .bar-nav .auth-buttons {
@@ -310,15 +339,6 @@ button.button:disabled {
     font-size: 15px;
     line-height: 24px;
     text-align: center;
-  }
-
-  /* A staff page has no nav links, so there is nothing to collapse: hide the
-     hamburger and leave Sign Out in the bar where it already fits. */
-  .top-bar-inner:has(.menu:empty) .menu-toggle {
-    display: none;
-  }
-  .top-bar-inner:has(.menu:empty) .bar-nav {
-    display: contents;
   }
 }
 
@@ -337,7 +357,7 @@ button.button:disabled {
 }
 
 .footer-inner .logo {
-  display: inline-block;
+  display: inline-flex;
   margin-bottom: 10px;
 }
 
@@ -1133,7 +1153,7 @@ button.button:disabled {
 /* The staff pages keep their links in a sidebar down the left. The page title
    and any stat cards sit in their own row above, so the sidebar starts level
    with the main box. Below 760px there is no room beside the content, so the
-   sidebar turns into a row of tabs on top. */
+   links move into the hamburger menu in the top bar instead (section 4). */
 
 .admin-layout {
   display: grid;
@@ -1221,7 +1241,6 @@ button.button:disabled {
   .admin-layout {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-      "side"
       "head"
       "main";
     gap: 20px;
@@ -1229,30 +1248,26 @@ button.button:disabled {
   }
 
   .admin-sidebar {
-    position: static;
-    padding: 6px;
-  }
-
-  .sidebar-title {
     display: none;
-  }
-
-  .sidebar-menu {
-    flex-direction: row;
-    overflow-x: auto;
-  }
-
-  .sidebar-menu a {
-    white-space: nowrap;
   }
 }
 
+/* A panel title with a button on its right, on every screen size */
 .panel-head {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 0 16px;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.panel-head .panel-note {
+  margin-bottom: 0;
+}
+
+.panel-head .button {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .panel {
@@ -1318,6 +1333,42 @@ button.button:disabled {
   color: #fb2c36;
 }
 
+/* On a phone a tall card per number wastes the screen, so each card becomes
+   one line: the words on the left, the number on the right, both centred. */
+@media (max-width: 620px) {
+  .stat-row {
+    gap: 12px;
+  }
+
+  .stat {
+    flex-basis: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "name  figure"
+      "extra figure";
+    align-items: center;
+    column-gap: 16px;
+    padding: 16px 20px;
+  }
+
+  .stat-name {
+    grid-area: name;
+    align-self: end;
+  }
+
+  .stat-extra {
+    grid-area: extra;
+    align-self: start;
+  }
+
+  .stat-figure {
+    grid-area: figure;
+    margin-top: 0;
+    font-size: 24px;
+  }
+}
+
 /* 12. SNACK ORDER QUEUE ----------------------------------------------------*/
 
 .order-group {
@@ -1359,18 +1410,47 @@ button.button:disabled {
   font-size: 14px;
 }
 
+/* Every order is the same three columns, so the prices and the buttons line
+   up down the whole queue, even across the three groups. */
 .order-row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 90px 110px;
+  grid-template-areas: "left price action";
   align-items: center;
-  gap: 8px 16px;
+  gap: 6px 16px;
   padding: 14px 0 14px 0;
   border-top: 1px solid #f3f4f6;
 }
 
 .order-left {
-  flex: 1;
-  min-width: 200px;
+  grid-area: left;
+}
+
+.order-row .order-action-btn,
+.order-row .sold-tag {
+  grid-area: action;
+  justify-self: end;
+}
+
+/* On a phone the price sits over its button on the right, and the order
+   details are centred beside the pair. */
+@media (max-width: 620px) {
+  .order-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "left price"
+      "left action";
+    column-gap: 12px;
+  }
+
+  .order-price {
+    align-self: end;
+  }
+
+  .order-row .order-action-btn,
+  .order-row .sold-tag {
+    align-self: start;
+  }
 }
 
 .order-items {
@@ -1384,8 +1464,11 @@ button.button:disabled {
 }
 
 .order-price {
+  grid-area: price;
+  justify-self: end;
   font-size: 16px;
   font-weight: 900;
+  white-space: nowrap;
 }
 
 .order-status {
@@ -1446,6 +1529,12 @@ button.button:disabled {
 }
 
 .right {
+  text-align: right;
+}
+
+/* .movie-table th sets text-align: left, which would otherwise beat .right
+   and leave PRICE and SOLD out of line with the numbers under them. */
+.movie-table th.right {
   text-align: right;
 }
 
@@ -1699,6 +1788,68 @@ button.button:disabled {
   .add-grid {
     grid-template-columns: 1fr;
   }
+
+  .panel {
+    padding: 20px 18px;
+  }
+
+  /* On a phone the table becomes a list laid out like the snack orders: the
+     movie on the left, the tickets sold over the Remove button on the right. */
+  .movie-table,
+  .movie-table tbody {
+    display: block;
+  }
+
+  .movie-table thead {
+    display: none;
+  }
+
+  .movie-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "movie sold"
+      "movie action";
+    align-items: center;
+    gap: 6px 12px;
+    padding: 12px 0;
+    border-top: 1px solid #f3f4f6;
+  }
+
+  .movie-table tr:first-child {
+    border-top: none;
+  }
+
+  .movie-table td {
+    padding: 0;
+    border-bottom: none;
+  }
+
+  .movie-table td:first-child {
+    grid-area: movie;
+  }
+
+  .movie-table .sold-cell {
+    grid-area: sold;
+    align-self: end;
+    justify-self: end;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  /* The column heading is hidden, so the number says what it counts */
+  .movie-table .sold-cell::after {
+    content: " sold";
+    color: #6a7282;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .movie-table td:last-child {
+    grid-area: action;
+    align-self: start;
+    justify-self: end;
+  }
 }
 
 /* 14. TICKET SCANNER -------------------------------------------------------*/
@@ -1757,7 +1908,147 @@ button.button:disabled {
   margin-bottom: 12px;
 }
 
-/* 15. STATUS PAGES ---------------------------------------------------------*/
+/* 15. TICKET LOOKUP --------------------------------------------------------*/
+
+.search-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.search-field {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.search-field input {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.search-field input::placeholder {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* The same height as the box beside it */
+.search-row .button {
+  padding: 12px 22px;
+}
+
+#search-message {
+  margin: 16px 0 0 0;
+}
+
+.ticket-result {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #f9fafb;
+  border: 1px solid #f3f4f6;
+  border-radius: 14px;
+}
+
+.ticket-result-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ticket-result-code {
+  color: #fb2c36;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.ticket-result-movie {
+  font-size: 20px;
+  margin-top: 2px;
+}
+
+.status-badge {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.status-unused {
+  background-color: #dcfce7;
+  color: #036e46;
+}
+.status-used {
+  background-color: #fef9c2;
+  color: #a65f00;
+}
+.status-refunded {
+  background-color: #e5e7eb;
+  color: #4a5565;
+}
+
+.ticket-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px 24px;
+  margin: 18px 0 0 0;
+}
+
+.ticket-facts dt {
+  color: #99a1af;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.ticket-facts dd {
+  margin: 2px 0 0 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.refund-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.refund-note {
+  flex: 1;
+  min-width: 200px;
+  color: #4a5565;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.refund-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 620px) {
+  .ticket-result {
+    padding: 16px;
+  }
+
+  .refund-row .button,
+  .refund-buttons {
+    width: 100%;
+  }
+
+  .refund-buttons .button {
+    flex: 1;
+  }
+}
+
+/* 16. STATUS PAGES ---------------------------------------------------------*/
 
 .confirming-page {
   max-width: 448px;
@@ -1785,7 +2076,7 @@ button.button:disabled {
   .spinner { animation-duration: 3s; }
 }
 
-/* 16. MESSAGES AND EMPTY STATES --------------------------------------------*/
+/* 17. MESSAGES AND EMPTY STATES --------------------------------------------*/
 
 .form-message {
   padding: 12px 14px;
@@ -1838,7 +2129,7 @@ button.button:disabled {
   margin-bottom: 4px;
 }
 
-/* 17. UTILITIES ------------------------------------------------------------*/
+/* 18. UTILITIES ------------------------------------------------------------*/
 
 .hidden {
   display: none !important;

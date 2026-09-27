@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Staff Dashboard - Cinemax</title>
+  <title>Staff Dashboard</title>
+  <link rel="icon" type="image/png" href="photo/logo.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,11 +49,17 @@
 
   <header class="top-bar">
     <div class="top-bar-inner">
-      <a class="logo" href="index.html">CINEMAX</a>
+      <a class="logo" href="index.html"><img class="logo-mark" src="photo/logo.png" alt="" width="49" height="44">CINEMAX</a>
       <input class="menu-checkbox" type="checkbox" id="menu-open" aria-label="Menu">
       <label class="menu-toggle" for="menu-open"><span></span></label>
       <div class="bar-nav">
-        <nav class="menu"></nav>
+        <nav class="menu menu-staff">
+          <a href="admin.html" class="current">Dashboard</a>
+          <a href="admin-movies.html">Movies</a>
+          <a href="admin-add-movie.html">Add Movie</a>
+          <a href="admin-tickets.html">Tickets</a>
+          <a href="admin-scanner.html">Scanner</a>
+        </nav>
         <div class="auth-buttons">
           <button class="button button-red" type="button" id="sign-out">Sign Out</button>
         </div>
@@ -68,6 +75,7 @@
         <a href="admin.html" class="current">Dashboard</a>
         <a href="admin-movies.html">Movies</a>
         <a href="admin-add-movie.html">Add Movie</a>
+        <a href="admin-tickets.html">Tickets</a>
         <a href="admin-scanner.html">Scanner</a>
       </nav>
     </aside>
@@ -207,7 +215,7 @@
 
   <footer class="site-footer">
     <div class="footer-inner">
-      <a class="logo" href="index.html">CINEMAX</a>
+      <a class="logo" href="index.html"><img class="logo-mark" src="photo/logo.png" alt="" width="49" height="44">CINEMAX</a>
       <p class="footer-text">
         Your next movie experience starts here. <br>
         Book your seats, enjoy your snacks, and let the show begin.

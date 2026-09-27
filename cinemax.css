@@ -1130,33 +1130,129 @@ button.button:disabled {
   margin-bottom: 20px;
 }
 
-.admin-menu {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 28px;
+/* The staff pages keep their links in a sidebar down the left. The page title
+   and any stat cards sit in their own row above, so the sidebar starts level
+   with the main box. Below 760px there is no room beside the content, so the
+   sidebar turns into a row of tabs on top. */
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  grid-template-areas:
+    ".    head"
+    "side main";
+  gap: 24px 32px;
+  align-items: start;
+  max-width: 1180px;
+  width: 92%;
+  margin: 0 auto;
+  padding: 40px 0 64px 0;
 }
 
-.admin-menu a {
-  padding: 10px 18px;
+.admin-head {
+  grid-area: head;
+}
+
+.admin-head h1 {
+  font-size: 32px;
+  margin-bottom: 6px;
+}
+
+/* The grid gap already spaces the head from the box below it */
+.admin-head > :last-child {
+  margin-bottom: 0;
+}
+
+/* Inside the layout the page no longer centres itself: the grid does that. */
+.admin-layout .admin-page {
+  grid-area: main;
+  max-width: none;
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
+/* Sticks just under the top bar, which is 64px tall. */
+.admin-sidebar {
+  grid-area: side;
+  position: sticky;
+  top: 88px;
+  padding: 16px 12px;
   background-color: #ffffff;
   border: 1px solid #e5e7eb;
+  border-radius: 16px;
+}
+
+.sidebar-title {
+  padding: 0 12px 6px 12px;
+  color: #99a1af;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-menu a {
+  display: block;
+  padding: 10px 12px;
   border-radius: 12px;
   color: #6a7282;
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
 }
-.admin-menu a:hover {
-  border-color: #fb2c36;
-  color: #fb2c36;
+.sidebar-menu a:hover {
+  background-color: #f9fafb;
+  color: #101828;
 }
 
-.admin-menu a.current {
+.sidebar-menu a.current {
   background-color: #fb2c36;
-  border-color: #fb2c36;
   color: #ffffff;
+}
+
+@media (max-width: 760px) {
+  .admin-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "side"
+      "head"
+      "main";
+    gap: 20px;
+    padding-top: 24px;
+  }
+
+  .admin-sidebar {
+    position: static;
+    padding: 6px;
+  }
+
+  .sidebar-title {
+    display: none;
+  }
+
+  .sidebar-menu {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .sidebar-menu a {
+    white-space: nowrap;
+  }
+}
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0 16px;
 }
 
 .panel {
@@ -1602,12 +1698,6 @@ button.button:disabled {
 
   .add-grid {
     grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 620px) {
-  .admin-menu {
-    flex-wrap: wrap;
   }
 }
 

@@ -26,49 +26,58 @@
     </div>
   </header>
 
-  <main class="admin-page">
+  <div class="admin-layout">
 
-    <h1>Ticket Scanner</h1>
-    <p class="admin-intro">Check tickets at the door. <span id="signed-in-as">Signed in as Door Scanner.</span></p>
+    <aside class="admin-sidebar">
+      <nav class="sidebar-menu">
+        <p class="sidebar-title">Staff</p>
+        <a href="admin-scanner.html" class="current">Scanner</a>
+      </nav>
+    </aside>
 
-    <nav class="admin-menu">
-      <a href="admin-scanner.html" class="current">Scanner</a>
-    </nav>
-
-    <div class="panel camera-panel">
-
-      <p class="panel-note">Point the camera at the QR code on the ticket</p>
-
-      <div class="camera-video" id="camera-video"></div>
-
-      <p class="scan-result scan-result-good hidden">
-        Valid ticket
-        <span class="scan-result-who">Juan Dela Cruz &bull; Joker &bull; Seats C5, C6</span>
-      </p>
-
-      <p class="scan-result scan-result-used hidden">
-        Already scanned
-        <span class="scan-result-who">Scanned at 4:02 PM &bull; CMX-8F41K2</span>
-      </p>
-
-      <p class="scan-result scan-result-bad hidden">
-        Not a valid ticket
-        <span class="scan-result-who">No booking matches that code</span>
-      </p>
-
-      <div class="scan-actions hidden" id="scan-actions">
-        <button class="button button-red" id="confirm-booking" type="button">Confirm booking</button>
-        <button class="button button-outline" id="cancel-booking" type="button">Cancel</button>
-      </div>
-
-      <p class="camera-message" id="camera-message">Press Start camera to scan a ticket.</p>
-
-      <button class="button button-red" id="start-camera" type="button">Start camera</button>
-      <button class="button button-outline hidden" id="close-camera" type="button">Close camera</button>
-
+    <div class="admin-head">
+      <h1>Ticket Scanner</h1>
+      <p class="admin-intro">Check tickets at the door. <span id="signed-in-as">Signed in as Door Scanner.</span></p>
     </div>
 
-  </main>
+    <main class="admin-page">
+
+      <div class="panel camera-panel">
+
+        <p class="panel-note">Point the camera at the QR code on the ticket</p>
+
+        <div class="camera-video" id="camera-video"></div>
+
+        <p class="scan-result scan-result-good hidden">
+          Valid ticket
+          <span class="scan-result-who">Juan Dela Cruz &bull; Joker &bull; Seats C5, C6</span>
+        </p>
+
+        <p class="scan-result scan-result-used hidden">
+          Already scanned
+          <span class="scan-result-who">Scanned at 4:02 PM &bull; CMX-8F41K2</span>
+        </p>
+
+        <p class="scan-result scan-result-bad hidden">
+          Not a valid ticket
+          <span class="scan-result-who">No booking matches that code</span>
+        </p>
+
+        <div class="scan-actions hidden" id="scan-actions">
+          <button class="button button-red" id="confirm-booking" type="button">Confirm booking</button>
+          <button class="button button-outline" id="cancel-booking" type="button">Cancel</button>
+        </div>
+
+        <p class="camera-message" id="camera-message">Press Start camera to scan a ticket.</p>
+
+        <button class="button button-red" id="start-camera" type="button">Start camera</button>
+        <button class="button button-outline hidden" id="close-camera" type="button">Close camera</button>
+
+      </div>
+
+    </main>
+
+  </div>
 
   <script>
     (function () {

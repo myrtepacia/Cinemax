@@ -26,296 +26,195 @@
     </div>
   </header>
 
-  <main class="admin-page">
+  <div class="admin-layout">
 
-    <h1>Movies</h1>
-    <p class="admin-intro">Add a movie, upload its poster, or take one off the listings.</p>
+    <aside class="admin-sidebar">
+      <nav class="sidebar-menu">
+        <p class="sidebar-title">Staff</p>
+        <a href="admin.html">Dashboard</a>
+        <a href="admin-movies.html" class="current">Movies</a>
+        <a href="admin-add-movie.html">Add Movie</a>
+        <a href="admin-scanner.html">Scanner</a>
+      </nav>
+    </aside>
 
-    <nav class="admin-menu">
-      <a href="admin.html">Dashboard</a>
-      <a href="admin-movies.html" class="current">Movies</a>
-      <a href="admin-scanner.html">Scanner</a>
-    </nav>
+    <div class="admin-head">
+      <h1>Movies</h1>
+      <p class="admin-intro">Everything on the listings. Take a movie off, or add a new one.</p>
 
-    <p class="form-message hidden" id="page-message"></p>
+      <p class="form-message hidden" id="page-message"></p>
 
-    <div class="stat-row">
+      <div class="stat-row">
 
-      <div class="stat">
-        <p class="stat-name">Movies Listed</p>
-        <p class="stat-figure" id="count-total">6</p>
-        <p class="stat-extra" id="count-showing-note">4 showing now</p>
-      </div>
-
-      <div class="stat">
-        <p class="stat-name">Now Showing</p>
-        <p class="stat-figure" id="count-showing">4</p>
-        <p class="stat-extra">On sale today</p>
-      </div>
-
-      <div class="stat">
-        <p class="stat-name">Upcoming</p>
-        <p class="stat-figure" id="count-upcoming">2</p>
-        <p class="stat-extra">Not on sale yet</p>
-      </div>
-
-      <div class="stat">
-        <p class="stat-name">Tickets Sold</p>
-        <p class="stat-figure" id="count-tickets">180</p>
-        <p class="stat-extra">Across all movies</p>
-      </div>
-
-    </div>
-
-    <section class="panel">
-
-      <h2>All movies</h2>
-      <p class="panel-note">Everything currently listed on the website.</p>
-
-      <p class="loading-note hidden" id="movies-loading">Loading the listings&hellip;</p>
-
-      <table class="movie-table" id="movie-table">
-
-        <thead>
-          <tr>
-            <th>Movie</th>
-            <th class="hide-small">Status</th>
-            <th class="right hide-small">Price</th>
-            <th class="right">Sold</th>
-            <th></th>
-          </tr>
-        </thead>
-
-        <tbody id="movie-rows">
-
-          <tr>
-
-            <td>
-              <span class="cell-with-poster">
-                <img class="table-poster" src="photo/eternal-sunshine.jpg"
-                     alt="Eternal Sunshine of the Spotless Mind poster"
-                     width="40" height="54" loading="lazy" decoding="async">
-                <span>
-                  <span class="movie-name">Eternal Sunshine of the Spotless Mind</span>
-                  <span class="movie-sub">Romance, Drama, 1h 48m, PG-13</span>
-                </span>
-              </span>
-            </td>
-
-            <td class="hide-small"><span class="label-showing">Now Showing</span></td>
-            <td class="right hide-small">&#8369;220</td>
-            <td class="right">52</td>
-            <td class="right"><button class="remove-button" type="button">Remove</button></td>
-
-          </tr>
-
-          <tr>
-            <td>
-              <span class="cell-with-poster">
-                <img class="table-poster" src="photo/Pieces-of-us.jpg" alt="Pieces of Us poster"
-                     width="40" height="54" loading="lazy" decoding="async">
-                <span>
-                  <span class="movie-name">Pieces of Us</span>
-                  <span class="movie-sub">Romance, Drama, 1h 52m, PG-13</span>
-                </span>
-              </span>
-            </td>
-            <td class="hide-small"><span class="label-showing">Now Showing</span></td>
-            <td class="right hide-small">&#8369;220</td>
-            <td class="right">44</td>
-            <td class="right"><button class="remove-button" type="button">Remove</button></td>
-          </tr>
-
-          <tr>
-            <td>
-              <span class="cell-with-poster">
-                <img class="table-poster" src="photo/Joker.jpg" alt="Joker poster"
-                     width="40" height="54" loading="lazy" decoding="async">
-                <span>
-                  <span class="movie-name">Joker</span>
-                  <span class="movie-sub">Crime, Thriller, 2h 2m, R-16</span>
-                </span>
-              </span>
-            </td>
-            <td class="hide-small"><span class="label-showing">Now Showing</span></td>
-            <td class="right hide-small">&#8369;220</td>
-            <td class="right">61</td>
-            <td class="right"><button class="remove-button" type="button">Remove</button></td>
-          </tr>
-
-          <tr>
-            <td>
-              <span class="cell-with-poster">
-                <img class="table-poster" src="photo/The-Reckoning.jpg" alt="The Reckoning poster"
-                     width="40" height="54" loading="lazy" decoding="async">
-                <span>
-                  <span class="movie-name">The Reckoning</span>
-                  <span class="movie-sub">Action, Thriller, 1h 58m, R-16</span>
-                </span>
-              </span>
-            </td>
-            <td class="hide-small"><span class="label-showing">Now Showing</span></td>
-            <td class="right hide-small">&#8369;250</td>
-            <td class="right">23</td>
-            <td class="right"><button class="remove-button" type="button">Remove</button></td>
-          </tr>
-
-          <tr>
-            <td>
-              <span class="cell-with-poster">
-                <img class="table-poster" src="photo/Hush.jpg" alt="Hush poster"
-                     width="40" height="54" loading="lazy" decoding="async">
-                <span>
-                  <span class="movie-name">Hush</span>
-                  <span class="movie-sub">Horror, Thriller, 1h 22m, R-16</span>
-                </span>
-              </span>
-            </td>
-            <td class="hide-small"><span class="label-soon">Upcoming</span></td>
-            <td class="right hide-small">&#8369;220</td>
-            <td class="right">0</td>
-            <td class="right"><button class="remove-button" type="button">Remove</button></td>
-          </tr>
-
-          <tr>
-            <td>
-              <span class="cell-with-poster">
-                <img class="table-poster" src="photo/Broken-%5Bof%5D-Love.jpg" alt="Broken [of] Love poster"
-                     width="40" height="54" loading="lazy" decoding="async">
-                <span>
-                  <span class="movie-name">Broken [of] Love</span>
-                  <span class="movie-sub">Romance, Drama, 1h 45m, PG-13</span>
-                </span>
-              </span>
-            </td>
-            <td class="hide-small"><span class="label-soon">Upcoming</span></td>
-            <td class="right hide-small">&#8369;220</td>
-            <td class="right">0</td>
-            <td class="right"><button class="remove-button" type="button">Remove</button></td>
-          </tr>
-
-        </tbody>
-      </table>
-
-    </section>
-
-    <section class="panel">
-
-      <h2>Add a movie</h2>
-      <p class="panel-note">Fill in the details, choose a poster, and press Add movie.</p>
-
-      <p class="form-message hidden" id="add-message"></p>
-
-      <form id="add-form" novalidate>
-
-        <div class="add-grid">
-
-          <div class="form-field">
-            <label for="new-title">Movie title</label>
-            <input id="new-title" type="text" placeholder="The Reckoning" required>
-          </div>
-
-          <div class="form-field">
-            <label for="new-genre">Genre</label>
-            <input id="new-genre" type="text" placeholder="Action, Thriller" required>
-          </div>
-
-          <div class="form-field">
-            <label for="new-hours">Length</label>
-            <div class="length-pair">
-              <span class="length-part">
-                <input id="new-hours" type="number" min="0" max="9" step="1" placeholder="1" required>
-                <span class="length-unit">hrs</span>
-              </span>
-              <span class="length-part">
-                <input id="new-minutes" type="number" min="0" max="59" step="1" placeholder="58" required>
-                <span class="length-unit">min</span>
-              </span>
-            </div>
-            <p class="field-hint" id="length-hint">Hours and minutes are counted separately.</p>
-          </div>
-
-          <div class="form-field">
-            <label for="new-rating">Rating</label>
-            <select id="new-rating">
-              <option>G</option>
-              <option>PG</option>
-              <option selected>PG-13</option>
-              <option>R-13</option>
-              <option>R-16</option>
-              <option>R-18</option>
-            </select>
-          </div>
-
-          <div class="form-field">
-            <label for="new-price">Ticket price in pesos</label>
-            <input id="new-price" type="number" min="1" step="10" placeholder="220" required>
-          </div>
-
-          <div class="form-field">
-            <label for="new-status">Where it goes</label>
-            <select id="new-status">
-              <option value="now_showing">Now Showing</option>
-              <option value="upcoming">Upcoming Shows</option>
-            </select>
-          </div>
-
-          <div class="form-field">
-            <label id="run-date-label" for="run-date-button">Last day showing</label>
-
-            <div class="date-field" id="run-date-field">
-
-              <button class="date-button" type="button" id="run-date-button"
-                      aria-haspopup="true" aria-expanded="false">
-                <span id="run-date-text">Choose a date</span>
-                <span class="date-arrow">&#9662;</span>
-              </button>
-
-              <div class="calendar" id="run-calendar" role="group" aria-labelledby="run-date-label" hidden>
-
-                <div class="calendar-head">
-                  <button class="calendar-nav" type="button" id="run-calendar-back" aria-label="Previous month">&#8249;</button>
-                  <p class="calendar-month" id="run-calendar-month">Month</p>
-                  <button class="calendar-nav" type="button" id="run-calendar-next" aria-label="Next month">&#8250;</button>
-                </div>
-
-                <div class="calendar-grid calendar-day-names">
-                  <span>Sun</span>
-                  <span>Mon</span>
-                  <span>Tue</span>
-                  <span>Wed</span>
-                  <span>Thu</span>
-                  <span>Fri</span>
-                  <span>Sat</span>
-                </div>
-
-                <!-- The script fills this in for the month being looked at -->
-                <div class="calendar-grid" id="run-calendar-dates"></div>
-
-              </div>
-
-            </div>
-
-            <p class="field-hint" id="run-date-hint">Pick the last day of the run.</p>
-
-            <!-- Holds the picked day as 2026-10-31, which is what a booking page reads -->
-            <input type="hidden" id="new-run-date" value="">
-          </div>
-
-          <div class="form-field">
-            <label for="new-poster">Poster image</label>
-            <input id="new-poster" type="file" accept="image/jpeg,image/png,image/webp">
-          </div>
-
+        <div class="stat">
+          <p class="stat-name">Movies Listed</p>
+          <p class="stat-figure" id="count-total">6</p>
+          <p class="stat-extra" id="count-showing-note">4 showing now</p>
         </div>
 
-        <button class="button button-red" type="submit" id="add-button">Add movie</button>
+        <div class="stat">
+          <p class="stat-name">Now Showing</p>
+          <p class="stat-figure" id="count-showing">4</p>
+          <p class="stat-extra">On sale today</p>
+        </div>
 
-      </form>
+        <div class="stat">
+          <p class="stat-name">Upcoming</p>
+          <p class="stat-figure" id="count-upcoming">2</p>
+          <p class="stat-extra">Not on sale yet</p>
+        </div>
 
-    </section>
+        <div class="stat">
+          <p class="stat-name">Tickets Sold</p>
+          <p class="stat-figure" id="count-tickets">180</p>
+          <p class="stat-extra">Across all movies</p>
+        </div>
 
-  </main>
+      </div>
+    </div>
+
+    <main class="admin-page">
+
+      <section class="panel">
+
+        <div class="panel-head">
+          <div>
+            <h2>All movies</h2>
+            <p class="panel-note">Everything currently listed on the website.</p>
+          </div>
+          <a class="button button-red" href="admin-add-movie.html">+ Add movie</a>
+        </div>
+
+        <p class="loading-note hidden" id="movies-loading">Loading the listings&hellip;</p>
+
+        <table class="movie-table" id="movie-table">
+
+          <thead>
+            <tr>
+              <th>Movie</th>
+              <th class="hide-small">Status</th>
+              <th class="right hide-small">Price</th>
+              <th class="right">Sold</th>
+              <th></th>
+            </tr>
+          </thead>
+
+          <tbody id="movie-rows">
+
+            <tr>
+
+              <td>
+                <span class="cell-with-poster">
+                  <img class="table-poster" src="photo/eternal-sunshine.jpg"
+                       alt="Eternal Sunshine of the Spotless Mind poster"
+                       width="40" height="54" loading="lazy" decoding="async">
+                  <span>
+                    <span class="movie-name">Eternal Sunshine of the Spotless Mind</span>
+                    <span class="movie-sub">Romance, Drama, 1h 48m, PG-13</span>
+                  </span>
+                </span>
+              </td>
+
+              <td class="hide-small"><span class="label-showing">Now Showing</span></td>
+              <td class="right hide-small">&#8369;220</td>
+              <td class="right">52</td>
+              <td class="right"><button class="remove-button" type="button">Remove</button></td>
+
+            </tr>
+
+            <tr>
+              <td>
+                <span class="cell-with-poster">
+                  <img class="table-poster" src="photo/Pieces-of-us.jpg" alt="Pieces of Us poster"
+                       width="40" height="54" loading="lazy" decoding="async">
+                  <span>
+                    <span class="movie-name">Pieces of Us</span>
+                    <span class="movie-sub">Romance, Drama, 1h 52m, PG-13</span>
+                  </span>
+                </span>
+              </td>
+              <td class="hide-small"><span class="label-showing">Now Showing</span></td>
+              <td class="right hide-small">&#8369;220</td>
+              <td class="right">44</td>
+              <td class="right"><button class="remove-button" type="button">Remove</button></td>
+            </tr>
+
+            <tr>
+              <td>
+                <span class="cell-with-poster">
+                  <img class="table-poster" src="photo/Joker.jpg" alt="Joker poster"
+                       width="40" height="54" loading="lazy" decoding="async">
+                  <span>
+                    <span class="movie-name">Joker</span>
+                    <span class="movie-sub">Crime, Thriller, 2h 2m, R-16</span>
+                  </span>
+                </span>
+              </td>
+              <td class="hide-small"><span class="label-showing">Now Showing</span></td>
+              <td class="right hide-small">&#8369;220</td>
+              <td class="right">61</td>
+              <td class="right"><button class="remove-button" type="button">Remove</button></td>
+            </tr>
+
+            <tr>
+              <td>
+                <span class="cell-with-poster">
+                  <img class="table-poster" src="photo/The-Reckoning.jpg" alt="The Reckoning poster"
+                       width="40" height="54" loading="lazy" decoding="async">
+                  <span>
+                    <span class="movie-name">The Reckoning</span>
+                    <span class="movie-sub">Action, Thriller, 1h 58m, R-16</span>
+                  </span>
+                </span>
+              </td>
+              <td class="hide-small"><span class="label-showing">Now Showing</span></td>
+              <td class="right hide-small">&#8369;250</td>
+              <td class="right">23</td>
+              <td class="right"><button class="remove-button" type="button">Remove</button></td>
+            </tr>
+
+            <tr>
+              <td>
+                <span class="cell-with-poster">
+                  <img class="table-poster" src="photo/Hush.jpg" alt="Hush poster"
+                       width="40" height="54" loading="lazy" decoding="async">
+                  <span>
+                    <span class="movie-name">Hush</span>
+                    <span class="movie-sub">Horror, Thriller, 1h 22m, R-16</span>
+                  </span>
+                </span>
+              </td>
+              <td class="hide-small"><span class="label-soon">Upcoming</span></td>
+              <td class="right hide-small">&#8369;220</td>
+              <td class="right">0</td>
+              <td class="right"><button class="remove-button" type="button">Remove</button></td>
+            </tr>
+
+            <tr>
+              <td>
+                <span class="cell-with-poster">
+                  <img class="table-poster" src="photo/Broken-%5Bof%5D-Love.jpg" alt="Broken [of] Love poster"
+                       width="40" height="54" loading="lazy" decoding="async">
+                  <span>
+                    <span class="movie-name">Broken [of] Love</span>
+                    <span class="movie-sub">Romance, Drama, 1h 45m, PG-13</span>
+                  </span>
+                </span>
+              </td>
+              <td class="hide-small"><span class="label-soon">Upcoming</span></td>
+              <td class="right hide-small">&#8369;220</td>
+              <td class="right">0</td>
+              <td class="right"><button class="remove-button" type="button">Remove</button></td>
+            </tr>
+
+          </tbody>
+        </table>
+
+      </section>
+
+    </main>
+
+  </div>
 
   <footer class="site-footer">
     <div class="footer-inner">
@@ -327,312 +226,6 @@
       <p class="footer-copyright">&copy; 2026 Cinemax. All rights reserved.</p>
     </div>
   </footer>
-
-  <script>
-    (function () {
-
-      var monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'];
-      var dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-      var addForm = document.getElementById('add-form');
-      var addMessage = document.getElementById('add-message');
-
-      var titleInput = document.getElementById('new-title');
-      var genreInput = document.getElementById('new-genre');
-      var priceInput = document.getElementById('new-price');
-      var ratingSelect = document.getElementById('new-rating');
-      var statusSelect = document.getElementById('new-status');
-      var posterInput = document.getElementById('new-poster');
-
-      var hoursInput = document.getElementById('new-hours');
-      var minutesInput = document.getElementById('new-minutes');
-      var lengthHint = document.getElementById('length-hint');
-
-      var dateLabel = document.getElementById('run-date-label');
-      var dateField = document.getElementById('run-date-field');
-      var dateButton = document.getElementById('run-date-button');
-      var dateText = document.getElementById('run-date-text');
-      var dateHint = document.getElementById('run-date-hint');
-      var dateHolder = document.getElementById('new-run-date');
-
-      var calendar = document.getElementById('run-calendar');
-      var calendarDates = document.getElementById('run-calendar-dates');
-      var calendarMonth = document.getElementById('run-calendar-month');
-      var calendarBack = document.getElementById('run-calendar-back');
-      var calendarNext = document.getElementById('run-calendar-next');
-
-      // Turns '2026-10-31' into a date the browser can compare
-      function readDate(text) {
-        var parts = text.split('-');
-        return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-      }
-
-      // Turns a date back into '2026-10-31', the shape a booking page reads
-      function dateKey(date) {
-        var month = date.getMonth() + 1;
-        var day = date.getDate();
-        return date.getFullYear() +
-          '-' + (month < 10 ? '0' : '') + month +
-          '-' + (day < 10 ? '0' : '') + day;
-      }
-
-      // Counts a month as one number so two months are easy to compare
-      function monthNumber(date) {
-        return date.getFullYear() * 12 + date.getMonth();
-      }
-
-      // How a picked date reads on the box, like 'Sat, 31 Oct 2026'
-      function readableDate(key) {
-        var date = readDate(key);
-        return dayNames[date.getDay()] + ', ' + date.getDate() + ' ' +
-          monthNames[date.getMonth()].slice(0, 3) + ' ' + date.getFullYear();
-      }
-
-      // Today, with the clock part dropped so only the day itself is compared
-      var today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      var chosenDate = '';
-      var viewYear = today.getFullYear();
-      var viewMonth = today.getMonth();
-
-      // A run cannot end, and a movie cannot open, on a day already gone by
-      function isAvailable(date) {
-        return date >= today;
-      }
-
-      function drawCalendar() {
-        calendarMonth.textContent = monthNames[viewMonth] + ' ' + viewYear;
-        calendarDates.innerHTML = '';
-
-        // Empty boxes so the 1st lands under the right weekday
-        var startsOn = new Date(viewYear, viewMonth, 1).getDay();
-        var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-        var count;
-
-        for (count = 0; count < startsOn; count++) {
-          calendarDates.appendChild(document.createElement('span'));
-        }
-
-        for (count = 1; count <= daysInMonth; count++) {
-          var date = new Date(viewYear, viewMonth, count);
-          var key = dateKey(date);
-          var box = document.createElement('button');
-
-          box.type = 'button';
-          box.className = 'calendar-date';
-          box.textContent = count;
-          box.setAttribute('data-date', key);
-
-          if (!isAvailable(date)) {
-            box.disabled = true;
-            box.title = 'This date has already passed';
-          }
-
-          if (key === dateKey(today)) {
-            box.className += ' calendar-date-today';
-          }
-
-          if (key === chosenDate) {
-            box.className += ' calendar-date-picked';
-            box.setAttribute('aria-pressed', 'true');
-          }
-
-          calendarDates.appendChild(box);
-        }
-
-        // Months wholly past are of no use. Going forward has no end, so a
-        // run can be set as far ahead as the cinema has booked the movie.
-        calendarBack.disabled = (viewYear * 12 + viewMonth) <= monthNumber(today);
-      }
-
-      function moveMonth(step) {
-        var moved = viewYear * 12 + viewMonth + step;
-        if (moved < monthNumber(today)) {
-          return;
-        }
-        viewYear = Math.floor(moved / 12);
-        viewMonth = moved % 12;
-        drawCalendar();
-      }
-
-      function openCalendar() {
-        var start = chosenDate === '' ? today : readDate(chosenDate);
-        viewYear = start.getFullYear();
-        viewMonth = start.getMonth();
-        drawCalendar();
-        calendar.hidden = false;
-        dateButton.setAttribute('aria-expanded', 'true');
-      }
-
-      function closeCalendar() {
-        calendar.hidden = true;
-        dateButton.setAttribute('aria-expanded', 'false');
-      }
-
-      // The line the movie carries on the website. One that is showing counts
-      // down to its last day; one that is upcoming counts up to its first.
-      function listingNote() {
-        var date = readDate(chosenDate);
-        var month = monthNames[date.getMonth()].slice(0, 3);
-        if (statusSelect.value === 'upcoming') {
-          return 'Opens ' + month + ' ' + date.getDate();
-        }
-        return 'Until ' + month + ' ' + date.getDate() + ', ' + date.getFullYear();
-      }
-
-      function showDate() {
-        var upcoming = statusSelect.value === 'upcoming';
-        dateLabel.textContent = upcoming ? 'Opening day' : 'Last day showing';
-
-        if (chosenDate === '') {
-          dateText.textContent = 'Choose a date';
-          dateHint.textContent = upcoming
-            ? 'Pick the day it opens. Booking starts that morning.'
-            : 'Pick the last day of the run. The booking calendar greys out every day after it.';
-          return;
-        }
-
-        dateText.textContent = readableDate(chosenDate);
-        dateHint.textContent = 'The listing will read \u201c' + listingNote() + '\u201d.';
-      }
-
-      // The two boxes read back as one length, like '1h 58m'
-      function readLength() {
-        var hours = parseInt(hoursInput.value, 10);
-        var minutes = parseInt(minutesInput.value, 10);
-        if (isNaN(hours) || isNaN(minutes)) {
-          return '';
-        }
-        return hours + 'h ' + minutes + 'm';
-      }
-
-      function showLength() {
-        var length = readLength();
-        lengthHint.textContent = length === ''
-          ? 'Hours and minutes are counted separately.'
-          : 'The listing will read \u201c' + length + '\u201d.';
-      }
-
-      // Keeps the minutes a real number of minutes, and the hours sensible
-      function tidyNumber(input, lowest, highest) {
-        var value = parseInt(input.value, 10);
-        if (isNaN(value)) {
-          return;
-        }
-        if (value < lowest) {
-          input.value = lowest;
-        }
-        if (value > highest) {
-          input.value = highest;
-        }
-      }
-
-      function showMessage(text, kind) {
-        addMessage.textContent = text;
-        addMessage.className = 'form-message form-message-' + kind;
-      }
-
-      dateButton.addEventListener('click', function () {
-        if (calendar.hidden) {
-          openCalendar();
-        } else {
-          closeCalendar();
-        }
-      });
-
-      calendarDates.addEventListener('click', function (event) {
-        var box = event.target.closest('.calendar-date');
-        if (!box || box.disabled) {
-          return;
-        }
-        chosenDate = box.getAttribute('data-date');
-        dateHolder.value = chosenDate;
-        showDate();
-        closeCalendar();
-      });
-
-      calendarBack.addEventListener('click', function () {
-        moveMonth(-1);
-      });
-
-      calendarNext.addEventListener('click', function () {
-        moveMonth(1);
-      });
-
-      // A click anywhere else, or the Escape key, puts the calendar away
-      document.addEventListener('click', function (event) {
-        if (!dateField.contains(event.target)) {
-          closeCalendar();
-        }
-      });
-
-      document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape') {
-          closeCalendar();
-        }
-      });
-
-      // Where the movie goes decides how its date reads
-      statusSelect.addEventListener('change', showDate);
-
-      hoursInput.addEventListener('input', function () {
-        tidyNumber(hoursInput, 0, 9);
-        showLength();
-      });
-
-      minutesInput.addEventListener('input', function () {
-        tidyNumber(minutesInput, 0, 59);
-        showLength();
-      });
-
-      addForm.addEventListener('submit', function (event) {
-        event.preventDefault();
-
-        var missing = [];
-
-        [[titleInput, 'the title'], [genreInput, 'the genre'], [priceInput, 'the price']]
-          .forEach(function (field) {
-            var empty = field[0].value.trim() === '';
-            field[0].classList.toggle('invalid', empty);
-            if (empty) {
-              missing.push(field[1]);
-            }
-          });
-
-        var noLength = readLength() === '';
-        hoursInput.classList.toggle('invalid', noLength);
-        minutesInput.classList.toggle('invalid', noLength);
-        if (noLength) {
-          missing.push('the length');
-        }
-
-        if (chosenDate === '') {
-          missing.push('the date');
-        }
-
-        if (missing.length > 0) {
-          showMessage('Still missing ' + missing.join(', ') + '.', 'error');
-          return;
-        }
-
-        var poster = posterInput.files && posterInput.files[0]
-          ? posterInput.files[0].name
-          : 'no poster chosen';
-
-        showMessage('Ready to add: ' + titleInput.value.trim() + ' \u2014 ' +
-          genreInput.value.trim() + ', ' + readLength() + ', ' + ratingSelect.value +
-          ', \u20b1' + priceInput.value.trim() + ' (' + poster + '). Listed as \u201c' +
-          listingNote() + '\u201d, and its booking calendar runs to ' + chosenDate + '.',
-          'success');
-      });
-
-      showLength();
-      showDate();
-      drawCalendar();
-    })();
-  </script>
 
 </body>
 </html>

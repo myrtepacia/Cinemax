@@ -10,8 +10,4 @@ require_post();
 verify_csrf();
 
 logout_user();
-
-// The old session is gone; a fresh, empty one carries the goodbye message.
-start_session();
-flash('success', 'You are signed out.');
 redirect('index.php');

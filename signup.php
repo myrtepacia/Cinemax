@@ -92,21 +92,6 @@ function signup_validate(array $post): array
     ];
 }
 
-/**
- * The name to greet someone by: their first word that is not a short form
- * ending in a period, so "Ma. Cristina Santos" is greeted as Cristina, not
- * "Ma.". If every word is a short form, the whole name is used.
- */
-function signup_greeting_name(string $name): string
-{
-    foreach (explode(' ', $name) as $word) {
-        if ($word !== '' && substr($word, -1) !== '.') {
-            return $word;
-        }
-    }
-    return $name;
-}
-
 function signup_email_taken(string $email): bool
 {
     return db_value('SELECT 1 FROM users WHERE email = ?', [$email]) !== null;
@@ -184,7 +169,6 @@ if (is_post()) {
 
             if (!$emailTaken) {
                 login_user(['id' => $userId]);
-                flash('success', 'Welcome to Cinemax, ' . signup_greeting_name($clean['name']) . '! Your account is ready.');
                 redirect($return ?? 'index.php');
             }
         }
@@ -208,7 +192,6 @@ render_header();
       <h1>Join CINEMAX</h1>
       <p class="form-intro">Create an account to start booking.</p>
 
-      <?php render_flashes(); ?>
 <?php if ($emailTaken): ?>
       <p class="form-message form-message-error" id="form-message" role="alert">
         An account with that email already exists. <a href="<?= e(url($signinLink)) ?>">Sign in</a> instead.

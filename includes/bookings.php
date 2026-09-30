@@ -768,6 +768,26 @@ function snack_queue(): array
 }
 
 /**
+ * What the Snacks Claim monitor shows: the reference numbers of orders being
+ * prepared and of orders ready to pick up, as ['preparing' => [...],
+ * 'ready' => [...]], oldest first. Only the numbers: the screen faces the
+ * customers, so no names or orders are on it.
+ */
+function claim_monitor_orders(): array
+{
+    $lists = ['preparing' => [], 'ready' => []];
+    $rows = db_all(
+        "SELECT reference, snack_status FROM bookings
+         WHERE status = 'paid' AND snack_status IN ('preparing', 'ready')
+         ORDER BY show_date, show_time, id"
+    );
+    foreach ($rows as $row) {
+        $lists[$row['snack_status']][] = (string) $row['reference'];
+    }
+    return $lists;
+}
+
+/**
  * A short fingerprint of everything the dashboard shows. It changes the
  * moment anything on the dashboard would: a payment, a refund, an order
  * confirmed at the snack counter or moved on. The dashboard asks for it

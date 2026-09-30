@@ -223,25 +223,6 @@ function is_https(): bool
 }
 
 /**
- * A one-time message shown on the next page, e.g. after a redirect.
- * $type is 'success', 'error' or 'notice'.
- */
-function flash(string $type, string $message): void
-{
-    $_SESSION['flashes'][] = ['type' => $type, 'message' => $message];
-}
-
-/**
- * The waiting one-time messages, removed as they are read.
- */
-function take_flashes(): array
-{
-    $flashes = $_SESSION['flashes'] ?? [];
-    unset($_SESSION['flashes']);
-    return is_array($flashes) ? $flashes : [];
-}
-
-/**
  * Pesos as the site shows them: 1140 becomes '₱1,140'.
  */
 function peso(int $amount): string

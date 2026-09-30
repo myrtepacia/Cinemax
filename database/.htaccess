@@ -1,0 +1,2 @@
+# Private: code, secrets and data that are only ever read by the server itself
+Require all denied

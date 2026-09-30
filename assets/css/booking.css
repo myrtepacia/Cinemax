@@ -31,12 +31,35 @@
   align-items: start;
 }
 
+/* The poster, with the rating and running time tags on it */
+.booking-poster-wrap {
+  position: relative;
+  margin-bottom: 20px;
+}
+
 .booking-poster {
+  display: block;
   width: 100%;
   aspect-ratio: 3 / 4;
   object-fit: cover;
   border-radius: 16px;
-  margin-bottom: 20px;
+}
+
+/* A bigger poster than a card's, so slightly bigger tags */
+.booking-poster-wrap .tag-rated,
+.booking-poster-wrap .tag-time {
+  padding: 4px 12px;
+  font-size: 14px;
+}
+
+.booking-poster-wrap .tag-rated {
+  top: 14px;
+  right: 14px;
+}
+
+.booking-poster-wrap .tag-time {
+  bottom: 14px;
+  left: 14px;
 }
 
 .booking-block {
@@ -274,6 +297,12 @@
   margin: 4px 0 24px 0;
 }
 
+/* Never wider than the page: on a very narrow screen the seat map scrolls
+   sideways inside itself instead */
+.seat-area {
+  min-width: 0;
+}
+
 .seat-map {
   overflow-x: auto;
   padding-bottom: 8px;
@@ -284,24 +313,33 @@
   opacity: 0.5;
 }
 
+/* As wide as its seats, so the whole map stays centred */
 .seat-row {
   display: flex;
-  width: 340px;
+  align-items: center;
+  width: max-content;
   gap: 4px;
   margin: 0 auto 8px auto;
 }
 
+/* The row's letter, in the middle of the height of its seats */
 .row-letter {
   width: 20px;
   color: #99a1af;
   font-size: 12px;
   font-weight: 900;
-  text-align: right;
+  line-height: 1;
+  text-align: center;
 }
 
 .seat {
   position: relative;
   cursor: pointer;
+}
+
+/* The aisles: a wider gap before seats 4 and 8 */
+.seat-after-aisle {
+  margin-left: 12px;
 }
 
 /* The real tick box of each seat is hidden; the coloured box shows its state.
@@ -567,8 +605,8 @@
     grid-template-columns: 1fr;
   }
 
-  /* One column now, so the poster sits in the middle of it */
-  .booking-poster {
+  /* One column now, so the poster (and the tags on it) sits in the middle */
+  .booking-poster-wrap {
     max-width: 240px;
     margin-left: auto;
     margin-right: auto;
@@ -578,6 +616,24 @@
 @media (max-width: 620px) {
   .snack-list {
     grid-template-columns: 1fr;
+  }
+
+  /* Slightly smaller seats and aisles, so a whole row fits on a phone */
+  .seat-row {
+    gap: 3px;
+  }
+
+  .row-letter {
+    width: 16px;
+  }
+
+  .seat-box {
+    width: 26px;
+    height: 26px;
+  }
+
+  .seat-after-aisle {
+    margin-left: 8px;
   }
 }
 

@@ -106,6 +106,10 @@ CREATE TABLE bookings (
   -- snack counter; then 'preparing', 'ready', and 'sold' when picked up.
   -- NULL when the booking has no snacks.
   snack_status         ENUM('ordered', 'preparing', 'ready', 'sold') NULL,
+  -- The snack order's number (#001), given when it is paid: the lowest one
+  -- not held by another order still waiting to be picked up, so numbers
+  -- are used again once their orders are collected.
+  snack_number         SMALLINT UNSIGNED NULL,
   paymongo_checkout_id VARCHAR(64) NULL,
   paymongo_payment_id  VARCHAR(64) NULL,
   paymongo_refund_id   VARCHAR(64) NULL,

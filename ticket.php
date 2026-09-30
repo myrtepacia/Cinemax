@@ -54,6 +54,11 @@ $hasTicket = in_array($status, ['paid', 'refunded'], true);
 if ($hasTicket) {
     $snackLines = booking_snacks((int) $booking['id']);
     $snacks = snack_summary($snackLines);
+    // The order's number for the claim monitor, on a paid ticket only (a
+    // refunded one has given its number back)
+    $snackNumber = $status === 'paid' && $booking['snack_number'] !== null
+        ? '#' . snack_number_label((int) $booking['snack_number'])
+        : null;
     $snackStatus = [
         'ordered'   => ['Show this QR code at the snack counter', 'snack-status-ordered'],
         'preparing' => ['Preparing', 'snack-status-preparing'],
@@ -147,7 +152,7 @@ render_header();
           <div class="ticket-pair" id="snack-pair">
             <div>
               <p class="ticket-label">Snacks</p>
-              <p class="ticket-value ticket-value-small" id="snacks"><?= e($snacks) ?></p>
+              <p class="ticket-value ticket-value-small" id="snacks"><?php if ($snackNumber !== null): ?><strong class="snack-number"><?= e($snackNumber) ?></strong> - <?php endif; ?><?= e($snacks) ?></p>
             </div>
             <div>
               <p class="ticket-label">Pickup</p>

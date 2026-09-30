@@ -87,15 +87,14 @@ if (is_post()) {
     $bookingId = input_int($_POST, 'booking_id', 1);
     $target = $bookingId !== null ? find_booking_by_id($bookingId) : null;
     if ($target === null) {
-        flash('error', 'That booking does not exist.');
         redirect('admin/scanner.php');
     }
 
     try {
-        $refunded = refund_booking((int) $target['id'], (int) $user['id']);
-        flash('success', 'Refunded ' . peso((int) $refunded['total']) . ' to ' . $refunded['customer_name'] . '.');
+        refund_booking((int) $target['id'], (int) $user['id']);
     } catch (BookingException $e) {
-        flash('error', $e->getMessage());
+        // Cannot be refunded (already refunded or used, say): nothing changes,
+        // and the booking shown next says what it is
     }
     redirect('admin/scanner.php?ref=' . rawurlencode((string) $target['reference']));
 }
@@ -145,8 +144,6 @@ render_header(['staff' => true, 'current' => 'scanner']);
     </div>
 
     <main class="admin-page">
-
-      <?php render_flashes(); ?>
 
       <div class="panel camera-panel" id="scanner" data-api-url="<?= e(url('api/scan.php')) ?>">
 

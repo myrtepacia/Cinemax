@@ -24,16 +24,9 @@ if (is_post()) {
     $bookingId = input_int($_POST, 'booking_id', 1);
     $from = input_string($_POST, 'from', 20);
 
-    if ($bookingId === null || !in_array($from, ['preparing', 'ready'], true)) {
-        flash('error', 'That order could not be found.');
-    } elseif (advance_snack_order($bookingId, $from)) {
-        $booking = find_booking_by_id($bookingId);
-        $reference = $booking !== null ? (string) $booking['reference'] : 'The order';
-        flash('success', $from === 'preparing'
-            ? $reference . ' is ready at the counter.'
-            : $reference . ' was picked up.');
-    } else {
-        flash('notice', 'That order already moved on.');
+    // An order that has already moved on is simply left where it is
+    if ($bookingId !== null && in_array($from, ['preparing', 'ready'], true)) {
+        advance_snack_order($bookingId, $from);
     }
     redirect('admin/index.php');
 }
@@ -90,13 +83,6 @@ render_header(['staff' => true, 'current' => 'dashboard']);
     </div>
 
     <main class="admin-page" id="dashboard" data-live-url="<?= e(url('api/dashboard.php')) ?>" data-version="<?= e($version) ?>">
-      <?php
-      // dashboard.js fetches the page with ?live=1 to refresh the figures;
-      // that copy is never shown whole, so it must not use up the messages
-      if (!isset($_GET['live'])) {
-          render_flashes();
-      }
-      ?>
 
       <section class="panel" id="snack-orders">
 
@@ -124,7 +110,7 @@ render_header(['staff' => true, 'current' => 'dashboard']);
             <div class="order-row">
               <div class="order-left">
                 <p class="order-items"><?= e($order['items']) ?></p>
-                <p class="order-who"><?= e($order['reference']) ?> &bull; <?= e($order['customer_name']) ?> &bull; <?= e(dashboard_count((int) $order['item_count'], 'snack', 'snacks')) ?></p>
+                <p class="order-who"><?php if ($order['snack_number'] !== null): ?><strong>#<?= e(snack_number_label((int) $order['snack_number'])) ?></strong> &bull; <?php endif; ?><?= e($order['reference']) ?> &bull; <?= e($order['customer_name']) ?> &bull; <?= e(dashboard_count((int) $order['item_count'], 'snack', 'snacks')) ?></p>
               </div>
               <p class="order-price"><?= e(peso((int) $order['snacks_total'])) ?></p>
 <?php if ($stage === 'sold'): ?>

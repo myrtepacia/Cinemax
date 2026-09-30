@@ -239,6 +239,23 @@ function duration_label(int $minutes): string
 }
 
 /**
+ * The running time on a poster: 112 becomes '1h 52min', 120 '2h', 45 '45min'.
+ */
+function duration_tag(int $minutes): string
+{
+    $hours = intdiv($minutes, 60);
+    $rest = $minutes % 60;
+    $parts = [];
+    if ($hours > 0) {
+        $parts[] = $hours . 'h';
+    }
+    if ($rest > 0 || $hours === 0) {
+        $parts[] = $rest . 'min';
+    }
+    return implode(' ', $parts);
+}
+
+/**
  * A showing as tickets print it: '4:00 PM, Saturday, September 12, 2026',
  * led by the cinema when given: 'Cinema 2, 4:00 PM, Saturday, ...'.
  */

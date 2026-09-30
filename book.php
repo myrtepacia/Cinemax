@@ -20,6 +20,21 @@ $showtimes = movie_showtimes((int) $movie['id']);
 $bookable = $window !== null && $showtimes !== [];
 
 /**
+ * The film's poster, with its rating (top right) and running time (bottom
+ * left) on it, like the cards on the home page.
+ */
+function book_poster(array $movie): void
+{
+    ?>
+<div class="booking-poster-wrap">
+          <img class="booking-poster" src="<?= e(poster_url($movie)) ?>" alt="<?= e($movie['title'] . ' poster') ?>">
+          <span class="tag-rated"><?= e($movie['rating']) ?></span>
+          <span class="tag-time"><?= e(duration_tag((int) $movie['duration_minutes'])) ?></span>
+        </div>
+<?php
+}
+
+/**
  * '25 October 2026', the way the calendar's last line gives a date.
  */
 function book_long_date(string $date): string
@@ -58,11 +73,11 @@ render_header();
     <div class="booking-layout">
 
       <div class="booking-left">
-        <img class="booking-poster" src="<?= e(poster_url($movie)) ?>" alt="<?= e($movie['title'] . ' poster') ?>">
+        <?php book_poster($movie); ?>
 
         <div class="booking-block">
           <h1 class="film-title"><?= e($movie['title']) ?></h1>
-          <p class="film-details"><?= e(movie_details_line($movie, true)) ?></p>
+          <p class="film-details"><?= e($movie['genre']) ?></p>
         </div>
       </div>
 
@@ -123,11 +138,11 @@ render_header();
         <!-- Movie, date and showtime -->
         <div class="booking-left">
 
-          <img class="booking-poster" src="<?= e(poster_url($movie)) ?>" alt="<?= e($movie['title'] . ' poster') ?>">
+          <?php book_poster($movie); ?>
 
           <div class="booking-block">
             <h1 class="film-title"><?= e($movie['title']) ?></h1>
-            <p class="film-details"><?= e(movie_details_line($movie, true)) ?></p>
+            <p class="film-details"><?= e($movie['genre']) ?></p>
           </div>
 
           <div class="booking-block">

@@ -142,6 +142,21 @@ function add_movie_invalid(array $errors, string $field): string
     return isset($errors[$field]) ? ' class="invalid"' : '';
 }
 
+/**
+ * What the date box says: 'Fri, 9 Oct 2026 – Sat, 31 Oct 2026', or what is
+ * still to pick. add-movie.js writes the same words as dates are clicked.
+ */
+function add_movie_dates_text(string $opensOn, string $endsOn): string
+{
+    $day = static function (string $date): string {
+        return (new DateTimeImmutable($date))->format('D, j M Y');
+    };
+    if ($opensOn === '') {
+        return 'Choose the opening and last day';
+    }
+    return $day($opensOn) . ' – ' . ($endsOn !== '' ? $day($endsOn) : 'pick the last day');
+}
+
 // What the form shows: blank to start with, what was typed after a problem
 $old = [
     'title'    => '',
@@ -150,8 +165,9 @@ $old = [
     'minutes'  => '',
     'rating'   => 'PG-13',
     'price'    => '',
-    'status'   => 'now_showing',
-    'run_date' => '',
+    'opens_on' => '',
+    'ends_on'  => '',
+    'cinema'   => '',
 ];
 $errors = [];
 $posterWasChosen = false;
@@ -174,8 +190,9 @@ if (is_post()) {
         $minutes = input_int($_POST, 'minutes', 0, 59);
         $rating = input_string($_POST, 'rating', 10);
         $price = input_int($_POST, 'price', 1, 10000);
-        $status = input_string($_POST, 'status', 20);
-        $runDate = input_date($_POST, 'run_date');
+        $opensOn = input_date($_POST, 'opens_on');
+        $endsOn = input_date($_POST, 'ends_on');
+        $cinema = input_int($_POST, 'cinema', 1, CINEMA_COUNT);
 
         $old = [
             'title'    => $title,
@@ -184,8 +201,9 @@ if (is_post()) {
             'minutes'  => input_string($_POST, 'minutes', 10),
             'rating'   => in_array($rating, MOVIE_RATINGS, true) ? $rating : 'PG-13',
             'price'    => input_string($_POST, 'price', 10),
-            'status'   => in_array($status, ['now_showing', 'upcoming'], true) ? $status : 'now_showing',
-            'run_date' => $runDate ?? '',
+            'opens_on' => $opensOn ?? '',
+            'ends_on'  => $opensOn !== null ? ($endsOn ?? '') : '',
+            'cinema'   => $cinema !== null ? (string) $cinema : '',
         ];
 
         if ($title === '') {
@@ -218,15 +236,22 @@ if (is_post()) {
             $errors['price'] = "Enter a ticket price from \u{20B1}1 to \u{20B1}10,000, in whole pesos.";
         }
 
-        if (!in_array($status, ['now_showing', 'upcoming'], true)) {
-            $errors['status'] = 'Choose Now Showing or Upcoming Shows.';
+        // Every new movie is upcoming: it can be booked from its opening day
+        // (straight away when that is today) until its last day
+        if ($opensOn === null) {
+            $errors['opens_on'] = 'Choose the opening day.';
+        } elseif ($opensOn < today()) {
+            $errors['opens_on'] = 'The opening day cannot be a day that has already gone by.';
+        }
+        if ($endsOn === null) {
+            $errors['ends_on'] = 'Choose the last day showing.';
+        } elseif ($opensOn !== null && $endsOn < $opensOn) {
+            $errors['ends_on'] = 'The last day showing cannot be before the opening day.';
         }
 
-        $dateName = $old['status'] === 'upcoming' ? 'opening day' : 'last day showing';
-        if ($runDate === null) {
-            $errors['run_date'] = 'Choose the ' . $dateName . '.';
-        } elseif ($runDate < today()) {
-            $errors['run_date'] = 'The ' . $dateName . ' cannot be a day that has already gone by.';
+        // The cinema its showtimes are found in
+        if ($cinema === null) {
+            $errors['cinema'] = 'Choose the cinema it shows in.';
         }
 
         $upload = $_FILES['poster'] ?? null;
@@ -246,19 +271,19 @@ if (is_post()) {
             }
 
             if (count($errors) === 0) {
+                // It gets the first free times in the cinemas, if any
                 try {
-                    $movieId = create_movie([
+                    create_movie([
                         'title'            => $title,
                         'genre'            => $genre,
                         'duration_minutes' => $duration,
                         'rating'           => $rating,
                         'price'            => $price,
-                        'status'           => $status,
-                        // A film that is showing runs until its last day; an
-                        // upcoming one can be booked from its opening day on
-                        'opens_on'         => $status === 'upcoming' ? $runDate : null,
-                        'ends_on'          => $status === 'now_showing' ? $runDate : null,
+                        'status'           => 'upcoming',
+                        'opens_on'         => $opensOn,
+                        'ends_on'          => $endsOn,
                         'poster_path'      => $posterPath,
+                        'cinema'           => $cinema,
                     ]);
                 } catch (Throwable $e) {
                     if ($posterPath !== null) {
@@ -266,29 +291,11 @@ if (is_post()) {
                     }
                     throw $e;
                 }
-
-                // It gets the first free times in the cinemas, if any
-                $shows = [];
-                foreach (movie_schedule($movieId) as $time => $cinema) {
-                    $shows[] = format_time((string) $time) . ' (' . cinema_label($cinema) . ')';
-                }
-                if ($shows !== []) {
-                    $last = array_pop($shows);
-                    $list = $shows !== [] ? implode(', ', $shows) . ' and ' . $last : $last;
-                    flash('success', $title . ' was added. It shows every day at ' . $list . '.');
-                } else {
-                    flash('notice', $title . ' was added, but both cinemas are full on the days it runs, so it has no showtimes yet.');
-                }
                 redirect('admin/movies.php');
             }
         }
     }
 }
-
-$upcoming = $old['status'] === 'upcoming';
-$runDateText = $old['run_date'] !== ''
-    ? (new DateTimeImmutable($old['run_date']))->format('D, j M Y')
-    : 'Choose a date';
 
 render_head('Add Movie', ['assets/css/admin.css']);
 render_header(['staff' => true, 'current' => 'add-movie']);
@@ -302,7 +309,6 @@ render_header(['staff' => true, 'current' => 'add-movie']);
     </div>
 
     <main class="admin-page">
-      <?php render_flashes(); ?>
 
       <section class="panel">
 
@@ -374,21 +380,13 @@ render_header(['staff' => true, 'current' => 'add-movie']);
             </div>
 
             <div class="form-field">
-              <label for="new-status">Where it goes</label>
-              <select id="new-status" name="status"<?= add_movie_invalid($errors, 'status') ?>>
-                <option value="now_showing"<?= $upcoming ? '' : ' selected' ?>>Now Showing</option>
-                <option value="upcoming"<?= $upcoming ? ' selected' : '' ?>>Upcoming Shows</option>
-              </select>
-            </div>
-
-            <div class="form-field">
-              <label id="run-date-label" for="run-date-button"><?= e($upcoming ? 'Opening day' : 'Last day showing') ?></label>
+              <label id="run-date-label" for="run-date-button">Opening and last day</label>
 
               <div class="date-field" id="run-date-field">
 
-                <button class="date-button" type="button" id="run-date-button"
+                <button class="date-button<?= isset($errors['opens_on']) || isset($errors['ends_on']) ? ' invalid' : '' ?>" type="button" id="run-date-button"
                         aria-haspopup="true" aria-expanded="false">
-                  <span id="run-date-text"><?= e($runDateText) ?></span>
+                  <span id="run-date-text"><?= e(add_movie_dates_text($old['opens_on'], $old['ends_on'])) ?></span>
                   <span class="date-arrow">&#9662;</span>
                 </button>
 
@@ -412,11 +410,25 @@ render_header(['staff' => true, 'current' => 'add-movie']);
 
                   <div class="calendar-grid" id="run-calendar-dates"></div>
 
+                  <p class="calendar-hint" id="run-calendar-hint">Pick the opening day</p>
+
                 </div>
 
               </div>
 
-              <input type="hidden" id="new-run-date" name="run_date" value="<?= e($old['run_date']) ?>">
+              <input type="hidden" id="new-opens-on" name="opens_on" value="<?= e($old['opens_on']) ?>">
+              <input type="hidden" id="new-ends-on" name="ends_on" value="<?= e($old['ends_on']) ?>">
+            </div>
+
+            <div class="form-field">
+              <label for="new-cinema">Cinema</label>
+              <select id="new-cinema" name="cinema" required<?= add_movie_invalid($errors, 'cinema') ?>>
+                <!-- Shown in the box only, never in the list -->
+                <option value="" disabled hidden<?= $old['cinema'] === '' ? ' selected' : '' ?>>Choose a cinema</option>
+<?php for ($number = 1; $number <= CINEMA_COUNT; $number++): ?>
+                <option value="<?= e((string) $number) ?>"<?= $old['cinema'] === (string) $number ? ' selected' : '' ?>><?= e(cinema_label($number)) ?></option>
+<?php endfor; ?>
+              </select>
             </div>
 
             <div class="form-field">

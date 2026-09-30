@@ -61,11 +61,10 @@ render_header(['home' => true, 'current' => 'now-showing']);
                  width="900" height="1200" decoding="async" <?= $eager ? 'fetchpriority="high"' : 'loading="lazy"' ?>>
             <span class="tag-status tag-showing">Showing</span>
             <span class="tag-rated"><?= e($movie['rating']) ?></span>
+            <span class="tag-time"><?= e(duration_tag((int) $movie['duration_minutes'])) ?></span>
           </div>
           <div class="movie-info">
             <h3 class="movie-title"><?= e($movie['title']) ?></h3>
-            <p class="movie-genre"><?= e(movie_details_line($movie)) ?></p>
-            <p class="movie-price"><?= e(peso((int) $movie['price'])) ?></p>
             <a class="button button-red button-wide" href="<?= e(url('book.php?movie=' . rawurlencode((string) $movie['slug']))) ?>">Book Now</a>
           </div>
         </div>
@@ -100,10 +99,10 @@ render_header(['home' => true, 'current' => 'now-showing']);
                  width="900" height="1200" decoding="async" <?= $eager ? 'fetchpriority="high"' : 'loading="lazy"' ?>>
             <span class="tag-status tag-soon">Soon</span>
             <span class="tag-rated"><?= e($movie['rating']) ?></span>
+            <span class="tag-time"><?= e(duration_tag((int) $movie['duration_minutes'])) ?></span>
           </div>
           <div class="movie-info">
             <h3 class="movie-title"><?= e($movie['title']) ?></h3>
-            <p class="movie-genre"><?= e(movie_details_line($movie)) ?></p>
             <span class="button button-grey button-wide"><?= e(movie_opening_note($movie)) ?></span>
           </div>
         </div>

@@ -379,6 +379,38 @@ function snack_summary(array $lines): string
 }
 
 /**
+ * A snack order number as the ticket and the claim monitor show it: 1 is
+ * '001'. The ticket puts '#' in front.
+ */
+function snack_number_label(int $number): string
+{
+    return str_pad((string) $number, 3, '0', STR_PAD_LEFT);
+}
+
+/**
+ * The lowest snack order number not held by an order still waiting to be
+ * picked up: with 1 and 3 held, it is 2. Picked-up and refunded orders give
+ * their numbers back. Called by mark_booking_paid() while it holds the
+ * numbers lock, so two payments never get the same one.
+ */
+function next_snack_number(): int
+{
+    $held = db_all(
+        "SELECT DISTINCT snack_number FROM bookings
+         WHERE status = 'paid' AND snack_status IN ('ordered', 'preparing', 'ready') AND snack_number IS NOT NULL
+         ORDER BY snack_number"
+    );
+    $next = 1;
+    foreach ($held as $row) {
+        if ((int) $row['snack_number'] !== $next) {
+            break;
+        }
+        $next++;
+    }
+    return $next;
+}
+
+/**
  * Marks a booking paid once PayMongo says it is. Safe to call twice (the
  * return page and the webhook may both do it). Returns:
  *   'paid'      it is now paid
@@ -388,6 +420,24 @@ function snack_summary(array $lines): string
  *   'mismatch'  the amount paid is not the booking's total
  */
 function mark_booking_paid(int $bookingId, string $paymentId, int $amountPaid): string
+{
+    // Snack order numbers are handed out one payment at a time, and the lock
+    // is only let go once the payment is saved, so two customers paying at
+    // the same moment cannot both get the same free number
+    if ((int) db_value("SELECT GET_LOCK('cinemax_snack_numbers', 10)") !== 1) {
+        error_log('[payment] snack numbers lock was busy for booking ' . $bookingId);
+    }
+    try {
+        return mark_booking_paid_now($bookingId, $paymentId, $amountPaid);
+    } finally {
+        db_value("SELECT RELEASE_LOCK('cinemax_snack_numbers')");
+    }
+}
+
+/**
+ * mark_booking_paid()'s work, in one transaction.
+ */
+function mark_booking_paid_now(int $bookingId, string $paymentId, int $amountPaid): string
 {
     return (string) db_transaction(function () use ($bookingId, $paymentId, $amountPaid): string {
         $booking = db_one('SELECT * FROM bookings WHERE id = ? FOR UPDATE', [$bookingId]);
@@ -421,12 +471,14 @@ function mark_booking_paid(int $bookingId, string $paymentId, int $amountPaid): 
             }
         }
 
+        // An order with snacks gets its number for the counter now
+        $hasSnacks = (int) $booking['snacks_total'] > 0;
         db_exec(
             "UPDATE bookings
              SET status = 'paid', paid_at = NOW(), paymongo_payment_id = ?,
-                 snack_status = IF(snacks_total > 0, 'ordered', NULL)
+                 snack_status = ?, snack_number = ?
              WHERE id = ?",
-            [$paymentId, $bookingId]
+            [$paymentId, $hasSnacks ? 'ordered' : null, $hasSnacks ? next_snack_number() : null, $bookingId]
         );
         return 'paid';
     });
@@ -739,18 +791,19 @@ function dashboard_stats(): array
 
 /**
  * The snack counter's queue: ['preparing' => [...], 'ready' => [...],
- * 'sold' => [...]]. Each order has id, reference, customer_name, items
- * (one line), item_count and snacks_total. 'sold' holds the latest 20.
+ * 'sold' => [...]]. Each order has id, reference, snack_number (or null),
+ * customer_name, items (one line), item_count and snacks_total. 'sold'
+ * holds the latest 20.
  */
 function snack_queue(): array
 {
     $queue = ['preparing' => [], 'ready' => [], 'sold' => []];
     $orders = db_all(
-        "(SELECT b.id, b.reference, b.snack_status, b.snacks_total, b.show_date, b.show_time, b.paid_at, u.name AS customer_name
+        "(SELECT b.id, b.reference, b.snack_number, b.snack_status, b.snacks_total, b.show_date, b.show_time, b.paid_at, u.name AS customer_name
           FROM bookings b JOIN users u ON u.id = b.user_id
           WHERE b.status = 'paid' AND b.snack_status IN ('preparing', 'ready'))
          UNION ALL
-         (SELECT b.id, b.reference, b.snack_status, b.snacks_total, b.show_date, b.show_time, b.paid_at, u.name AS customer_name
+         (SELECT b.id, b.reference, b.snack_number, b.snack_status, b.snacks_total, b.show_date, b.show_time, b.paid_at, u.name AS customer_name
           FROM bookings b JOIN users u ON u.id = b.user_id
           WHERE b.status = 'paid' AND b.snack_status = 'sold'
           ORDER BY b.paid_at DESC LIMIT 20)
@@ -768,21 +821,24 @@ function snack_queue(): array
 }
 
 /**
- * What the Snacks Claim monitor shows: the reference numbers of orders being
- * prepared and of orders ready to pick up, as ['preparing' => [...],
- * 'ready' => [...]], oldest first. Only the numbers: the screen faces the
- * customers, so no names or orders are on it.
+ * What the Snacks Claim monitor shows: the order numbers ('002', no '#')
+ * being prepared and ready to pick up, as ['preparing' => [...], 'ready' =>
+ * [...]], lowest first. Only the numbers: the screen faces the customers,
+ * so no names or orders are on it. An order paid before numbers were given
+ * out shows its reference instead.
  */
 function claim_monitor_orders(): array
 {
     $lists = ['preparing' => [], 'ready' => []];
     $rows = db_all(
-        "SELECT reference, snack_status FROM bookings
+        "SELECT reference, snack_status, snack_number FROM bookings
          WHERE status = 'paid' AND snack_status IN ('preparing', 'ready')
-         ORDER BY show_date, show_time, id"
+         ORDER BY snack_number IS NULL, snack_number, id"
     );
     foreach ($rows as $row) {
-        $lists[$row['snack_status']][] = (string) $row['reference'];
+        $lists[$row['snack_status']][] = $row['snack_number'] !== null
+            ? snack_number_label((int) $row['snack_number'])
+            : (string) $row['reference'];
     }
     return $lists;
 }

@@ -165,17 +165,6 @@ function render_staff_sidebar(string $current): void
 }
 
 /**
- * Prints and clears the waiting one-time messages.
- */
-function render_flashes(): void
-{
-    foreach (take_flashes() as $flash) {
-        $type = in_array($flash['type'] ?? '', ['success', 'error', 'notice'], true) ? $flash['type'] : 'notice';
-        echo '<p class="form-message form-message-' . $type . '" role="status">' . e($flash['message'] ?? '') . "</p>\n";
-    }
-}
-
-/**
  * The footer, the page's scripts, and the end of the page. Options:
  *   'js' => scripts under assets/, e.g. ['assets/js/booking.js']
  */

@@ -1,7 +1,8 @@
-// Staff Add Movie page. The run date is picked from a small calendar, which
-// writes the date into the form's hidden run_date box. Before the form is
-// sent, empty boxes are pointed out here to save a round trip; the server
-// checks everything again anyway.
+// Staff Add Movie page. The movie's run is picked from a small calendar: the
+// first day clicked is the opening day, the second the last day, and they
+// are written into the form's hidden opens_on and ends_on boxes. Before the
+// form is sent, empty boxes are pointed out here to save a round trip; the
+// server checks everything again anyway.
 (function () {
 
   var monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -20,7 +21,7 @@
   var titleInput = document.getElementById('new-title');
   var genreInput = document.getElementById('new-genre');
   var priceInput = document.getElementById('new-price');
-  var statusSelect = document.getElementById('new-status');
+  var cinemaSelect = document.getElementById('new-cinema');
 
   var hoursInput = document.getElementById('new-hours');
   var minutesInput = document.getElementById('new-minutes');
@@ -33,17 +34,18 @@
   }
   var posterTooBigText = 'The poster must be ' + Math.round(posterLimit / (1024 * 1024)) + ' MB or smaller.';
 
-  var dateLabel = document.getElementById('run-date-label');
   var dateField = document.getElementById('run-date-field');
   var dateButton = document.getElementById('run-date-button');
   var dateText = document.getElementById('run-date-text');
-  var dateHolder = document.getElementById('new-run-date');
+  var opensHolder = document.getElementById('new-opens-on');
+  var endsHolder = document.getElementById('new-ends-on');
 
   var calendar = document.getElementById('run-calendar');
   var calendarDates = document.getElementById('run-calendar-dates');
   var calendarMonth = document.getElementById('run-calendar-month');
   var calendarBack = document.getElementById('run-calendar-back');
   var calendarNext = document.getElementById('run-calendar-next');
+  var calendarHint = document.getElementById('run-calendar-hint');
 
   // Turns '2026-10-31' into a date the browser can compare
   function readDate(text) {
@@ -76,15 +78,25 @@
   var today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // After the server sends the form back with a problem, the date picked
-  // before is already in the hidden box
-  var chosenDate = /^\d{4}-\d{2}-\d{2}$/.test(dateHolder.value) ? dateHolder.value : '';
+  // After the server sends the form back with a problem, the days picked
+  // before are already in the hidden boxes. 'YYYY-MM-DD' keys compare
+  // correctly as plain text.
+  function readHolder(holder) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(holder.value) ? holder.value : '';
+  }
+  var openDate = readHolder(opensHolder);
+  var lastDate = openDate === '' ? '' : readHolder(endsHolder);
   var viewYear = today.getFullYear();
   var viewMonth = today.getMonth();
 
-  // A run cannot end, and a movie cannot open, on a day already gone by
+  // A run cannot start or end on a day already gone by
   function isAvailable(date) {
     return date >= today;
+  }
+
+  // The next click sets the opening day, unless one is waiting for its last day
+  function pickingLastDay() {
+    return openDate !== '' && lastDate === '';
   }
 
   function clearDates() {
@@ -125,13 +137,17 @@
         box.className += ' calendar-date-today';
       }
 
-      if (key === chosenDate) {
+      if (key === openDate || key === lastDate) {
         box.className += ' calendar-date-picked';
         box.setAttribute('aria-pressed', 'true');
+      } else if (lastDate !== '' && key > openDate && key < lastDate) {
+        box.className += ' calendar-date-in-range';
       }
 
       calendarDates.appendChild(box);
     }
+
+    calendarHint.textContent = pickingLastDay() ? 'Now pick the last day showing' : 'Pick the opening day';
 
     // Months wholly past are of no use. Going forward has no end, so a
     // run can be set as far ahead as the cinema has booked the movie.
@@ -149,7 +165,7 @@
   }
 
   function openCalendar() {
-    var start = chosenDate === '' ? today : readDate(chosenDate);
+    var start = openDate === '' ? today : readDate(openDate);
     if (start < today) {
       start = today;
     }
@@ -165,12 +181,17 @@
     dateButton.setAttribute('aria-expanded', 'false');
   }
 
-  // A showing movie counts down to its last day; an upcoming one counts up
-  // to its first, so the same date box is labelled for whichever it is
+  // The date box reads like 'Fri, 9 Oct 2026 – Sat, 31 Oct 2026', the same
+  // words the server writes into it
   function showDate() {
-    var upcoming = statusSelect.value === 'upcoming';
-    dateLabel.textContent = upcoming ? 'Opening day' : 'Last day showing';
-    dateText.textContent = chosenDate === '' ? 'Choose a date' : readableDate(chosenDate);
+    if (openDate === '') {
+      dateText.textContent = 'Choose the opening and last day';
+    } else {
+      dateText.textContent = readableDate(openDate) + ' – ' +
+        (lastDate === '' ? 'pick the last day' : readableDate(lastDate));
+    }
+    opensHolder.value = openDate;
+    endsHolder.value = lastDate;
   }
 
   // The two boxes read back as one length, like '1h 58m'
@@ -227,15 +248,31 @@
     }
   });
 
+  // First click: the opening day. Second click: the last day, which may be
+  // the same day. A day before the opening day starts over from there, and a
+  // click once both are set starts a new run.
   calendarDates.addEventListener('click', function (event) {
     var box = event.target.closest('.calendar-date');
     if (!box || box.disabled) {
       return;
     }
-    chosenDate = box.getAttribute('data-date');
-    dateHolder.value = chosenDate;
+    // Redrawing replaces the day clicked, which would then look like a click
+    // outside the calendar and shut it before the last day is picked
+    event.stopPropagation();
+    var key = box.getAttribute('data-date');
+    if (pickingLastDay() && key >= openDate) {
+      lastDate = key;
+    } else {
+      openDate = key;
+      lastDate = '';
+    }
+    dateButton.classList.remove('invalid');
     showDate();
-    closeCalendar();
+    if (lastDate !== '') {
+      closeCalendar();
+    } else {
+      drawCalendar();
+    }
   });
 
   calendarBack.addEventListener('click', function () {
@@ -259,15 +296,17 @@
     }
   });
 
-  // Where the movie goes decides how its date reads
-  statusSelect.addEventListener('change', showDate);
-
   hoursInput.addEventListener('input', function () {
     tidyNumber(hoursInput, 0, 9);
   });
 
   minutesInput.addEventListener('input', function () {
     tidyNumber(minutesInput, 0, 59);
+  });
+
+  // Picking a cinema takes away its red outline
+  cinemaSelect.addEventListener('change', function () {
+    cinemaSelect.classList.remove('invalid');
   });
 
   // Says straight away when the chosen poster is too big, and takes the
@@ -308,8 +347,18 @@
       missing.push('the length');
     }
 
-    if (chosenDate === '') {
-      missing.push(statusSelect.value === 'upcoming' ? 'the opening day' : 'the last day showing');
+    if (openDate === '') {
+      missing.push('the opening day');
+    }
+    if (lastDate === '') {
+      missing.push('the last day showing');
+    }
+    dateButton.classList.toggle('invalid', openDate === '' || lastDate === '');
+
+    var noCinema = cinemaSelect.value === '';
+    cinemaSelect.classList.toggle('invalid', noCinema);
+    if (noCinema) {
+      missing.push('the cinema');
     }
 
     if (missing.length > 0) {

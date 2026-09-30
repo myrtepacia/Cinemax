@@ -230,7 +230,8 @@ function show_clashes(array $shows, int $start, int $length): bool
 /**
  * Up to $count daily shows for a new film, as ['start' => 'HH:MM:SS',
  * 'cinema' => n], at the earliest times a cinema is free on every day the
- * film runs. Fewer, or none, when the cinemas are full. $movie holds
+ * film runs: only in cinema $onlyCinema when one is given, otherwise in
+ * whichever is free. Fewer, or none, when the cinema is full. $movie holds
  * duration_minutes, opens_on and ends_on.
  *
  * A cinema is taken by the other films' daily shows on the days they run,
@@ -238,13 +239,14 @@ function show_clashes(array $shows, int $start, int $length): bool
  * cleaning time. The film's own shows never overlap each other either:
  * a showing's seats are counted per film and time.
  */
-function free_showtimes(array $movie, int $count): array
+function free_showtimes(array $movie, int $count, ?int $onlyCinema = null): array
 {
     $today = today();
     $from = max($movie['opens_on'] ?? $today, $today);
     $to = $movie['ends_on'] ?? null;
 
-    $taken = array_fill(1, CINEMA_COUNT, []);
+    // The cinemas that may be used, each with what already takes it
+    $taken = $onlyCinema !== null ? [$onlyCinema => []] : array_fill(1, CINEMA_COUNT, []);
     $shows = db_all(
         'SELECT s.start_time, s.cinema, m.duration_minutes, m.opens_on, m.ends_on
          FROM showtimes s JOIN movies m ON m.id = s.movie_id
@@ -292,16 +294,17 @@ function free_showtimes(array $movie, int $count): array
 
 /**
  * Adds a film with up to SHOWS_PER_NEW_FILM daily shows at the first free
- * times in the cinemas (or none, when they are full on its days). $movie
- * holds title, genre, duration_minutes, rating, price, status, opens_on,
- * ends_on and poster_path, already checked by the caller. Returns the new id.
+ * times in its cinema (or none, when that cinema is full on its days).
+ * $movie holds title, genre, duration_minutes, rating, price, status,
+ * opens_on, ends_on, poster_path and cinema (1 or 2), already checked by the
+ * caller. Returns the new id.
  */
 function create_movie(array $movie): int
 {
     return (int) db_transaction(function (PDO $pdo) use ($movie): int {
         // One film at a time, so two admins cannot both take the same free time
         db_all('SELECT id FROM movies WHERE is_active = 1 FOR UPDATE');
-        $shows = free_showtimes($movie, SHOWS_PER_NEW_FILM);
+        $shows = free_showtimes($movie, SHOWS_PER_NEW_FILM, (int) $movie['cinema']);
 
         db_exec(
             'INSERT INTO movies (slug, title, genre, duration_minutes, rating, price, status, opens_on, ends_on, poster_path)

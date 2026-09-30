@@ -24,8 +24,6 @@ render_header(['staff' => true, 'current' => 'snack-scanner']);
 
     <main class="admin-page">
 
-      <?php render_flashes(); ?>
-
       <div class="panel camera-panel" id="scanner" data-mode="snack" data-api-url="<?= e(url('api/snack-scan.php')) ?>">
 
         <p class="panel-note">Open the camera to scan the QR code on the ticket</p>

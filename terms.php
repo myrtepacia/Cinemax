@@ -14,8 +14,6 @@ render_header();
 ?>
   <main class="terms-page">
 
-    <?php render_flashes(); ?>
-
     <h1>Terms of Service</h1>
     <p class="terms-intro">These are the terms you agree to when using Cinemax's online booking system.</p>
 

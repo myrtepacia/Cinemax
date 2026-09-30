@@ -69,17 +69,11 @@ function movie_listing_state(array $movie): string
 }
 
 /**
- * The line under a film's name: 'Until Oct 25, 2026' or 'Opens Oct 17'.
+ * When an upcoming film opens, for its card: 'Opens Oct 17'.
  */
-function movie_listing_note(array $movie): string
+function movie_opening_note(array $movie): string
 {
-    if (movie_listing_state($movie) === 'soon') {
-        return 'Opens ' . (new DateTimeImmutable($movie['opens_on']))->format('M j');
-    }
-    if (!empty($movie['ends_on'])) {
-        return 'Until ' . format_date_short($movie['ends_on']);
-    }
-    return 'Now showing';
+    return 'Opens ' . (new DateTimeImmutable($movie['opens_on']))->format('M j');
 }
 
 /**
@@ -330,6 +324,116 @@ function create_movie(array $movie): int
             db_exec('INSERT INTO showtimes (movie_id, cinema, start_time) VALUES (?, ?, ?)', [$id, $show['cinema'], $show['start']]);
         }
         return $id;
+    });
+}
+
+/**
+ * The earliest new last day a film's run can be extended to: the day after
+ * its last day, or today for a run that has already ended.
+ */
+function movie_extend_from(array $movie): string
+{
+    $next = (new DateTimeImmutable((string) $movie['ends_on']))->modify('+1 day')->format('Y-m-d');
+    return max($next, today());
+}
+
+/**
+ * How far a film's run can be extended with its shows kept at the same
+ * times, as ['last' => 'Y-m-d', 'blocker' => a film's title, 'cinema' => n,
+ * 'from' => 'Y-m-d'], or null when nothing is in the way. What stands in
+ * the way is another film's show in the same cinema at a clashing time on
+ * a day it runs, or tickets already sold or held for one.
+ */
+function movie_extend_limit(array $movie): ?array
+{
+    $start = movie_extend_from($movie);
+    $own = [];
+    foreach (movie_schedule((int) $movie['id']) as $time => $cinema) {
+        $own[$cinema][] = [minutes_of_day((string) $time), (int) $movie['duration_minutes']];
+    }
+
+    $first = null;
+    $inTheWay = static function (string $date, array $show) use (&$first): void {
+        if ($first === null || $date < $first['from']) {
+            $first = ['from' => $date, 'blocker' => (string) $show['title'], 'cinema' => (int) $show['cinema']];
+        }
+    };
+    $clashes = static function (array $show, string $timeColumn) use ($own): bool {
+        return show_clashes($own[(int) $show['cinema']] ?? [], minutes_of_day((string) $show[$timeColumn]), (int) $show['duration_minutes']);
+    };
+
+    $shows = db_all(
+        'SELECT s.start_time, s.cinema, m.title, m.duration_minutes, m.opens_on, m.ends_on
+         FROM showtimes s JOIN movies m ON m.id = s.movie_id
+         WHERE m.is_active = 1 AND m.id <> ? AND (m.ends_on IS NULL OR m.ends_on >= ?)',
+        [(int) $movie['id'], $start]
+    );
+    foreach ($shows as $show) {
+        $from = max((string) ($show['opens_on'] ?? $start), $start);
+        if ($clashes($show, 'start_time') && ($show['ends_on'] === null || $show['ends_on'] >= $from)) {
+            $inTheWay($from, $show);
+        }
+    }
+    $sold = db_all(
+        "SELECT DISTINCT b.show_date, b.show_time, b.cinema, m.title, m.duration_minutes
+         FROM bookings b JOIN movies m ON m.id = b.movie_id
+         WHERE b.movie_id <> ? AND b.status IN ('paid', 'pending') AND b.show_date >= ?",
+        [(int) $movie['id'], $start]
+    );
+    foreach ($sold as $show) {
+        if ($clashes($show, 'show_time')) {
+            $inTheWay((string) $show['show_date'], $show);
+        }
+    }
+
+    if ($first === null) {
+        return null;
+    }
+    $first['last'] = (new DateTimeImmutable($first['from']))->modify('-1 day')->format('Y-m-d');
+    return $first;
+}
+
+/**
+ * Why a run can go no further, for the Movies page: 'Can run until Fri, 16
+ * Oct 2026 at the latest: Broken [of] Love uses Cinema 1 at those times
+ * from Sat, 17 Oct.'
+ */
+function movie_extend_limit_text(array $movie, array $limit): string
+{
+    $why = $limit['blocker'] . ' uses ' . cinema_label($limit['cinema']) . ' at those times from '
+        . (new DateTimeImmutable($limit['from']))->format('D, j M') . '.';
+    if ($limit['last'] < movie_extend_from($movie)) {
+        return 'This run cannot be extended: ' . $why;
+    }
+    return 'Can run until ' . (new DateTimeImmutable($limit['last']))->format('D, j M Y') . ' at the latest: ' . $why;
+}
+
+/**
+ * Moves a film's last day later, keeping its showtimes. Returns null when
+ * done, or what is wrong for the admin to read.
+ */
+function extend_movie(int $movieId, string $newLast): ?string
+{
+    return db_transaction(function () use ($movieId, $newLast): ?string {
+        // One change to the timetable at a time (see create_movie)
+        db_all('SELECT id FROM movies WHERE is_active = 1 FOR UPDATE');
+        $movie = db_one('SELECT * FROM movies WHERE id = ? AND is_active = 1', [$movieId]);
+        if ($movie === null) {
+            return 'That movie is no longer on the listings.';
+        }
+        if ($movie['ends_on'] === null) {
+            return $movie['title'] . ' has no last day, so there is nothing to extend.';
+        }
+        $from = movie_extend_from($movie);
+        if ($newLast < $from) {
+            return 'Pick a new last day from ' . (new DateTimeImmutable($from))->format('D, j M Y') . ' on.';
+        }
+        $limit = movie_extend_limit($movie);
+        if ($limit !== null && $newLast > $limit['last']) {
+            return movie_extend_limit_text($movie, $limit);
+        }
+        db_exec('UPDATE movies SET ends_on = ? WHERE id = ?', [$newLast, $movieId]);
+        return null;
     });
 }
 

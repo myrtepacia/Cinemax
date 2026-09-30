@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Dashboard</title>
+  <link rel="icon" type="image/png" href="photo/logo.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="cinemax.css">
+  <style>
+    /* Cinemax staff pages: Dashboard, Movies and Add Movie.
+       Everything else these pages use lives in cinemax.css. */
+
+    /* 1. SNACK ORDER BUTTONS ---------------------------------------------------*/
+
+    /* Each button sits in a small form (the step is a POST with a CSRF token).
+       The form is display: contents (.inline-form), so the button itself is
+       what lines up in the order row's grid. */
+    .order-action-btn {
+      padding: 7px 14px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background-color 0.15s;
+    }
+
+    /* Preparing section — moves order to Ready */
+    .btn-mark-ready {
+      background-color: #fb2c36;
+      border: none;
+      color: #ffffff;
+    }
+    .btn-mark-ready:hover {
+      background-color: #e7000b;
+    }
+
+    /* Ready section — moves order to Sold */
+    .btn-mark-pickup {
+      background-color: #fb2c36;
+      border: none;
+      color: #ffffff;
+    }
+    .btn-mark-pickup:hover {
+      background-color: #e7000b;
+    }
+
+    /* 2. MOVIES TABLE ----------------------------------------------------------*/
+
+    /* A film still listed but past its last day: the same pill as Now Showing
+       and Upcoming, in grey because nobody can book it. */
+    .label-ended {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background-color: #f3f4f6;
+      color: #4a5565;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* Extend and Remove side by side at the end of each row */
+    .row-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .last-day-cell {
+      white-space: nowrap;
+    }
+
+    /* The Extend panel under a film's row, folded away until Extend is pressed */
+    .movie-table tr.extend-row[hidden] {
+      display: none;
+    }
+
+    /* The last film's row may be followed by its folded-away panel, so it is
+       marked from the page rather than found with :last-child */
+    .movie-table tr.last-movie td {
+      border-bottom: none;
+    }
+
+    .movie-table .extend-row td {
+      padding: 14px 16px;
+      background-color: #f9fafb;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .extend-now {
+      margin-bottom: 10px;
+      color: #4a5565;
+      font-size: 13px;
+    }
+
+    .extend-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .extend-date-field {
+      flex: 0 1 280px;
+    }
+
+    .extend-date-field .calendar {
+      min-width: 280px;
+    }
+
+    .extend-controls .button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .extend-note {
+      margin-top: 10px;
+      color: #6a7282;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    @media (max-width: 620px) {
+      .movie-table tr.extend-row {
+        display: block;
+        padding: 0 0 12px 0;
+        border-top: none;
+      }
+
+      .movie-table .extend-row td {
+        display: block;
+        border-radius: 12px;
+      }
+
+      .extend-date-field {
+        flex-basis: 100%;
+      }
+    }
+
+    /* 3. ADD MOVIE FORM --------------------------------------------------------*/
+
+    /* The server's list of what to fix, inside the red message box */
+    .form-error-list {
+      margin: 6px 0 0 0;
+      padding-left: 20px;
+    }
+
+    .form-error-list li + li {
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+  <header class="top-bar">
+    <div class="top-bar-inner">
+
+      <a class="logo" href="index.html"><img class="logo-mark" src="photo/logo.png" alt="" width="49" height="44">CINEMAX</a>
+
+      <input class="menu-checkbox" type="checkbox" id="menu-open" aria-label="Menu">
+      <label class="menu-toggle" for="menu-open"><span></span></label>
+
+      <div class="bar-nav">
+        <nav class="menu menu-staff">
+          <a href="admin.html" class="current">Dashboard</a>
+          <a href="admin-movies.html">Movies</a>
+          <a href="admin-add-movie.html">Add Movie</a>
+          <a href="admin-scanner.html">Ticket Scanner</a>
+          <a href="admin-snack-scanner.html">Snack Scanner</a>
+        </nav>
+
+        <div class="auth-buttons">
+          <a class="button button-red" href="index.html">Sign Out</a>
+        </div>
+      </div>
+
+    </div>
+  </header>
+  <div class="admin-layout">
+        <aside class="admin-sidebar">
+      <nav class="sidebar-menu">
+        <p class="sidebar-title">Staff</p>
+        <a href="admin.html" class="current">Dashboard</a>
+        <a href="admin-movies.html">Movies</a>
+        <a href="admin-add-movie.html">Add Movie</a>
+        <a href="admin-scanner.html">Ticket Scanner</a>
+        <a href="admin-snack-scanner.html">Snack Scanner</a>
+      </nav>
+    </aside>
+
+    <div class="admin-head">
+      <h1>Staff Dashboard</h1>
+
+      <div class="stat-row" id="dashboard-stats">
+
+        <div class="stat stat-money">
+          <p class="stat-name">Total Revenue</p>
+          <p class="stat-figure">₱3,265</p>
+          <p class="stat-extra">Tickets plus snacks</p>
+        </div>
+
+        <div class="stat">
+          <p class="stat-name">Ticket Sales</p>
+          <p class="stat-figure">₱1,850</p>
+          <p class="stat-extra">8 tickets sold</p>
+        </div>
+
+        <div class="stat">
+          <p class="stat-name">Snack Sales</p>
+          <p class="stat-figure">₱1,415</p>
+          <p class="stat-extra">10 snacks sold</p>
+        </div>
+
+      </div>
+    </div>
+
+    <main class="admin-page" id="dashboard" data-version="df20d97f79973294">
+
+      <section class="panel" id="snack-orders">
+
+        <h2>Snack orders</h2>
+        <p class="panel-note">
+          Tap a button to move an order to the next stage. 6 snacks in total.
+        </p>
+
+        <div class="order-group">
+
+          <h3 class="order-group-title">
+            Preparing
+            <span class="order-count count-preparing">2</span>
+          </h3>
+
+
+          <div>
+
+            <div class="order-row">
+              <div class="order-left">
+                <p class="order-items">Barkada Combo</p>
+                <p class="order-who"><strong>#002</strong> &bull; CMX-Z7E3ST &bull; Maria Santos &bull; 1 snack</p>
+              </div>
+              <p class="order-price">₱480</p>
+              <form class="inline-form">
+                <input type="hidden" name="booking_id" value="3">
+                <input type="hidden" name="from" value="preparing">
+                <button type="submit" class="order-action-btn btn-mark-ready">Ready</button>
+              </form>
+            </div>
+
+            <div class="order-row">
+              <div class="order-left">
+                <p class="order-items">Popcorn, Large, Soda, Large</p>
+                <p class="order-who"><strong>#004</strong> &bull; CMX-ZZMYT7 &bull; Ana Lim &bull; 2 snacks</p>
+              </div>
+              <p class="order-price">₱255</p>
+              <form class="inline-form">
+                <input type="hidden" name="booking_id" value="5">
+                <input type="hidden" name="from" value="preparing">
+                <button type="submit" class="order-action-btn btn-mark-ready">Ready</button>
+              </form>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="order-group">
+
+          <h3 class="order-group-title">
+            Ready
+            <span class="order-count count-ready">1</span>
+          </h3>
+
+
+          <div>
+
+            <div class="order-row">
+              <div class="order-left">
+                <p class="order-items">Solo Combo</p>
+                <p class="order-who"><strong>#003</strong> &bull; CMX-U7XLKL &bull; Paolo Reyes &bull; 1 snack</p>
+              </div>
+              <p class="order-price">₱180</p>
+              <form class="inline-form">
+                <input type="hidden" name="booking_id" value="4">
+                <input type="hidden" name="from" value="ready">
+                <button type="submit" class="order-action-btn btn-mark-pickup">Picked Up</button>
+              </form>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="order-group">
+
+          <h3 class="order-group-title">
+            Sold
+            <span class="order-count count-sold">1</span>
+          </h3>
+
+
+          <div>
+
+            <div class="order-row">
+              <div class="order-left">
+                <p class="order-items">Chocolate Bar ×2</p>
+                <p class="order-who"><strong>#005</strong> &bull; CMX-DEXV4W &bull; Carlo Mendoza &bull; 2 snacks</p>
+              </div>
+              <p class="order-price">₱120</p>
+              <span class="sold-tag">Sold</span>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <a class="logo" href="index.html"><img class="logo-mark" src="photo/logo.png" alt="" width="49" height="44">CINEMAX</a>
+      <p class="footer-text">
+        Your next movie experience starts here. <br>
+        Book your seats, enjoy your snacks, and let the show begin.
+      </p>
+      <p class="footer-copyright">&copy; 2026 Cinemax. All rights reserved. <a href="terms.html">Terms of Service</a></p>
+    </div>
+  </footer>
+  <script>
+    // Snack orders: Ready moves an order from Preparing to Ready, Picked Up
+    // moves it from Ready to Sold. The groups' counts and "Nothing..." lines
+    // follow along.
+    (function () {
+      var section = document.getElementById('snack-orders');
+      if (!section) {
+        return;
+      }
+      var groups = section.querySelectorAll('.order-group');
+      var stages = ['preparing', 'ready', 'sold'];
+      var emptyText = {
+        preparing: 'Nothing being prepared',
+        ready: 'Nothing waiting at the counter',
+        sold: 'Nothing handed over yet'
+      };
+
+      function list(stage) {
+        return groups[stages.indexOf(stage)].lastElementChild;
+      }
+
+      function refresh() {
+        stages.forEach(function (stage, index) {
+          var group = groups[index];
+          var count = list(stage).querySelectorAll('.order-row').length;
+          group.querySelector('.order-count').textContent = count;
+          var empty = group.querySelector('.empty-note');
+          if (!empty) {
+            empty = document.createElement('p');
+            empty.className = 'empty-note';
+            empty.textContent = emptyText[stage];
+            group.insertBefore(empty, list(stage));
+          }
+          empty.hidden = count > 0;
+        });
+      }
+
+      section.addEventListener('submit', function (event) {
+        event.preventDefault();
+        var form = event.target;
+        var row = form.closest('.order-row');
+        var from = form.querySelector('input[name="from"]');
+
+        if (from.value === 'preparing') {
+          // Now it is waiting at the counter: its button becomes Picked Up
+          from.value = 'ready';
+          var button = form.querySelector('button');
+          button.textContent = 'Picked Up';
+          button.classList.remove('btn-mark-ready');
+          button.classList.add('btn-mark-pickup');
+          list('ready').appendChild(row);
+        } else {
+          // Handed over: the button makes way for the Sold tag
+          var tag = document.createElement('span');
+          tag.className = 'sold-tag';
+          tag.textContent = 'Sold';
+          form.replaceWith(tag);
+          list('sold').insertBefore(row, list('sold').firstChild);
+        }
+        refresh();
+      });
+
+      refresh();
+    })();
+  </script>
+</body>
+</html>

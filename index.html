@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cinemax</title>
+  <link rel="icon" type="image/png" href="photo/logo.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="cinemax.css">
+</head>
+<body>
+  <header class="top-bar">
+    <div class="top-bar-inner">
+
+      <a class="logo" href="index.html"><img class="logo-mark" src="photo/logo.png" alt="" width="49" height="44">CINEMAX</a>
+
+      <input class="menu-checkbox" type="checkbox" id="menu-open" aria-label="Menu">
+      <label class="menu-toggle" for="menu-open"><span></span></label>
+
+      <div class="bar-nav">
+        <nav class="menu">
+          <a href="#now-showing" class="current">Now Showing</a>
+          <a href="#coming-soon">Upcoming Shows</a>
+        </nav>
+
+        <div class="auth-buttons">
+          <a class="button button-outline" href="signin.html">Sign In</a>
+          <a class="button button-red" href="signup.html">Sign Up</a>
+        </div>
+      </div>
+
+    </div>
+  </header>
+  <main>
+
+    <section class="section" id="now-showing">
+
+      <div class="section-title-row">
+        <h2 class="section-title">Now Showing</h2>
+        <span class="film-count" id="showing-count">4 Films</span>
+      </div>
+      <p class="section-note">Reserve your seat and pre-order your snacks. Tickets from ₱220.</p>
+
+      <div class="movie-grid" id="showing-grid">
+
+        <div class="movie-card">
+          <div class="movie-poster">
+            <img src="photo/eternal-sunshine.jpg" alt="Eternal Sunshine of the Spotless Mind poster"
+                 width="900" height="1200" decoding="async" fetchpriority="high">
+            <span class="tag-status tag-showing">Showing</span>
+            <span class="tag-rated">PG-13</span>
+            <span class="tag-time">1h 48min</span>
+          </div>
+          <div class="movie-info">
+            <h3 class="movie-title">Eternal Sunshine of the Spotless Mind</h3>
+            <a class="button button-red button-wide" href="book-eternal-sunshine.html">Book Now</a>
+          </div>
+        </div>
+
+        <div class="movie-card">
+          <div class="movie-poster">
+            <img src="photo/Pieces-of-us.jpg" alt="Pieces of Us poster"
+                 width="900" height="1200" decoding="async" fetchpriority="high">
+            <span class="tag-status tag-showing">Showing</span>
+            <span class="tag-rated">PG-13</span>
+            <span class="tag-time">1h 52min</span>
+          </div>
+          <div class="movie-info">
+            <h3 class="movie-title">Pieces of Us</h3>
+            <a class="button button-red button-wide" href="book-pieces-of-us.html">Book Now</a>
+          </div>
+        </div>
+
+        <div class="movie-card">
+          <div class="movie-poster">
+            <img src="photo/Joker.jpg" alt="Joker poster"
+                 width="900" height="1200" decoding="async" fetchpriority="high">
+            <span class="tag-status tag-showing">Showing</span>
+            <span class="tag-rated">R-16</span>
+            <span class="tag-time">2h 2min</span>
+          </div>
+          <div class="movie-info">
+            <h3 class="movie-title">Joker</h3>
+            <a class="button button-red button-wide" href="book-joker.html">Book Now</a>
+          </div>
+        </div>
+
+        <div class="movie-card">
+          <div class="movie-poster">
+            <img src="photo/The-Reckoning.jpg" alt="The Reckoning poster"
+                 width="900" height="1200" decoding="async" fetchpriority="high">
+            <span class="tag-status tag-showing">Showing</span>
+            <span class="tag-rated">R-16</span>
+            <span class="tag-time">1h 58min</span>
+          </div>
+          <div class="movie-info">
+            <h3 class="movie-title">The Reckoning</h3>
+            <a class="button button-red button-wide" href="book-the-reckoning.html">Book Now</a>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <section class="section" id="coming-soon">
+
+      <div class="section-title-row">
+        <h2 class="section-title">Upcoming Shows</h2>
+        <span class="film-count film-count-soon" id="soon-count">2 Films</span>
+      </div>
+      <p class="section-note">Coming to Cinemax soon. Booking opens on release day.</p>
+
+      <div class="movie-grid" id="soon-grid">
+
+        <div class="movie-card">
+          <div class="movie-poster">
+            <img src="photo/Hush.jpg" alt="Hush poster"
+                 width="900" height="1200" decoding="async" loading="lazy">
+            <span class="tag-status tag-soon">Soon</span>
+            <span class="tag-rated">R-16</span>
+            <span class="tag-time">1h 22min</span>
+          </div>
+          <div class="movie-info">
+            <h3 class="movie-title">Hush</h3>
+            <span class="button button-grey button-wide">Opens Oct 9</span>
+          </div>
+        </div>
+
+        <div class="movie-card">
+          <div class="movie-poster">
+            <img src="photo/Broken-%5Bof%5D-Love.jpg" alt="Broken [of] Love poster"
+                 width="900" height="1200" decoding="async" loading="lazy">
+            <span class="tag-status tag-soon">Soon</span>
+            <span class="tag-rated">PG-13</span>
+            <span class="tag-time">1h 45min</span>
+          </div>
+          <div class="movie-info">
+            <h3 class="movie-title">Broken [of] Love</h3>
+            <span class="button button-grey button-wide">Opens Oct 17</span>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <a class="logo" href="index.html"><img class="logo-mark" src="photo/logo.png" alt="" width="49" height="44">CINEMAX</a>
+      <p class="footer-text">
+        Your next movie experience starts here. <br>
+        Book your seats, enjoy your snacks, and let the show begin.
+      </p>
+      <p class="footer-copyright">&copy; 2026 Cinemax. All rights reserved. <a href="terms.html">Terms of Service</a></p>
+    </div>
+  </footer>
+  <script>
+    // Links in the phone menu that jump down this page (Now Showing,
+    // Upcoming Shows) do not load a new page, so the drop-down menu would
+    // stay open over the movies. This shuts it.
+    (function () {
+      var toggle = document.getElementById('menu-open');
+      if (toggle) {
+        document.querySelectorAll('.menu a').forEach(function (link) {
+          link.addEventListener('click', function () {
+            toggle.checked = false;
+          });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

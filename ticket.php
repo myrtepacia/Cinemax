@@ -74,8 +74,6 @@ render_header();
 ?>
   <main class="ticket-page">
 
-    <?php render_flashes(); ?>
-
 <?php if (!$hasTicket): ?>
     <div class="confirm-box">
       <h1>No Ticket for This Booking</h1>

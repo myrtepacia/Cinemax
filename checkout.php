@@ -14,7 +14,6 @@ verify_csrf();
 $movieId = input_int($_POST, 'movie_id', 1);
 $movie = $movieId !== null ? find_movie($movieId) : null;
 if ($movie === null || (int) $movie['is_active'] !== 1) {
-    flash('error', 'That movie cannot be booked any more.');
     redirect('index.php');
 }
 $bookPath = 'book.php?movie=' . rawurlencode((string) $movie['slug']);
@@ -23,13 +22,11 @@ $bookPath = 'book.php?movie=' . rawurlencode((string) $movie['slug']);
 // straight back to the film, rather than to this form-only address.
 $signedIn = current_user();
 if ($signedIn === null) {
-    flash('notice', 'Please sign in to book.');
     redirect('signin.php?return=' . rawurlencode($bookPath));
 }
-// Staff see a greyed-out button, but a form sent anyway gets a plain answer
-// on the film's page rather than an error page
+// Staff see a greyed-out button; a form sent anyway just goes back to the
+// film's page rather than to an error page
 if ($signedIn['role'] !== 'customer') {
-    flash('error', 'Staff accounts cannot book tickets. Sign in with a customer account to book.');
     redirect($bookPath);
 }
 $user = require_role('customer');
@@ -94,25 +91,21 @@ if (is_array($rawSnacks)) {
 }
 
 if ($date === null || $time === '') {
-    flash('error', 'Choose a date and a showtime.');
     redirect($backPath);
 }
 if ($snackProblem) {
-    flash('error', 'You can add up to ' . MAX_PER_SNACK . ' of each snack on the menu.');
     redirect($backPath);
 }
 
 // Each checkout opens a PayMongo session, so one account cannot start them
 // endlessly (holds are already capped by create_pending_booking()).
 if (too_many_attempts('checkout', 'user:' . $user['id'], 20, 3600, 60)) {
-    flash('error', 'Too many bookings started in a short time. Please wait a while and try again.');
     redirect($backPath);
 }
 
 try {
     $booking = create_pending_booking($user, $movie, $date, $time, $seats, $snacks);
 } catch (BookingException $e) {
-    flash('error', $e->getMessage());
     redirect($backPath);
 }
 record_attempt('checkout', 'user:' . $user['id']);
@@ -130,7 +123,6 @@ function checkout_give_up(array $booking, Throwable $error, string $backPath): v
         // The hold still runs out by itself after a few minutes
         error_log('[checkout] could not cancel ' . $booking['reference'] . ': ' . $cancelError->getMessage());
     }
-    flash('error', 'We could not reach the payment service. Nothing was charged. Please try again.');
     redirect($backPath);
 }
 

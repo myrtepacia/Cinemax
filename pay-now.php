@@ -47,7 +47,6 @@ try {
     $stillHeld = $booking !== null && $booking['status'] === 'pending'
         && strtotime((string) $booking['expires_at']) > time();
     if (!$stillHeld) {
-        flash('error', 'Your seat hold ran out before payment, so those seats went back on sale. Please pick your seats again.');
         redirect($filmPath);
     }
 
@@ -71,6 +70,5 @@ try {
     redirect_external($fresh['checkout_url']);
 } catch (PayMongoException $e) {
     error_log('[pay-now] ' . $reference . ': ' . $e->getMessage());
-    flash('error', 'We could not reach the payment service just now. Nothing was charged. Please try again in a moment.');
     redirect('payment-success.php?ref=' . rawurlencode($reference));
 }

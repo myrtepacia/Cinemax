@@ -39,8 +39,6 @@ render_header(['home' => true, 'current' => 'now-showing']);
 
     <section class="section" id="now-showing">
 
-      <?php render_flashes(); ?>
-
       <div class="section-title-row">
         <h2 class="section-title">Now Showing</h2>
         <span class="film-count" id="showing-count"><?= e(index_film_count(count($showing))) ?></span>
@@ -67,7 +65,6 @@ render_header(['home' => true, 'current' => 'now-showing']);
           <div class="movie-info">
             <h3 class="movie-title"><?= e($movie['title']) ?></h3>
             <p class="movie-genre"><?= e(movie_details_line($movie)) ?></p>
-            <p class="movie-last-day"><?= e(movie_listing_note($movie)) ?></p>
             <p class="movie-price"><?= e(peso((int) $movie['price'])) ?></p>
             <a class="button button-red button-wide" href="<?= e(url('book.php?movie=' . rawurlencode((string) $movie['slug']))) ?>">Book Now</a>
           </div>
@@ -107,7 +104,7 @@ render_header(['home' => true, 'current' => 'now-showing']);
           <div class="movie-info">
             <h3 class="movie-title"><?= e($movie['title']) ?></h3>
             <p class="movie-genre"><?= e(movie_details_line($movie)) ?></p>
-            <span class="button button-grey button-wide"><?= e(movie_listing_note($movie)) ?></span>
+            <span class="button button-grey button-wide"><?= e(movie_opening_note($movie)) ?></span>
           </div>
         </div>
 <?php endforeach; ?>

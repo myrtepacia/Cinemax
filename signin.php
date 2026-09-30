@@ -65,7 +65,6 @@ render_header();
       <h1>Welcome back</h1>
       <p class="form-intro">Sign in to book your seats.</p>
 
-      <?php render_flashes(); ?>
 <?php if ($error !== ''): ?>
       <p class="form-message form-message-error" id="form-message" role="alert"><?= e($error) ?></p>
 <?php endif; ?>

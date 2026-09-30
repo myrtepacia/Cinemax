@@ -25,7 +25,6 @@ function payment_cancel_settle(array $user, array $booking): void
     record_attempt('settle', 'user:' . $user['id']);
 
     $wasPaid = $booking['status'] === 'paid';
-    $wasRefunded = $booking['status'] === 'refunded';
     try {
         $result = settle_booking($booking);
     } catch (PayMongoException $e) {
@@ -43,14 +42,8 @@ function payment_cancel_settle(array $user, array $booking): void
             redirect('ticket.php?ref=' . rawurlencode($reference));
             break;
         case 'refunded':
-            flash('notice', $wasRefunded
-                ? 'Booking ' . $reference . ' was refunded, so its ticket can no longer be used.'
-                : 'Your payment arrived after your seat hold ran out and the seats had been taken, so it was refunded in full.');
-            redirect('account.php');
-            break;
         case 'review':
-            flash('notice', 'We received your payment for booking ' . $reference
-                . ', but our staff need to confirm it before your ticket is ready. Please check My Bookings again later.');
+            // My Bookings shows where it stands
             redirect('account.php');
             break;
     }
@@ -86,17 +79,14 @@ if (is_post()) {
 
     // A paid ticket is never cancelled from here (only staff can refund it)
     if ($booking['status'] === 'paid') {
-        flash('notice', 'Booking ' . $booking['reference'] . ' is already paid, so it was not cancelled.');
         redirect('ticket.php?ref=' . rawurlencode((string) $booking['reference']));
     }
 
+    // A booking already closed (cancelled, refunded) has nothing to cancel
     if (in_array($booking['status'], ['pending', 'expired'], true)) {
         // Paid in the meantime? Then this leaves for the ticket instead.
         payment_cancel_settle($user, $booking);
         cancel_pending_booking($booking);
-        flash('success', 'Booking ' . $booking['reference'] . ' was cancelled and its seats are free again.');
-    } else {
-        flash('notice', 'Booking ' . $booking['reference'] . ' was already closed, so there was nothing to cancel.');
     }
     redirect(payment_cancel_film_path($booking));
 }
@@ -113,8 +103,6 @@ render_head($stillHeld ? 'Waiting for payment' : 'Payment cancelled', ['assets/c
 render_header(['current' => 'account']);
 ?>
   <main class="ticket-page">
-
-    <?php render_flashes(); ?>
 
 <?php if ($stillHeld): ?>
     <!-- Laid out like the payment page while seats are held -->

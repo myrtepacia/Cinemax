@@ -22,8 +22,6 @@ if (too_many_attempts('settle', 'user:' . $user['id'], 30, 300)) {
 }
 record_attempt('settle', 'user:' . $user['id']);
 
-$wasRefunded = $booking['status'] === 'refunded';
-
 try {
     $result = settle_booking($booking);
 } catch (PayMongoException $e) {
@@ -37,14 +35,8 @@ switch ($result) {
         redirect('ticket.php?ref=' . rawurlencode($reference));
         break;
     case 'refunded':
-        flash('notice', $wasRefunded
-            ? 'Booking ' . $reference . ' was refunded, so its ticket can no longer be used.'
-            : 'Your payment arrived after your seat hold ran out and the seats had been taken, so it was refunded in full.');
-        redirect('account.php');
-        break;
     case 'review':
-        flash('notice', 'We received your payment for booking ' . $reference
-            . ', but our staff need to confirm it before your ticket is ready. Please check My Bookings again later.');
+        // My Bookings shows where it stands
         redirect('account.php');
         break;
 }
@@ -94,8 +86,6 @@ render_head('Payment', ['assets/css/booking.css']);
 render_header(['current' => 'account']);
 ?>
   <main class="ticket-page">
-
-    <?php render_flashes(); ?>
 
     <?php
     // Seats still held: a big gap above "held until" and a small one below

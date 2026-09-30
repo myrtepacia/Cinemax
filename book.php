@@ -50,8 +50,6 @@ render_header();
 
     <a class="back-link" href="<?= e(url('index.php')) ?>">&larr; Back to movies</a>
 
-    <?php render_flashes(); ?>
-
 <?php if (!$bookable): ?>
 <?php
     // Not bookable today: coming soon, finished, or no showtimes set yet
@@ -202,12 +200,13 @@ render_header();
             <div class="screen-curve"></div>
             <p class="screen-word">SCREEN</p>
 
+            <!-- Two aisles split each row: seats 1-3 | 4-7 | 8-10 -->
             <div class="seat-map" id="seat-map">
 <?php foreach (SEAT_ROWS as $row): ?>
               <div class="seat-row">
                 <span class="row-letter"><?= e($row) ?></span>
 <?php for ($number = 1; $number <= SEATS_PER_ROW; $number++): ?>
-                <label class="seat"><input type="checkbox" name="seats[]" value="<?= e($row . $number) ?>" aria-label="<?= e('Seat ' . $row . $number) ?>"><span class="seat-box"><?= e($number) ?></span></label>
+                <label class="seat<?= in_array($number, [4, 8], true) ? ' seat-after-aisle' : '' ?>"><input type="checkbox" name="seats[]" value="<?= e($row . $number) ?>" aria-label="<?= e('Seat ' . $row . $number) ?>"><span class="seat-box"><?= e($number) ?></span></label>
 <?php endfor; ?>
               </div>
 <?php endforeach; ?>

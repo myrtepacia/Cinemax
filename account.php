@@ -57,8 +57,6 @@ render_header(['current' => 'account']);
     <h1>My Bookings</h1>
     <p class="admin-intro" id="intro">Signed in as <?= e($user['email']) ?>.</p>
 
-    <?php render_flashes(); ?>
-
     <section class="panel">
 
 <?php if ($bookings === []): ?>

@@ -120,14 +120,11 @@ function login_user(array $user): void
     }
 
     session_regenerate_id(true);
-    $keepFlashes = $_SESSION['flashes'] ?? [];
     $_SESSION = [];
     $_SESSION['user_id'] = (int) $account['id'];
     $_SESSION['auth_check'] = session_auth_check($account);
     $_SESSION['last_seen'] = time();
     $_SESSION['rotated_at'] = time();
-    $_SESSION['flashes'] = $keepFlashes;
-    unset($_SESSION['csrf_token']);
     db_exec('UPDATE users SET last_login_at = NOW() WHERE id = ?', [(int) $user['id']]);
 }
 
@@ -173,7 +170,6 @@ function require_login(): array
 {
     $user = current_user();
     if ($user === null) {
-        flash('notice', 'Please sign in first.');
         $return = safe_return_path(current_path());
         redirect('signin.php' . ($return !== null ? '?return=' . rawurlencode($return) : ''));
     }

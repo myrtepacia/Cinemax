@@ -82,7 +82,7 @@ CREATE TABLE snacks (
 -- One booking: some seats for one showing, maybe some snacks, one payment.
 --
 -- status:
---   pending   seats are held while the customer is at PayMongo (until expires_at)
+--   pending   seats are held while the customer pays (until expires_at)
 --   paid      money received; this is a real ticket
 --   expired   the hold ran out before payment
 --   cancelled the customer backed out at PayMongo
@@ -110,7 +110,10 @@ CREATE TABLE bookings (
   -- not held by another order still waiting to be picked up, so numbers
   -- are used again once their orders are collected.
   snack_number         SMALLINT UNSIGNED NULL,
-  paymongo_checkout_id VARCHAR(64) NULL,
+  snack_scanned_at     DATETIME NULL,           -- confirmed at the snack counter
+  snack_sold_at        DATETIME NULL,           -- picked up
+  paymongo_checkout_id VARCHAR(64) NULL,       -- PayMongo's checkout page (cs_...)
+  paymongo_intent_id   VARCHAR(64) NULL,       -- or a QR Ph payment shown on pay.php (pi_...)
   paymongo_payment_id  VARCHAR(64) NULL,
   paymongo_refund_id   VARCHAR(64) NULL,
   expires_at           DATETIME NOT NULL,
@@ -123,6 +126,7 @@ CREATE TABLE bookings (
   PRIMARY KEY (id),
   UNIQUE KEY uq_bookings_reference (reference),
   UNIQUE KEY uq_bookings_checkout (paymongo_checkout_id),
+  UNIQUE KEY uq_bookings_intent (paymongo_intent_id),
   KEY idx_bookings_user (user_id, created_at),
   KEY idx_bookings_status (status, expires_at),
   KEY idx_bookings_snacks (status, snack_status),

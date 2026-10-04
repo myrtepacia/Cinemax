@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// The parts every page shares: <head>, the top bar, the staff sidebar,
-// one-time messages and the footer.
+// The parts pages share: <head>, the top bar, the staff sidebar, the
+// payment pages' booking summary and the footer.
 //
 // A customer page:
 //   render_head('My Bookings');
@@ -161,6 +161,47 @@ function render_staff_sidebar(string $current): void
 <?php endforeach; ?>
       </nav>
     </aside>
+<?php
+}
+
+/**
+ * A booking's details laid out like the e-ticket's body, for the payment
+ * pages, under the name of the customer who booked. $amountLabel heads the
+ * price: 'Amount Due' or 'Total'.
+ */
+function render_booking_summary(array $booking, string $amountLabel): void
+{
+    ?>
+    <div class="ticket">
+      <div class="ticket-body">
+        <div class="ticket-row">
+          <p class="ticket-label">Name</p>
+          <p class="ticket-value ticket-value-small"><?= e($booking['customer_name']) ?></p>
+        </div>
+        <div class="ticket-pair">
+          <div>
+            <p class="ticket-label">Reference No.</p>
+            <p class="ticket-value ticket-reference"><?= e($booking['reference']) ?></p>
+          </div>
+          <div>
+            <p class="ticket-label">Seat(s)</p>
+            <p class="ticket-value"><?= e($booking['seat_list']) ?></p>
+          </div>
+        </div>
+        <div class="ticket-pair">
+          <div>
+            <p class="ticket-label">Movie</p>
+            <p class="ticket-value ticket-value-small"><?= e($booking['title']) ?></p>
+          </div>
+          <div>
+            <p class="ticket-label"><?= e($amountLabel) ?></p>
+            <p class="ticket-value"><?= e(peso((int) $booking['total'])) ?></p>
+          </div>
+        </div>
+        <p class="ticket-label">Showing</p>
+        <p class="ticket-value ticket-value-small"><?= e(format_showing((string) $booking['show_date'], (string) $booking['show_time'], (int) $booking['cinema'])) ?></p>
+      </div>
+    </div>
 <?php
 }
 

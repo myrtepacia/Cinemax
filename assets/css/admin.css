@@ -1,56 +1,28 @@
 /* Cinemax staff pages: Dashboard, Movies and Add Movie.
    Everything else these pages use lives in cinemax.css. */
 
-/* 1. SNACK ORDER BUTTONS ---------------------------------------------------*/
+/* 1. SNACK ORDERS ----------------------------------------------------------*/
 
-/* Each button sits in a small form (the step is a POST with a CSRF token).
-   The form is display: contents (.inline-form), so the button itself is
-   what lines up in the order row's grid. */
-.order-action-btn {
-  padding: 7px 14px;
-  border-radius: 10px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: background-color 0.15s;
+/* The search above Sold. Its box is the same as the Ticket Scanner's search
+   (.search-field in cinemax.css). */
+.sold-search {
+  margin: 10px 0 4px 0;
 }
 
-/* Preparing section — moves order to Ready */
-.btn-mark-ready {
-  background-color: #fb2c36;
-  border: none;
-  color: #ffffff;
-}
-.btn-mark-ready:hover {
-  background-color: #e7000b;
+.sold-search-note {
+  padding: 10px 0 2px 0;
+  color: var(--text-soft);
+  font-size: 14px;
 }
 
-/* Ready section — moves order to Sold */
-.btn-mark-pickup {
-  background-color: #fb2c36;
-  border: none;
-  color: #ffffff;
-}
-.btn-mark-pickup:hover {
-  background-color: #e7000b;
+/* When a found order was scanned at the snack counter and picked up */
+.order-time {
+  margin-top: 2px;
+  color: var(--text-soft);
+  font-size: 12px;
 }
 
 /* 2. MOVIES TABLE ----------------------------------------------------------*/
-
-/* A film still listed but past its last day: the same pill as Now Showing
-   and Upcoming, in grey because nobody can book it. */
-.label-ended {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background-color: #f3f4f6;
-  color: #4a5565;
-  font-size: 11px;
-  font-weight: 700;
-}
 
 /* Extend and Remove side by side at the end of each row */
 .row-actions {
@@ -76,13 +48,13 @@
 
 .movie-table .extend-row td {
   padding: 14px 16px;
-  background-color: #f9fafb;
-  border-bottom: 1px solid #f3f4f6;
+  background-color: var(--page);
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .extend-now {
   margin-bottom: 10px;
-  color: #4a5565;
+  color: var(--text-soft);
   font-size: 13px;
 }
 
@@ -101,14 +73,9 @@
   min-width: 280px;
 }
 
-.extend-controls .button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
 .extend-note {
   margin-top: 10px;
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 12px;
   font-weight: 600;
 }

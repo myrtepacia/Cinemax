@@ -37,9 +37,9 @@ $movies = active_movies();
 
 // The label in the Status column for each place a film can be in
 $labels = [
-    'showing' => ['class' => 'label-showing', 'text' => 'Now Showing'],
-    'soon'    => ['class' => 'label-soon', 'text' => 'Upcoming'],
-    'ended'   => ['class' => 'label-ended', 'text' => 'Ended'],
+    'showing' => ['class' => 'pill-green', 'text' => 'Now Showing'],
+    'soon'    => ['class' => 'pill-indigo', 'text' => 'Upcoming'],
+    'ended'   => ['class' => 'pill-grey', 'text' => 'Ended'],
 ];
 
 render_head('Movies', ['assets/css/admin.css']);
@@ -105,19 +105,19 @@ render_header(['staff' => true, 'current' => 'movies']);
                        width="40" height="54" loading="lazy" decoding="async">
                   <span>
                     <span class="movie-name"><?= e($movie['title']) ?></span>
-                    <span class="movie-sub"><?= e(movie_details_line($movie, true)) ?></span>
+                    <span class="movie-sub"><?= e(movie_details_line($movie)) ?></span>
                   </span>
                 </span>
               </td>
 
-              <td class="hide-small"><span class="<?= e($label['class']) ?>"><?= e($label['text']) ?></span></td>
+              <td class="hide-small"><span class="pill <?= e($label['class']) ?>"><?= e($label['text']) ?></span></td>
               <td class="hide-small last-day-cell"><?= e($lastDay !== null ? format_date_short($lastDay) : 'No last day') ?></td>
               <td class="right hide-small"><?= e(peso((int) $movie['price'])) ?></td>
               <td class="right sold-cell"><?= e(number_format(movie_tickets_sold((int) $movie['id']))) ?></td>
               <td class="right">
                 <span class="row-actions">
 <?php if ($lastDay !== null): ?>
-                  <button class="remove-button extend-toggle" type="button"
+                  <button class="button button-outline button-small extend-toggle" type="button"
                           aria-controls="<?= e($panelId) ?>" aria-expanded="false">Extend</button>
 <?php endif; ?>
                   <form method="post" action="<?= e(url('admin/movies.php')) ?>" class="inline-form remove-form"
@@ -126,7 +126,7 @@ render_header(['staff' => true, 'current' => 'movies']);
 
                     <input type="hidden" name="action" value="remove">
                     <input type="hidden" name="movie_id" value="<?= e($movie['id']) ?>">
-                    <button class="remove-button" type="submit">Remove</button>
+                    <button class="button button-outline button-small" type="submit">Remove</button>
                   </form>
                 </span>
               </td>
@@ -144,7 +144,7 @@ render_header(['staff' => true, 'current' => 'movies']);
                   <input type="hidden" name="ends_on" value="" class="extend-value">
 
                   <p class="extend-now">
-                    Last day now: <strong><?= e((new DateTimeImmutable($lastDay))->format('D, j M Y')) ?></strong>
+                    Last day now: <strong><?= e(format_day($lastDay)) ?></strong>
                   </p>
 <?php if ($canExtend): ?>
                   <div class="extend-controls">
@@ -158,7 +158,7 @@ render_header(['staff' => true, 'current' => 'movies']);
                       </button>
                     </div>
                     <button class="button button-red extend-save" type="submit" disabled>Save</button>
-                    <button class="remove-button extend-cancel" type="button">Cancel</button>
+                    <button class="button button-outline button-small extend-cancel" type="button">Cancel</button>
                   </div>
 <?php endif; ?>
 <?php if ($limit !== null): ?>
@@ -179,4 +179,4 @@ render_header(['staff' => true, 'current' => 'movies']);
     </main>
 
   </div>
-<?php render_footer(['js' => ['assets/js/admin-movies.js']]);
+<?php render_footer(['js' => ['assets/js/dates.js', 'assets/js/admin-movies.js']]);

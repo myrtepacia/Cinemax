@@ -28,7 +28,7 @@ render_head('Snacks Claim', ['assets/css/claim-monitor.css']);
     <header class="claim-head">
       <p class="claim-brand"><img src="<?= e(asset('assets/img/logo.png')) ?>" alt="" width="49" height="44">CINEMAX</p>
       <h1>Snacks Claim</h1>
-      <button class="claim-fullscreen" id="claim-fullscreen" type="button" hidden>Full screen</button>
+      <button class="button button-outline button-small claim-fullscreen" id="claim-fullscreen" type="button" hidden>Full screen</button>
     </header>
 
     <main class="claim-board">

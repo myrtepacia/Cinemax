@@ -49,6 +49,11 @@ if (is_post()) {
             $error = 'That email and password do not match an account.';
         } else {
             login_user($result);
+            // A scanner account going to its home page picks Ticket or Snack
+            // Scanner first; admin/scanner.php shows the choice on phones
+            if ($return === null && $result['role'] === 'scanner') {
+                $_SESSION['choose_scanner'] = true;
+            }
             redirect($return ?? home_for($result));
         }
     }

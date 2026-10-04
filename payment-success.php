@@ -43,44 +43,7 @@ switch ($result) {
 
 // Still here: not paid yet, or PayMongo could not be asked just now
 $stillHeld = $booking['status'] === 'pending' && strtotime((string) $booking['expires_at']) > time();
-$filmPath = find_movie_by_slug((string) $booking['slug']) !== null
-    ? 'book.php?movie=' . rawurlencode((string) $booking['slug'])
-    : 'index.php';
-
-/**
- * The booking's details, laid out like the e-ticket's body.
- */
-function payment_success_summary(array $booking): void
-{
-    ?>
-    <div class="ticket">
-      <div class="ticket-body">
-        <div class="ticket-pair">
-          <div>
-            <p class="ticket-label">Reference No.</p>
-            <p class="ticket-value ticket-reference"><?= e($booking['reference']) ?></p>
-          </div>
-          <div>
-            <p class="ticket-label">Seat(s)</p>
-            <p class="ticket-value"><?= e($booking['seat_list']) ?></p>
-          </div>
-        </div>
-        <div class="ticket-pair">
-          <div>
-            <p class="ticket-label">Movie</p>
-            <p class="ticket-value ticket-value-small"><?= e($booking['title']) ?></p>
-          </div>
-          <div>
-            <p class="ticket-label">Amount Due</p>
-            <p class="ticket-value"><?= e(peso((int) $booking['total'])) ?></p>
-          </div>
-        </div>
-        <p class="ticket-label">Showing</p>
-        <p class="ticket-value ticket-value-small"><?= e(format_showing((string) $booking['show_date'], (string) $booking['show_time'], (int) $booking['cinema'])) ?></p>
-      </div>
-    </div>
-<?php
-}
+$filmPath = booking_film_path($booking);
 
 render_head('Payment', ['assets/css/booking.css']);
 render_header(['current' => 'account']);
@@ -111,7 +74,7 @@ render_header(['current' => 'account']);
 <?php endif; ?>
     </div>
 
-    <?php payment_success_summary($booking); ?>
+    <?php render_booking_summary($booking, 'Amount Due'); ?>
 
     <div class="ticket-actions">
 <?php if ($stillHeld): ?>

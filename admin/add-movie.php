@@ -13,6 +13,11 @@ const ADD_MOVIE_MAX_POSTER_BYTES = 5 * 1024 * 1024;
 const ADD_MOVIE_MIN_POSTER_SIDE = 50;
 const ADD_MOVIE_MAX_POSTER_SIDE = 6000;
 
+// Every new poster is saved this size (3:4), the same as the starting
+// films', so all the cards and booking pages show posters alike
+const ADD_MOVIE_POSTER_WIDTH = 900;
+const ADD_MOVIE_POSTER_HEIGHT = 1200;
+
 // The picture types a poster may be, by what the file really is, with the
 // ending the saved copy gets. The name the file came with is never used.
 const ADD_MOVIE_POSTER_TYPES = [
@@ -102,20 +107,97 @@ function add_movie_check_poster($upload): array
 }
 
 /**
+ * True when PHP can redraw pictures (its GD extension, switched on in
+ * php.ini), so new posters are fitted to 900 x 1200.
+ */
+function add_movie_can_fit_posters(): bool
+{
+    return function_exists('imagecreatetruecolor');
+}
+
+/**
  * Saves a checked poster under a random name in uploads/posters and returns
- * its path from the site root, or null if it could not be saved.
+ * its path from the site root, or null if it could not be saved. It is saved
+ * as a 900 x 1200 JPEG (see add_movie_fit_poster). Without GD it is kept as
+ * it came, and the cards still crop it to 3:4 on the page.
  */
 function add_movie_save_poster(array $file): ?string
 {
-    $name = bin2hex(random_bytes(16)) . '.' . $file['ext'];
+    $fit = add_movie_can_fit_posters();
+    $name = bin2hex(random_bytes(16)) . '.' . ($fit ? 'jpg' : $file['ext']);
     $target = APP_ROOT . '/uploads/posters/' . $name;
     try {
-        $moved = move_uploaded_file($file['tmp'], $target);
+        $saved = $fit
+            ? add_movie_fit_poster($file['tmp'], $file['ext'], $target)
+            : move_uploaded_file($file['tmp'], $target);
     } catch (Throwable $e) {
         error_log('[' . date('c') . '] Poster upload could not be saved: ' . $e->getMessage());
+        add_movie_delete_poster('uploads/posters/' . $name);
         return null;
     }
-    return $moved ? 'uploads/posters/' . $name : null;
+    return $saved ? 'uploads/posters/' . $name : null;
+}
+
+/**
+ * Redraws a poster at exactly 900 x 1200: the biggest 3:4 piece from the
+ * middle of the picture, so a taller picture loses a little top and bottom
+ * and a wider one a little each side. Saved as a JPEG at $target.
+ */
+function add_movie_fit_poster(string $source, string $ext, string $target): bool
+{
+    switch ($ext) {
+        case 'png':
+            $picture = imagecreatefrompng($source);
+            break;
+        case 'webp':
+            $picture = imagecreatefromwebp($source);
+            break;
+        default:
+            $picture = imagecreatefromjpeg($source);
+    }
+    if ($picture === false) {
+        return false;
+    }
+
+    // A phone photo can be stored on its side with a note saying which way
+    // is up; turn it the right way first
+    if ($ext === 'jpg' && function_exists('exif_read_data')) {
+        $exif = @exif_read_data($source);
+        $turn = [3 => 180, 6 => 270, 8 => 90][(int) ($exif['Orientation'] ?? 1)] ?? 0;
+        if ($turn !== 0) {
+            $turned = imagerotate($picture, $turn, 0);
+            if ($turned !== false) {
+                imagedestroy($picture);
+                $picture = $turned;
+            }
+        }
+    }
+
+    $width = imagesx($picture);
+    $height = imagesy($picture);
+    if ($width * ADD_MOVIE_POSTER_HEIGHT > $height * ADD_MOVIE_POSTER_WIDTH) {
+        // Wider than 3:4: keep the full height
+        $cropHeight = $height;
+        $cropWidth = min($width, (int) round($height * ADD_MOVIE_POSTER_WIDTH / ADD_MOVIE_POSTER_HEIGHT));
+    } else {
+        // Taller than 3:4 (or exactly it): keep the full width
+        $cropWidth = $width;
+        $cropHeight = min($height, (int) round($width * ADD_MOVIE_POSTER_HEIGHT / ADD_MOVIE_POSTER_WIDTH));
+    }
+
+    $poster = imagecreatetruecolor(ADD_MOVIE_POSTER_WIDTH, ADD_MOVIE_POSTER_HEIGHT);
+    // A JPEG cannot be see-through, so see-through parts become white
+    imagefill($poster, 0, 0, imagecolorallocate($poster, 255, 255, 255));
+    imagecopyresampled(
+        $poster, $picture,
+        0, 0, intdiv($width - $cropWidth, 2), intdiv($height - $cropHeight, 2),
+        ADD_MOVIE_POSTER_WIDTH, ADD_MOVIE_POSTER_HEIGHT, $cropWidth, $cropHeight
+    );
+    imagedestroy($picture);
+
+    $saved = imagejpeg($poster, $target, 85);
+    imagedestroy($poster);
+    return $saved;
 }
 
 /**
@@ -143,18 +225,15 @@ function add_movie_invalid(array $errors, string $field): string
 }
 
 /**
- * What the date box says: 'Fri, 9 Oct 2026 – Sat, 31 Oct 2026', or what is
- * still to pick. add-movie.js writes the same words as dates are clicked.
+ * What the date box says: 'Fri, Oct 9, 2026 – Sat, Oct 31, 2026', or what
+ * is still to pick. add-movie.js writes the same words as dates are clicked.
  */
 function add_movie_dates_text(string $opensOn, string $endsOn): string
 {
-    $day = static function (string $date): string {
-        return (new DateTimeImmutable($date))->format('D, j M Y');
-    };
     if ($opensOn === '') {
         return 'Choose the opening and last day';
     }
-    return $day($opensOn) . ' – ' . ($endsOn !== '' ? $day($endsOn) : 'pick the last day');
+    return format_day($opensOn) . ' – ' . ($endsOn !== '' ? format_day($endsOn) : 'pick the last day');
 }
 
 // What the form shows: blank to start with, what was typed after a problem
@@ -434,6 +513,9 @@ render_header(['staff' => true, 'current' => 'add-movie']);
             <div class="form-field">
               <label for="new-poster">Poster image</label>
               <input id="new-poster" name="poster" type="file" accept="image/jpeg,image/png,image/webp" data-max-bytes="<?= e((string) ADD_MOVIE_MAX_POSTER_BYTES) ?>"<?= add_movie_invalid($errors, 'poster') ?>>
+<?php if (add_movie_can_fit_posters()): ?>
+              <p class="field-hint">Any size works: it is fitted to 900 &times; 1200 like the other posters.</p>
+<?php endif; ?>
             </div>
 
           </div>
@@ -447,4 +529,4 @@ render_header(['staff' => true, 'current' => 'add-movie']);
     </main>
 
   </div>
-<?php render_footer(['js' => ['assets/js/add-movie.js']]);
+<?php render_footer(['js' => ['assets/js/dates.js', 'assets/js/add-movie.js']]);

@@ -34,14 +34,6 @@ function book_poster(array $movie): void
 <?php
 }
 
-/**
- * '25 October 2026', the way the calendar's last line gives a date.
- */
-function book_long_date(string $date): string
-{
-    return (new DateTimeImmutable($date))->format('j F Y');
-}
-
 // After checkout.php bounces a booking back (a seat was taken meanwhile,
 // say), the date and showtime come back in the address so they are picked
 // again. Only values that are still bookable are used.
@@ -106,8 +98,8 @@ render_header();
     $ticketPrice = (int) $movie['price'];
     $openEnded = empty($movie['ends_on']);
     $untilLine = $openEnded
-        ? 'Booking open up to ' . book_long_date($window['to'])
-        : 'Showing until ' . book_long_date($window['to']);
+        ? 'Booking open up to ' . format_date_short($window['to'])
+        : 'Showing until ' . format_date_short($window['to']);
     $afterNote = $openEnded
         ? 'Bookings for this date are not open yet'
         : 'This movie has stopped showing by then';
@@ -177,7 +169,7 @@ render_header();
                 <!-- The script fills this in for the month being looked at -->
                 <div class="calendar-grid" id="calendar-dates"></div>
 
-                <p class="calendar-until" id="calendar-until"><?= e($untilLine) ?></p>
+                <p class="calendar-hint" id="calendar-until"><?= e($untilLine) ?></p>
 
               </div>
 
@@ -315,4 +307,4 @@ render_header();
 
   </main>
 <?php
-render_footer($bookable ? ['js' => ['assets/js/booking.js']] : []);
+render_footer($bookable ? ['js' => ['assets/js/dates.js', 'assets/js/booking.js']] : []);

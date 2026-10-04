@@ -231,15 +231,15 @@ function peso(int $amount): string
 }
 
 /**
- * Minutes as a running time: 108 becomes '1h 48m'.
+ * A number with its word: '1 snack', '3 snacks', '1,200 tickets'.
  */
-function duration_label(int $minutes): string
+function count_label(int $count, string $one, string $many): string
 {
-    return intdiv($minutes, 60) . 'h ' . ($minutes % 60) . 'm';
+    return number_format($count) . ' ' . ($count === 1 ? $one : $many);
 }
 
 /**
- * The running time on a poster: 112 becomes '1h 52min', 120 '2h', 45 '45min'.
+ * A running time: 112 becomes '1h 52min', 120 '2h', 45 '45min'.
  */
 function duration_tag(int $minutes): string
 {
@@ -287,6 +287,23 @@ function format_time(string $time): string
 function format_date_short(string $date): string
 {
     return (new DateTimeImmutable($date))->format('M j, Y');
+}
+
+/**
+ * A date with its day of the week: 'Sun, Oct 25, 2026'. The calendars'
+ * scripts write picked days the same way.
+ */
+function format_day(string $date): string
+{
+    return (new DateTimeImmutable($date))->format('D, M j, Y');
+}
+
+/**
+ * A date written out in full: 'Sunday, October 25, 2026'.
+ */
+function format_date_long(string $date): string
+{
+    return (new DateTimeImmutable($date))->format('l, F j, Y');
 }
 
 /**

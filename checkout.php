@@ -29,7 +29,7 @@ if ($signedIn === null) {
 if ($signedIn['role'] !== 'customer') {
     redirect($bookPath);
 }
-$user = require_role('customer');
+$user = $signedIn;
 
 $date = input_date($_POST, 'date');
 $time = input_string($_POST, 'time', 8);
@@ -126,12 +126,27 @@ function checkout_give_up(array $booking, Throwable $error, string $backPath): v
     redirect($backPath);
 }
 
+$customer = [
+    'name'   => (string) $user['name'],
+    'email'  => (string) $user['email'],
+    'mobile' => (string) ($user['mobile'] ?? ''),
+];
+
+// QR Ph only: the code is made here, valid exactly as long as the seats are
+// held, and shown on Cinemax's own page with a countdown
+if (paymongo_qrph_only()) {
+    try {
+        $qr = paymongo_create_qrph($booking, $customer, booking_seconds_left($booking));
+    } catch (Throwable $e) {
+        checkout_give_up($booking, $e, $backPath);
+    }
+    attach_intent((int) $booking['id'], $qr['id']);
+    $_SESSION['qrph'] = [$booking['reference'] => $qr['qr']];
+    redirect('pay.php?ref=' . rawurlencode((string) $booking['reference']));
+}
+
 try {
-    $checkout = paymongo_create_checkout($booking, booking_line_items($booking), [
-        'name'   => (string) $user['name'],
-        'email'  => (string) $user['email'],
-        'mobile' => (string) ($user['mobile'] ?? ''),
-    ]);
+    $checkout = paymongo_create_checkout($booking, booking_line_items($booking), $customer);
 } catch (Throwable $e) {
     // PayMongoException mostly; anything else from the call (a missing
     // extension, say) also must not leave the seats held for nothing

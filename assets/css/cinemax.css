@@ -1,13 +1,37 @@
 /* 1. FOUNDATIONS -----------------------------------------------------------*/
 
+/* Every colour on the site. Red is the brand; green, amber and indigo only
+   say what state something is in (ready, waiting, upcoming); the rest is
+   grey. The other style sheets use these too. */
+:root {
+  --white: #ffffff;
+  --page: #f9fafb;        /* the page behind the boxes, quiet fills */
+  --line-soft: #f3f4f6;   /* lines inside a box, grey labels */
+  --line: #e5e7eb;        /* box outlines */
+  --muted: #99a1af;       /* small headings, hints, switched-off text */
+  --text-soft: #6a7282;   /* notes and second lines */
+  --text: #101828;        /* everything else */
+
+  --red: #fb2c36;
+  --red-dark: #c10007;    /* a red button pointed at, error words */
+  --red-light: #ffe2e2;   /* behind red words, something picked */
+
+  --green: #008236;       /* showing, ready, a good ticket */
+  --green-light: #dcfce7;
+  --amber: #a65f00;       /* waiting: unpaid, already used, a warning */
+  --amber-light: #fef9c2;
+  --indigo: #4f39f6;      /* upcoming films, seats, the e-ticket */
+  --indigo-light: #e0e7ff;
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  background-color: #f9fafb;
-  color: #101828;
+  background-color: var(--page);
+  color: var(--text);
   font-family: 'Outfit', Arial, sans-serif;
   font-size: 16px;
   line-height: 1.6;
@@ -24,7 +48,7 @@ p {
 }
 
 a {
-  color: #fb2c36;
+  color: var(--red);
 }
 
 img {
@@ -32,12 +56,14 @@ img {
   max-width: 100%;
 }
 
-/* 2. BUTTONS ---------------------------------------------------------------*/
+/* 2. BUTTONS AND LABELS ----------------------------------------------------*/
 
+/* Every button has a 1px border (see-through on a red one), so a red and an
+   outlined button side by side are the same height. */
 .button {
   display: inline-block;
   padding: 10px 16px;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 12px;
   font-family: inherit;
   font-size: 14px;
@@ -48,26 +74,27 @@ img {
 }
 
 .button-red {
-  background-color: #fb2c36;
-  color: #ffffff;
+  background-color: var(--red);
+  color: var(--white);
 }
 .button-red:hover {
-  background-color: #e7000b;
+  background-color: var(--red-dark);
 }
 
 .button-outline {
-  background-color: #ffffff;
-  color: #101828;
-  border: 1px solid #e5e7eb;
+  background-color: var(--white);
+  color: var(--text);
+  border-color: var(--line);
   font-weight: 600;
 }
 .button-outline:hover {
-  background-color: #f9fafb;
+  border-color: var(--red);
+  color: var(--red);
 }
 
 .button-grey {
-  background-color: #e5e7eb;
-  color: #99a1af;
+  background-color: var(--line);
+  color: var(--muted);
 }
 
 .button-wide {
@@ -75,9 +102,54 @@ img {
   width: 100%;
 }
 
+/* For a row in a list or table: Ready, Picked Up, Extend, Remove */
+.button-small {
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
 button.button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* A small rounded label saying what state something is in. A colour means
+   the same on every page: green good to go or ready, amber waiting or
+   already used, red refunded (or snacks still being prepared, as on the
+   claim monitor), indigo upcoming, grey finished. */
+.pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pill-green {
+  background-color: var(--green-light);
+  color: var(--green);
+}
+
+.pill-amber {
+  background-color: var(--amber-light);
+  color: var(--amber);
+}
+
+.pill-red {
+  background-color: var(--red-light);
+  color: var(--red-dark);
+}
+
+.pill-indigo {
+  background-color: var(--indigo-light);
+  color: var(--indigo);
+}
+
+.pill-grey {
+  background-color: var(--line-soft);
+  color: var(--text-soft);
 }
 
 /* 3. TOP BAR ---------------------------------------------------------------*/
@@ -86,8 +158,8 @@ button.button:disabled {
   position: sticky;
   top: 0;
   z-index: 10;
-  background-color: #ffffff;
-  border-bottom: 1px solid #f3f4f6;
+  background-color: var(--white);
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .top-bar-inner {
@@ -105,7 +177,7 @@ button.button:disabled {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  color: #101828;
+  color: var(--text);
   font-size: 20px;
   font-weight: 900;
   text-decoration: none;
@@ -127,19 +199,19 @@ button.button:disabled {
 .menu a {
   padding: 8px 16px;
   border-radius: 12px;
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 14px;
   font-weight: 600;
   text-decoration: none;
 }
 .menu a:hover {
-  background-color: #f9fafb;
-  color: #101828;
+  background-color: var(--page);
+  color: var(--text);
 }
 
 .menu a.current {
-  background-color: #fef2f2;
-  color: #fb2c36;
+  background-color: var(--red-light);
+  color: var(--red);
 }
 
 .auth-buttons {
@@ -232,13 +304,13 @@ button.button:disabled {
   width: 44px;
   height: 44px;
   padding: 0;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--line);
   border-radius: 12px;
-  background-color: #ffffff;
+  background-color: var(--white);
   cursor: pointer;
 }
 .menu-toggle:hover {
-  border-color: #fb2c36;
+  border-color: var(--red);
 }
 
 .menu-toggle span {
@@ -247,7 +319,7 @@ button.button:disabled {
   width: 18px;
   height: 2px;
   border-radius: 2px;
-  background-color: #101828;
+  background-color: var(--text);
   transition: transform 0.18s ease, opacity 0.18s ease;
 }
 
@@ -259,7 +331,7 @@ button.button:disabled {
   width: 18px;
   height: 2px;
   border-radius: 2px;
-  background-color: #101828;
+  background-color: var(--text);
   transition: transform 0.18s ease;
 }
 
@@ -306,8 +378,8 @@ button.button:disabled {
     flex-direction: column;
     gap: 4px;
     padding: 12px;
-    background-color: #ffffff;
-    border-bottom: 1px solid #e5e7eb;
+    background-color: var(--white);
+    border-bottom: 1px solid var(--line);
     box-shadow: 0 12px 24px rgba(16, 24, 40, 0.08);
   }
 
@@ -336,7 +408,7 @@ button.button:disabled {
     gap: 8px;
     margin-top: 4px;
     padding-top: 12px;
-    border-top: 1px solid #f3f4f6;
+    border-top: 1px solid var(--line-soft);
   }
 
   .bar-nav .auth-buttons .button {
@@ -351,8 +423,8 @@ button.button:disabled {
 /* 5. FOOTER ----------------------------------------------------------------*/
 
 .site-footer {
-  background-color: #ffffff;
-  border-top: 1px solid #e5e7eb;
+  background-color: var(--white);
+  border-top: 1px solid var(--line);
   padding: 36px 20px 28px 20px;
 }
 
@@ -368,15 +440,15 @@ button.button:disabled {
 }
 
 .footer-text {
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 13px;
 }
 
 .footer-copyright {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid #f3f4f6;
-  color: #99a1af;
+  border-top: 1px solid var(--line-soft);
+  color: var(--muted);
   font-size: 12px;
 }
 
@@ -401,16 +473,16 @@ button.button:disabled {
 }
 
 .film-count {
-  color: #fb2c36;
+  color: var(--red);
   font-size: 14px;
   font-weight: 700;
 }
 .film-count-soon {
-  color: #4f39f6;
+  color: var(--indigo);
 }
 
 .section-note {
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 14px;
   margin-bottom: 28px;
 }
@@ -424,16 +496,19 @@ button.button:disabled {
 .movie-card {
   display: flex;
   flex-direction: column;
-  background-color: #ffffff;
-  border: 1px solid #f3f4f6;
+  background-color: var(--white);
+  border: 1px solid var(--line-soft);
   border-radius: 16px;
   overflow: hidden;
 }
 
+/* Every poster shows in the same 3:4 shape. A picture of another shape is
+   cropped to fit: overflow: hidden stops a taller one stretching its card. */
 .movie-poster {
   position: relative;
   aspect-ratio: 3 / 4;
-  background-color: #e5e7eb;
+  overflow: hidden;
+  background-color: var(--line);
 }
 
 .movie-poster img {
@@ -443,14 +518,15 @@ button.button:disabled {
 }
 
 /* On the poster: the rating top right, the running time bottom left (both
-   in the same dark pill), Showing / Soon bottom right */
+   in the same dark pill), Showing / Soon bottom right in green / indigo */
 .tag-rated,
-.tag-time {
+.tag-time,
+.tag-status {
   position: absolute;
   padding: 2px 10px;
   border-radius: 999px;
-  background-color: rgba(0, 0, 0, 0.55);
-  color: #ffffff;
+  background-color: rgba(16, 24, 40, 0.6);
+  color: var(--white);
   font-size: 12px;
   font-weight: 700;
 }
@@ -463,6 +539,19 @@ button.button:disabled {
 .tag-time {
   left: 10px;
   bottom: 12px;
+}
+
+.tag-status {
+  right: 10px;
+  bottom: 12px;
+}
+
+.tag-showing {
+  background-color: var(--green);
+}
+
+.tag-soon {
+  background-color: var(--indigo);
 }
 
 /* Small phones: two narrow cards a row, so smaller tags that keep the time
@@ -489,23 +578,6 @@ button.button:disabled {
     bottom: 8px;
     right: 6px;
   }
-}
-
-.tag-status {
-  position: absolute;
-  right: 10px;
-  bottom: 12px;
-  padding: 2px 10px;
-  border-radius: 999px;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 700;
-}
-.tag-showing {
-  background-color: #00bc7d;
-}
-.tag-soon {
-  background-color: #4f39f6;
 }
 
 .movie-info {
@@ -559,8 +631,8 @@ button.button:disabled {
   max-width: 448px;
   margin: 0 auto;
   padding: 32px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  background-color: var(--white);
+  border: 1px solid var(--line);
   border-radius: 24px;
 }
 
@@ -570,7 +642,7 @@ button.button:disabled {
 }
 
 .form-intro {
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 14px;
   margin-bottom: 24px;
 }
@@ -590,31 +662,31 @@ button.button:disabled {
 .form-field select {
   width: 100%;
   padding: 11px 14px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  background-color: var(--white);
+  border: 1px solid var(--line);
   border-radius: 12px;
   font-family: inherit;
   font-size: 14px;
   font-weight: 600;
-  color: #101828;
+  color: var(--text);
 }
 
 .form-field input::placeholder {
-  color: #99a1af;
+  color: var(--muted);
   font-weight: 500;
 }
 
 .form-field input:focus,
 .form-field select:focus {
   outline: none;
-  border-color: #fb2c36;
+  border-color: var(--red);
 }
 
 .agree-line {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 13px;
   margin: 18px 0 18px 0;
 }
@@ -623,7 +695,7 @@ button.button:disabled {
   width: 16px;
   height: 16px;
   margin-top: 3px;
-  accent-color: #fb2c36;
+  accent-color: var(--red);
 }
 
 .form-card .button {
@@ -636,7 +708,7 @@ button.button:disabled {
 
 .form-switch {
   text-align: center;
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 14px;
   margin-top: 16px;
 }
@@ -668,8 +740,8 @@ button.button:disabled {
   height: 64px;
   margin: 0 auto 16px auto;
   border-radius: 50%;
-  background-color: #dcfce7;
-  color: #00bc7d;
+  background-color: var(--green-light);
+  color: var(--green);
   font-size: 30px;
   font-weight: 900;
 }
@@ -679,22 +751,22 @@ button.button:disabled {
 }
 
 .confirm-box p {
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 14px;
   margin-top: 4px;
 }
 
 .ticket {
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  background-color: var(--white);
+  border: 1px solid var(--line);
   border-radius: 24px;
   overflow: hidden;
 }
 
 .ticket-header {
   padding: 28px;
-  color: #ffffff;
-  background-color: #6d28d9;
+  color: var(--white);
+  background-color: var(--indigo);
 }
 
 .ticket-brand {
@@ -729,13 +801,13 @@ button.button:disabled {
 }
 
 .ticket-when {
-  color: #ddd6ff;
+  color: var(--indigo-light);
   font-size: 14px;
   margin-top: 6px;
 }
 
 .ticket-tear {
-  border-top: 1px dashed #e5e7eb;
+  border-top: 1px dashed var(--line);
 }
 
 .ticket-body {
@@ -749,8 +821,13 @@ button.button:disabled {
   margin-bottom: 20px;
 }
 
+/* One detail across the whole width, spaced like a pair */
+.ticket-row {
+  margin-bottom: 20px;
+}
+
 .ticket-label {
-  color: #99a1af;
+  color: var(--muted);
   font-size: 10px;
   font-weight: 900;
   letter-spacing: 2px;
@@ -764,7 +841,7 @@ button.button:disabled {
 }
 
 .ticket-reference {
-  color: #fb2c36;
+  color: var(--red);
   letter-spacing: 1px;
 }
 
@@ -773,14 +850,9 @@ button.button:disabled {
   font-weight: 600;
 }
 
-/* The snack order's number (#002) in front of the snacks */
-.snack-number {
-  font-weight: 900;
-}
-
 .ticket-qr {
   padding: 20px;
-  background-color: #f9fafb;
+  background-color: var(--page);
   border-radius: 16px;
   text-align: center;
 }
@@ -792,7 +864,7 @@ button.button:disabled {
 }
 
 .ticket-qr p {
-  color: #99a1af;
+  color: var(--muted);
   font-size: 11px;
   letter-spacing: 1px;
 }
@@ -829,22 +901,22 @@ button.button:disabled {
 }
 
 .terms-intro {
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 15px;
   margin-bottom: 28px;
 }
 
 .terms-block {
   padding: 24px 24px 14px 24px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  background-color: var(--white);
+  border: 1px solid var(--line);
   border-radius: 16px;
   margin-bottom: 14px;
 }
 
 .terms-kind {
   display: block;
-  color: #fb2c36;
+  color: var(--red);
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 2px;
@@ -853,7 +925,7 @@ button.button:disabled {
 }
 
 .terms-kind-snack {
-  color: #4f39f6;
+  color: var(--indigo);
 }
 
 .terms-block h2 {
@@ -862,7 +934,7 @@ button.button:disabled {
 }
 
 .terms-block p {
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 14px;
   margin-bottom: 10px;
 }
@@ -882,7 +954,7 @@ button.button:disabled {
 }
 
 .admin-intro {
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 15px;
   margin-bottom: 20px;
 }
@@ -941,14 +1013,14 @@ button.button:disabled {
   position: sticky;
   top: 88px;
   padding: 16px 12px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  background-color: var(--white);
+  border: 1px solid var(--line);
   border-radius: 16px;
 }
 
 .sidebar-title {
   padding: 0 12px 6px 12px;
-  color: #99a1af;
+  color: var(--muted);
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 1px;
@@ -966,19 +1038,19 @@ button.button:disabled {
   display: block;
   padding: 10px 12px;
   border-radius: 12px;
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
 }
 .sidebar-menu a:hover {
-  background-color: #f9fafb;
-  color: #101828;
+  background-color: var(--page);
+  color: var(--text);
 }
 
 .sidebar-menu a.current {
-  background-color: #fb2c36;
-  color: #ffffff;
+  background-color: var(--red);
+  color: var(--white);
 }
 
 @media (max-width: 760px) {
@@ -994,6 +1066,83 @@ button.button:disabled {
   .admin-sidebar {
     display: none;
   }
+}
+
+/* Straight after a scanner account signs in on a phone: Ticket Scanner or
+   Snack Scanner. Wider screens never show it and open the Ticket Scanner. */
+.scanner-choice {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .scanner-choice {
+    display: block;
+    width: 92%;
+    margin: 0 auto;
+    padding: 24px 0 64px 0;
+  }
+
+  .scanner-choice h1 {
+    font-size: 32px;
+    margin-bottom: 6px;
+  }
+
+  .admin-layout.scanner-waiting {
+    display: none;
+  }
+}
+
+.choice-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px;
+  margin-bottom: 12px;
+  background-color: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  color: var(--text);
+  text-decoration: none;
+}
+.choice-card:hover,
+.choice-card:active {
+  border-color: var(--red);
+}
+
+.choice-name {
+  display: block;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.choice-note {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-soft);
+  font-size: 14px;
+}
+
+.choice-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background-color: var(--red);
+}
+
+/* The arrow is two sides of a turned square, so it sits dead centre */
+.choice-arrow::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  margin-left: -3px;
+  border-top: 3px solid var(--white);
+  border-right: 3px solid var(--white);
+  transform: rotate(45deg);
 }
 
 /* A panel title with a button on its right, on every screen size */
@@ -1016,8 +1165,8 @@ button.button:disabled {
 
 .panel {
   padding: 24px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  background-color: var(--white);
+  border: 1px solid var(--line);
   border-radius: 16px;
   margin-bottom: 24px;
 }
@@ -1028,7 +1177,7 @@ button.button:disabled {
 }
 
 .panel-note {
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 14px;
   margin-bottom: 20px;
 }
@@ -1044,13 +1193,13 @@ button.button:disabled {
   flex: 1;
   min-width: 180px;
   padding: 20px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  background-color: var(--white);
+  border: 1px solid var(--line);
   border-radius: 16px;
 }
 
 .stat-name {
-  color: #99a1af;
+  color: var(--muted);
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 1px;
@@ -1064,17 +1213,14 @@ button.button:disabled {
 }
 
 .stat-extra {
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 12px;
 }
 
-.stat-money {
-  background-color: #fef2f2;
-  border-color: #ffd5d7;
-}
+/* Total Revenue: a white card like the others, its words in red */
 .stat-money .stat-name,
 .stat-money .stat-figure {
-  color: #fb2c36;
+  color: var(--red);
 }
 
 /* On a phone a tall card per number wastes the screen, so each card becomes
@@ -1118,7 +1264,7 @@ button.button:disabled {
 .order-group {
   padding-top: 18px;
   margin-top: 18px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--line);
 }
 
 .order-group-title {
@@ -1129,28 +1275,9 @@ button.button:disabled {
   margin-bottom: 4px;
 }
 
-.order-count {
-  padding: 1px 10px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 700;
-}
-.count-preparing {
-  background-color: #fef9c3;
-  color: #854d0e;
-}
-.count-ready {
-  background-color: #dcfce7;
-  color: #036e46;
-}
-.count-sold {
-  background-color: #f3f4f6;
-  color: #4a5565;
-}
-
 .empty-note {
   padding: 10px 0 2px 0;
-  color: #99a1af;
+  color: var(--muted);
   font-size: 14px;
 }
 
@@ -1163,7 +1290,7 @@ button.button:disabled {
   align-items: center;
   gap: 6px 16px;
   padding: 14px 0 14px 0;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid var(--line-soft);
 }
 
 .order-left {
@@ -1172,7 +1299,7 @@ button.button:disabled {
 
 /* Ready, Picked Up and Sold keep their own size, centred in their column so
    they sit on one line down the queue, like the prices beside them. */
-.order-row .order-action-btn,
+.order-row .button,
 .order-row .sold-tag {
   grid-area: action;
   justify-self: center;
@@ -1199,7 +1326,7 @@ button.button:disabled {
     text-align: center;
   }
 
-  .order-row .order-action-btn,
+  .order-row .button,
   .order-row .sold-tag {
     align-self: start;
     justify-self: end;
@@ -1212,7 +1339,7 @@ button.button:disabled {
 }
 
 .order-who {
-  color: #4a5565;
+  color: var(--text-soft);
   font-size: 13px;
 }
 
@@ -1224,32 +1351,10 @@ button.button:disabled {
   white-space: nowrap;
 }
 
-.order-status {
-  padding: 7px 10px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  color: #101828;
-  cursor: pointer;
-}
-.order-status:hover {
-  border-color: #fb2c36;
-}
-.order-status:focus {
-  outline: none;
-  border-color: #fb2c36;
-}
-
+/* The Sold label is as tall as the buttons above it, so it lines up */
 .sold-tag {
   padding: 7px 14px;
-  border-radius: 999px;
-  background-color: #f3f4f6;
-  color: #4a5565;
   font-size: 13px;
-  font-weight: 700;
 }
 
 /* 13. MOVIES TABLE ---------------------------------------------------------*/
@@ -1261,8 +1366,8 @@ button.button:disabled {
 
 .movie-table th {
   padding: 0 10px 10px 10px;
-  border-bottom: 1px solid #e5e7eb;
-  color: #99a1af;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 1px;
@@ -1272,7 +1377,7 @@ button.button:disabled {
 
 .movie-table td {
   padding: 12px 10px;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--line-soft);
   font-size: 14px;
   vertical-align: middle;
 }
@@ -1311,44 +1416,9 @@ button.button:disabled {
 
 .movie-sub {
   display: block;
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 12px;
   line-height: 1.4;
-}
-
-.label-showing,
-.label-soon {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-}
-.label-showing {
-  background-color: #dcfce7;
-  color: #036e46;
-}
-.label-soon {
-  background-color: #e0e7ff;
-  color: #4f39f6;
-}
-
-.remove-button {
-  display: inline-block;
-  padding: 6px 12px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  color: #6a7282;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.remove-button:hover {
-  border-color: #fb2c36;
-  background-color: #fef2f2;
-  color: #fb2c36;
 }
 
 .add-grid {
@@ -1359,7 +1429,7 @@ button.button:disabled {
 
 .field-hint {
   margin-top: 6px;
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 12px;
   font-weight: 600;
 }
@@ -1386,7 +1456,7 @@ button.button:disabled {
   top: 50%;
   right: 14px;
   transform: translateY(-50%);
-  color: #99a1af;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 700;
   pointer-events: none;
@@ -1406,13 +1476,13 @@ button.button:disabled {
   gap: 10px;
   width: 100%;
   padding: 11px 14px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  background-color: var(--white);
+  border: 1px solid var(--line);
   border-radius: 12px;
   font-family: inherit;
   font-size: 14px;
   font-weight: 600;
-  color: #101828;
+  color: var(--text);
   text-align: left;
   cursor: pointer;
 }
@@ -1420,11 +1490,11 @@ button.button:disabled {
 .date-button:hover,
 .date-button:focus {
   outline: none;
-  border-color: #fb2c36;
+  border-color: var(--red);
 }
 
 .date-arrow {
-  color: #99a1af;
+  color: var(--muted);
   font-size: 11px;
 }
 
@@ -1436,8 +1506,8 @@ button.button:disabled {
   width: 100%;
   min-width: 260px;
   padding: 14px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  background-color: var(--white);
+  border: 1px solid var(--line);
   border-radius: 16px;
   box-shadow: 0 14px 30px rgba(16, 24, 40, 0.15);
 }
@@ -1459,25 +1529,25 @@ button.button:disabled {
   width: 28px;
   height: 28px;
   padding: 0;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  background-color: var(--white);
+  border: 1px solid var(--line);
   border-radius: 8px;
   font-family: inherit;
   font-size: 15px;
   font-weight: 900;
   line-height: 1;
-  color: #101828;
+  color: var(--text);
   cursor: pointer;
 }
 
 .calendar-nav:hover {
-  border-color: #fb2c36;
-  color: #fb2c36;
+  border-color: var(--red);
+  color: var(--red);
 }
 
 .calendar-nav:disabled {
-  color: #e5e7eb;
-  border-color: #f3f4f6;
+  color: var(--line);
+  border-color: var(--line-soft);
   cursor: default;
 }
 
@@ -1489,7 +1559,7 @@ button.button:disabled {
 
 .calendar-day-names span {
   padding-bottom: 6px;
-  color: #99a1af;
+  color: var(--muted);
   font-size: 11px;
   font-weight: 700;
   text-align: center;
@@ -1497,56 +1567,56 @@ button.button:disabled {
 
 .calendar-date {
   padding: 8px 0;
-  background-color: #ffffff;
+  background-color: var(--white);
   border: 1px solid transparent;
   border-radius: 8px;
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
-  color: #101828;
+  color: var(--text);
   cursor: pointer;
 }
 
 .calendar-date:hover {
-  background-color: #fef2f2;
-  border-color: #fb2c36;
+  background-color: var(--red-light);
+  border-color: var(--red);
 }
 
 /* A run cannot start or end on a day that has already gone by */
 .calendar-date:disabled {
-  background-color: #ffffff;
+  background-color: var(--white);
   border-color: transparent;
-  color: #d1d5dc;
+  color: var(--muted);
   cursor: default;
 }
 
 .calendar-date-today:enabled {
-  color: #4f39f6;
-  border-color: #e0e7ff;
+  color: var(--indigo);
+  border-color: var(--indigo-light);
 }
 
 /* Add Movie: the days between the opening and last day */
 .calendar-date-in-range,
 .calendar-date-in-range:enabled {
-  background-color: #fee2e2;
-  border-color: #fee2e2;
-  color: #c10007;
+  background-color: var(--red-light);
+  border-color: var(--red-light);
+  color: var(--red-dark);
 }
 
 .calendar-date-picked,
 .calendar-date-picked:enabled,
 .calendar-date-picked:hover {
-  background-color: #fb2c36;
-  border-color: #fb2c36;
-  color: #ffffff;
+  background-color: var(--red);
+  border-color: var(--red);
+  color: var(--white);
 }
 
 /* Add Movie: which of the two days to pick next */
 .calendar-hint {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid #f3f4f6;
-  color: #6a7282;
+  border-top: 1px solid var(--line-soft);
+  color: var(--text-soft);
   font-size: 12px;
   font-weight: 600;
   text-align: center;
@@ -1587,7 +1657,7 @@ button.button:disabled {
     align-items: center;
     gap: 6px 8px;
     padding: 12px 0;
-    border-top: 1px solid #f3f4f6;
+    border-top: 1px solid var(--line-soft);
   }
 
   .movie-table tr:first-child {
@@ -1615,7 +1685,7 @@ button.button:disabled {
   /* The column heading is hidden, so the number says what it counts */
   .movie-table .sold-cell::after {
     content: " sold";
-    color: #6a7282;
+    color: var(--text-soft);
     font-size: 12px;
     font-weight: 600;
   }
@@ -1631,7 +1701,7 @@ button.button:disabled {
     grid-area: extend;
   }
 
-  .movie-table .remove-form .remove-button {
+  .movie-table .remove-form .button {
     grid-area: remove;
   }
 }
@@ -1648,11 +1718,11 @@ button.button:disabled {
   aspect-ratio: 4 / 3;
   margin: 0 auto 12px auto;
   border-radius: 16px;
-  background-color: #101828;
+  background-color: var(--text);
 }
 
 .camera-message {
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 14px;
   margin-bottom: 16px;
 }
@@ -1671,16 +1741,16 @@ button.button:disabled {
   font-weight: 900;
 }
 .scan-result-good {
-  background-color: #dcfce7;
-  color: #008236;
+  background-color: var(--green-light);
+  color: var(--green);
 }
 .scan-result-used {
-  background-color: #fef9c2;
-  color: #a65f00;
+  background-color: var(--amber-light);
+  color: var(--amber);
 }
 .scan-result-bad {
-  background-color: #ffe2e2;
-  color: #c10007;
+  background-color: var(--red-light);
+  color: var(--red-dark);
 }
 
 .scan-result-who {
@@ -1719,7 +1789,7 @@ button.button:disabled {
 .ticket-lookup {
   margin: 0 0 22px 0;
   padding: 0 0 22px 0;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--line);
   text-align: left;
 }
 
@@ -1739,7 +1809,9 @@ button.button:disabled {
   margin-bottom: 0;
 }
 
+/* A darker outline than other boxes, like the Dashboard's search */
 .search-field input {
+  border-color: var(--text-soft);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -1751,7 +1823,7 @@ button.button:disabled {
 
 /* The same height as the box beside it */
 .search-row .button {
-  padding: 12px 22px;
+  padding: 11px 22px;
 }
 
 #search-message {
@@ -1761,9 +1833,9 @@ button.button:disabled {
 .ticket-result {
   margin-top: 20px;
   padding: 20px;
-  background-color: #f9fafb;
-  border: 1px solid #f3f4f6;
-  border-radius: 14px;
+  background-color: var(--page);
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
 }
 
 .ticket-result-head {
@@ -1774,7 +1846,7 @@ button.button:disabled {
 }
 
 .ticket-result-code {
-  color: #fb2c36;
+  color: var(--red);
   font-size: 13px;
   font-weight: 900;
   letter-spacing: 1px;
@@ -1785,25 +1857,9 @@ button.button:disabled {
   margin-top: 2px;
 }
 
-.status-badge {
+.ticket-result-head .pill {
   flex-shrink: 0;
   padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.status-unused {
-  background-color: #dcfce7;
-  color: #036e46;
-}
-.status-used {
-  background-color: #fef9c2;
-  color: #a65f00;
-}
-.status-refunded {
-  background-color: #e5e7eb;
-  color: #4a5565;
 }
 
 .ticket-facts {
@@ -1814,7 +1870,7 @@ button.button:disabled {
 }
 
 .ticket-facts dt {
-  color: #99a1af;
+  color: var(--muted);
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 1px;
@@ -1835,13 +1891,13 @@ button.button:disabled {
   gap: 12px 16px;
   margin-top: 18px;
   padding-top: 16px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--line);
 }
 
 .refund-note {
   flex: 1;
   min-width: 200px;
-  color: #4a5565;
+  color: var(--text-soft);
   font-size: 13px;
   font-weight: 600;
 }
@@ -1866,35 +1922,7 @@ button.button:disabled {
   }
 }
 
-/* 16. STATUS PAGES ---------------------------------------------------------*/
-
-.confirming-page {
-  max-width: 448px;
-  width: 92%;
-  margin: 0 auto;
-  padding: 72px 0;
-  text-align: center;
-}
-
-.spinner {
-  width: 44px;
-  height: 44px;
-  margin: 0 auto 20px auto;
-  border: 4px solid #e5e7eb;
-  border-top-color: #fb2c36;
-  border-radius: 50%;
-  animation: spin 0.9s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .spinner { animation-duration: 3s; }
-}
-
-/* 17. MESSAGES AND EMPTY STATES --------------------------------------------*/
+/* 16. MESSAGES AND EMPTY STATES --------------------------------------------*/
 
 .form-message {
   padding: 12px 14px;
@@ -1905,23 +1933,18 @@ button.button:disabled {
 }
 
 .form-message-error {
-  background-color: #ffe2e2;
-  color: #c10007;
-}
-
-.form-message-success {
-  background-color: #dcfce7;
-  color: #036e46;
+  background-color: var(--red-light);
+  color: var(--red-dark);
 }
 
 .form-message-notice {
-  background-color: #fef9c2;
-  color: #a65f00;
+  background-color: var(--amber-light);
+  color: var(--amber);
 }
 
 .field-error {
   display: block;
-  color: #c10007;
+  color: var(--red-dark);
   font-size: 13px;
   font-weight: 600;
   margin-top: 4px;
@@ -1930,25 +1953,24 @@ button.button:disabled {
 .form-field input.invalid,
 .form-field select.invalid,
 .form-field .date-button.invalid {
-  border-color: #c10007;
+  border-color: var(--red-dark);
 }
 
-.loading-note,
 .empty-state {
   padding: 28px 16px;
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 14px;
   text-align: center;
 }
 
 .empty-state strong {
   display: block;
-  color: #101828;
+  color: var(--text);
   font-size: 16px;
   margin-bottom: 4px;
 }
 
-/* 18. UTILITIES ------------------------------------------------------------*/
+/* 17. UTILITIES ------------------------------------------------------------*/
 
 .hidden {
   display: none !important;

@@ -8,14 +8,6 @@ require __DIR__ . '/../includes/bootstrap.php';
 
 $user = require_role('admin');
 
-/**
- * '1 snack' or '3 snacks'.
- */
-function dashboard_count(int $count, string $one, string $many): string
-{
-    return number_format($count) . ' ' . ($count === 1 ? $one : $many);
-}
-
 // Moving an order on. The step it is moving from comes with the form, so a
 // stale page or a second click cannot push an order two steps at once.
 if (is_post()) {
@@ -43,11 +35,12 @@ foreach ($queue as $orders) {
     }
 }
 
-// The three stages, in the order the counter works through them
+// The three stages, in the order the counter works through them, each
+// counted in the colour the claim monitor shows it in
 $groups = [
-    'preparing' => ['title' => 'Preparing', 'empty' => 'Nothing being prepared'],
-    'ready'     => ['title' => 'Ready', 'empty' => 'Nothing waiting at the counter'],
-    'sold'      => ['title' => 'Sold', 'empty' => 'Nothing handed over yet'],
+    'preparing' => ['title' => 'Preparing', 'empty' => 'Nothing being prepared', 'pill' => 'pill-red'],
+    'ready'     => ['title' => 'Ready', 'empty' => 'Nothing waiting at the counter', 'pill' => 'pill-green'],
+    'sold'      => ['title' => 'Sold', 'empty' => 'Nothing handed over yet', 'pill' => 'pill-grey'],
 ];
 
 render_head('Staff Dashboard', ['assets/css/admin.css']);
@@ -70,13 +63,13 @@ render_header(['staff' => true, 'current' => 'dashboard']);
         <div class="stat">
           <p class="stat-name">Ticket Sales</p>
           <p class="stat-figure"><?= e(peso($stats['ticket_revenue'])) ?></p>
-          <p class="stat-extra"><?= e(dashboard_count($stats['tickets_sold'], 'ticket', 'tickets')) ?> sold</p>
+          <p class="stat-extra"><?= e(count_label($stats['tickets_sold'], 'ticket', 'tickets')) ?> sold</p>
         </div>
 
         <div class="stat">
           <p class="stat-name">Snack Sales</p>
           <p class="stat-figure"><?= e(peso($stats['snack_revenue'])) ?></p>
-          <p class="stat-extra"><?= e(dashboard_count($stats['snacks_sold'], 'snack', 'snacks')) ?> sold</p>
+          <p class="stat-extra"><?= e(count_label($stats['snacks_sold'], 'snack', 'snacks')) ?> sold</p>
         </div>
 
       </div>
@@ -88,7 +81,7 @@ render_header(['staff' => true, 'current' => 'dashboard']);
 
         <h2>Snack orders</h2>
         <p class="panel-note">
-          Tap a button to move an order to the next stage. <?= e(dashboard_count($snacksShown, 'snack', 'snacks')) ?> in total.
+          Tap a button to move an order to the next stage. <?= e(count_label($snacksShown, 'snack', 'snacks')) ?> in total.
         </p>
 
 <?php foreach ($groups as $stage => $group): ?>
@@ -97,24 +90,38 @@ render_header(['staff' => true, 'current' => 'dashboard']);
           <h3 class="order-group-title">
             <?= e($group['title']) ?>
 
-            <span class="order-count count-<?= e($stage) ?>"><?= e(count($queue[$stage])) ?></span>
+            <span class="pill <?= e($group['pill']) ?>"><?= e(count($queue[$stage])) ?></span>
           </h3>
+
+<?php if ($stage === 'sold'): ?>
+          <!-- Search the picked-up orders as you type (dashboard.js); while it
+               shows results, the list below is hidden -->
+          <div class="sold-search" id="sold-search" data-url="<?= e(url('api/snack-search.php')) ?>">
+            <div class="form-field search-field">
+              <input id="sold-search-input" type="search" maxlength="40"
+                     placeholder="Search by reference number" autocomplete="off" spellcheck="false"
+                     aria-label="Search picked-up snack orders by reference number">
+            </div>
+            <p class="sold-search-note" id="sold-search-note" role="status" hidden></p>
+            <div id="sold-search-results"></div>
+          </div>
+<?php endif; ?>
 
 <?php if (count($queue[$stage]) === 0): ?>
           <p class="empty-note"><?= e($group['empty']) ?></p>
 <?php endif; ?>
 
-          <div>
+          <div class="order-list">
 <?php foreach ($queue[$stage] as $order): ?>
 
             <div class="order-row">
               <div class="order-left">
                 <p class="order-items"><?= e($order['items']) ?></p>
-                <p class="order-who"><?php if ($order['snack_number'] !== null): ?><strong>#<?= e(snack_number_label((int) $order['snack_number'])) ?></strong> &bull; <?php endif; ?><?= e($order['reference']) ?> &bull; <?= e($order['customer_name']) ?> &bull; <?= e(dashboard_count((int) $order['item_count'], 'snack', 'snacks')) ?></p>
+                <p class="order-who"><?php if ($order['snack_number'] !== null): ?><strong>#<?= e(snack_number_label((int) $order['snack_number'])) ?></strong> &bull; <?php endif; ?><?= e($order['reference']) ?> &bull; <?= e($order['customer_name']) ?> &bull; <?= e(count_label((int) $order['item_count'], 'snack', 'snacks')) ?></p>
               </div>
               <p class="order-price"><?= e(peso((int) $order['snacks_total'])) ?></p>
 <?php if ($stage === 'sold'): ?>
-              <span class="sold-tag">Sold</span>
+              <span class="pill pill-grey sold-tag">Sold</span>
 <?php else: ?>
               <form method="post" action="<?= e(url('admin/index.php')) ?>" class="inline-form">
                 <?= csrf_field() ?>
@@ -122,9 +129,9 @@ render_header(['staff' => true, 'current' => 'dashboard']);
                 <input type="hidden" name="booking_id" value="<?= e($order['id']) ?>">
                 <input type="hidden" name="from" value="<?= e($stage) ?>">
 <?php if ($stage === 'preparing'): ?>
-                <button type="submit" class="order-action-btn btn-mark-ready">Ready</button>
+                <button type="submit" class="button button-red button-small">Ready</button>
 <?php else: ?>
-                <button type="submit" class="order-action-btn btn-mark-pickup">Picked Up</button>
+                <button type="submit" class="button button-red button-small">Picked Up</button>
 <?php endif; ?>
               </form>
 <?php endif; ?>

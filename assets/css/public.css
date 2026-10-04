@@ -13,7 +13,7 @@
   align-items: center;
   gap: 16px;
   padding: 14px 0 14px 0;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid var(--line-soft);
 }
 
 .booking-link {
@@ -22,11 +22,11 @@
 }
 
 .booking-link:hover .order-items {
-  color: #fb2c36;
+  color: var(--red);
 }
 
 .booking-link:focus-visible {
-  outline: 2px solid #fb2c36;
+  outline: 2px solid var(--red);
   outline-offset: 4px;
   border-radius: 8px;
 }
@@ -39,36 +39,13 @@
   overflow-wrap: anywhere;
 }
 
-/* The price, with a small label under it when the ticket is used,
+/* The price, with a small label (.pill) under it when the ticket is used,
    refunded or not paid yet */
 .booking-side {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
-}
-
-.booking-status {
-  padding: 1px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.booking-status-used {
-  background-color: #f3f4f6;
-  color: #4a5565;
-}
-
-.booking-status-refunded {
-  background-color: #ffe2e2;
-  color: #c10007;
-}
-
-.booking-status-pending {
-  background-color: #fef9c2;
-  color: #a65f00;
 }
 
 .empty-action {
@@ -94,7 +71,7 @@
   margin-bottom: 6px;
 }
 
-/* How the snack order is coming along, under "Concession counter" */
+/* How the snack order is coming along, under the pickup number and snacks */
 .snack-status {
   margin: 0 0 18px 0;
   text-align: center;
@@ -102,7 +79,7 @@
   /* Every snack message is black and bold, the same size as the snacks
      line above it. One line even on a narrow phone: the text shrinks a
      little there instead */
-  color: #101828;
+  color: var(--text);
   font-size: clamp(11px, 3.6vw, 14px);
   font-weight: 900;
 }

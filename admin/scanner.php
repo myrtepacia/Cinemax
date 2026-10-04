@@ -22,6 +22,12 @@ require __DIR__ . '/../includes/bootstrap.php';
 $user = require_role('admin', 'scanner');
 $canRefund = $user['role'] === 'admin';
 
+// Straight after a scanner account signs in (signin.php sets this), a phone
+// first asks which scanner to open. It is shown once, and only on narrow
+// screens: on a computer the Ticket Scanner shows as usual.
+$chooseFirst = !empty($_SESSION['choose_scanner']);
+unset($_SESSION['choose_scanner']);
+
 /**
  * What staff typed, tidied the way a reference is written, so the "no
  * booking matches" message shows it the way it is printed on a ticket:
@@ -55,24 +61,16 @@ function scanner_status(array $booking): array
     switch ($booking['status']) {
         case 'paid':
             return $booking['scanned_at'] === null
-                ? ['Not scanned yet', 'status-unused']
-                : ['Already scanned', 'status-used'];
+                ? ['Not scanned yet', 'pill-green']
+                : ['Already scanned', 'pill-amber'];
         case 'refunded':
-            return ['Refunded', 'status-refunded'];
+            return ['Refunded', 'pill-red'];
         default:
             // Expired, cancelled, or a hold that has run out: never paid
             return scanner_awaiting_payment($booking)
-                ? ['Awaiting payment', 'status-refunded']
-                : ['Not paid', 'status-refunded'];
+                ? ['Awaiting payment', 'pill-amber']
+                : ['Not paid', 'pill-grey'];
     }
-}
-
-/**
- * A day as the refund note says it: 'Friday, September 25, 2026'.
- */
-function scanner_long_date(string $datetime): string
-{
-    return (new DateTimeImmutable($datetime))->format('l, F j, Y');
 }
 
 // The refund, for admins only. The booking id only says which booking;
@@ -135,7 +133,30 @@ if ($booking !== null) {
 render_head('Ticket Scanner');
 render_header(['staff' => true, 'current' => 'scanner']);
 ?>
-  <div class="admin-layout">
+<?php if ($chooseFirst): ?>
+  <div class="scanner-choice">
+    <h1>Choose a scanner</h1>
+    <p class="admin-intro">Which one are you working on?</p>
+
+    <a class="choice-card" href="<?= e(url('admin/scanner.php')) ?>">
+      <span>
+        <span class="choice-name">Ticket Scanner</span>
+        <span class="choice-note">Check tickets at the door</span>
+      </span>
+      <span class="choice-arrow" aria-hidden="true"></span>
+    </a>
+
+    <a class="choice-card" href="<?= e(url('admin/snack-scanner.php')) ?>">
+      <span>
+        <span class="choice-name">Snack Scanner</span>
+        <span class="choice-note">Confirm snack orders at the counter</span>
+      </span>
+      <span class="choice-arrow" aria-hidden="true"></span>
+    </a>
+  </div>
+<?php endif; ?>
+
+  <div class="admin-layout<?= $chooseFirst ? ' scanner-waiting' : '' ?>">
 
     <?php render_staff_sidebar('scanner'); ?>
 
@@ -174,7 +195,7 @@ render_header(['staff' => true, 'current' => 'scanner']);
                 <p class="ticket-result-code"><?= e($booking['reference']) ?></p>
                 <h3 class="ticket-result-movie"><?= e($booking['title']) ?></h3>
               </div>
-              <span class="status-badge <?= e($statusClass) ?>"><?= e($statusLabel) ?></span>
+              <span class="pill <?= e($statusClass) ?>"><?= e($statusLabel) ?></span>
             </div>
 
             <dl class="ticket-facts">
@@ -229,7 +250,7 @@ render_header(['staff' => true, 'current' => 'scanner']);
             </div>
 <?php elseif ($booking['status'] === 'refunded'): ?>
             <div class="refund-row" id="refund-row">
-              <p class="refund-note"><?= e(peso($total)) ?> was refunded<?= $booking['refunded_at'] !== null ? ' on ' . e(scanner_long_date((string) $booking['refunded_at'])) : '' ?>. The seats are open for booking again.</p>
+              <p class="refund-note"><?= e(peso($total)) ?> was refunded<?= $booking['refunded_at'] !== null ? ' on ' . e(format_date_long((string) $booking['refunded_at'])) : '' ?>. The seats are open for booking again.</p>
             </div>
 <?php elseif (scanner_awaiting_payment($booking)): ?>
             <div class="refund-row" id="refund-row">

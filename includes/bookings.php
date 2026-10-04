@@ -61,8 +61,10 @@ function release_expired_holds(): void
     // time limits and only a few are made per request; any left over are
     // simply expired, and a late payment on one is still caught by
     // settle_booking() (seats taken back if free, refunded if not).
+    // A QR Ph code is made to stop working when its hold does, so only a
+    // checkout page needs closing.
     $runOut = db_all(
-        "SELECT id, paymongo_checkout_id FROM bookings
+        "SELECT id, reference, paymongo_checkout_id, paymongo_intent_id FROM bookings
          WHERE status = 'pending' AND expires_at < NOW()
          ORDER BY expires_at LIMIT 20"
     );
@@ -70,23 +72,23 @@ function release_expired_holds(): void
     foreach ($runOut as $hold) {
         $bookingId = (int) $hold['id'];
         $checkoutId = (string) ($hold['paymongo_checkout_id'] ?? '');
-        $askPayMongo = $checkoutId !== '' && $remoteCalls < 3;
+        $askPayMongo = ($checkoutId !== '' || !empty($hold['paymongo_intent_id'])) && $remoteCalls < 3;
 
         if ($askPayMongo) {
             $remoteCalls++;
             try {
-                $payment = paymongo_paid_payment(paymongo_get_checkout($checkoutId, 5));
+                $payment = booking_paid_payment($hold, 5);
                 if ($payment !== null
                     && in_array(mark_booking_paid($bookingId, $payment['id'], $payment['amount']), ['paid', 'already'], true)) {
                     continue;
                 }
             } catch (PayMongoException $e) {
-                error_log('[hold] could not check ' . $checkoutId . ': ' . $e->getMessage());
+                error_log('[hold] could not check ' . $hold['reference'] . ': ' . $e->getMessage());
             }
         }
 
         $expired = db_exec("UPDATE bookings SET status = 'expired' WHERE id = ? AND status = 'pending'", [$bookingId]) === 1;
-        if ($expired && $askPayMongo) {
+        if ($expired && $askPayMongo && $checkoutId !== '') {
             paymongo_expire_checkout($checkoutId, 5);
         }
     }
@@ -313,6 +315,26 @@ function booking_line_items(array $booking): array
 }
 
 /**
+ * Seconds until a booking's seats stop being held (0 once they have).
+ */
+function booking_seconds_left(array $booking): int
+{
+    $expires = strtotime((string) $booking['expires_at']);
+    return $expires === false ? 0 : max(0, $expires - time());
+}
+
+/**
+ * Records which PayMongo QR Ph payment (Payment Intent) belongs to a booking.
+ */
+function attach_intent(int $bookingId, string $intentId): void
+{
+    db_exec(
+        "UPDATE bookings SET paymongo_intent_id = ? WHERE id = ? AND status = 'pending'",
+        [$intentId, $bookingId]
+    );
+}
+
+/**
  * Records which PayMongo checkout session belongs to a booking.
  */
 function attach_checkout(int $bookingId, string $checkoutId): void
@@ -344,6 +366,29 @@ function find_booking_by_checkout(string $checkoutId): ?array
     return db_one(BOOKING_SELECT . ' WHERE b.paymongo_checkout_id = ?', [$checkoutId]);
 }
 
+function find_booking_by_intent(string $intentId): ?array
+{
+    return db_one(BOOKING_SELECT . ' WHERE b.paymongo_intent_id = ?', [$intentId]);
+}
+
+/**
+ * The paid payment on a booking's QR Ph payment or checkout page, as
+ * ['id' => 'pay_...', 'amount' => pesos], or null when nothing is paid yet
+ * (or the booking never reached PayMongo).
+ */
+function booking_paid_payment(array $booking, int $timeoutSeconds = 30): ?array
+{
+    $intentId = (string) ($booking['paymongo_intent_id'] ?? '');
+    if ($intentId !== '') {
+        return paymongo_paid_payment(paymongo_get_intent($intentId, $timeoutSeconds));
+    }
+    $checkoutId = (string) ($booking['paymongo_checkout_id'] ?? '');
+    if ($checkoutId !== '') {
+        return paymongo_paid_payment(paymongo_get_checkout($checkoutId, $timeoutSeconds));
+    }
+    return null;
+}
+
 /**
  * A booking by reference, only if it belongs to this user. Anyone else's
  * booking comes back as null, exactly as if it did not exist.
@@ -351,6 +396,17 @@ function find_booking_by_checkout(string $checkoutId): ?array
 function find_user_booking(int $userId, string $reference): ?array
 {
     return db_one(BOOKING_SELECT . ' WHERE b.reference = ? AND b.user_id = ?', [$reference, $userId]);
+}
+
+/**
+ * Where "back to the movie" goes from a booking: the film's page while it
+ * is still listed, else the home page.
+ */
+function booking_film_path(array $booking): string
+{
+    return find_movie_by_slug((string) $booking['slug']) !== null
+        ? 'book.php?movie=' . rawurlencode((string) $booking['slug'])
+        : 'index.php';
 }
 
 /**
@@ -380,11 +436,11 @@ function snack_summary(array $lines): string
 
 /**
  * A snack order number as the ticket and the claim monitor show it: 1 is
- * '001'. The ticket puts '#' in front.
+ * '0001'. The ticket and the Dashboard put '#' in front.
  */
 function snack_number_label(int $number): string
 {
-    return str_pad((string) $number, 3, '0', STR_PAD_LEFT);
+    return str_pad((string) $number, 4, '0', STR_PAD_LEFT);
 }
 
 /**
@@ -485,9 +541,9 @@ function mark_booking_paid_now(int $bookingId, string $paymentId, int $amountPai
 }
 
 /**
- * Asks PayMongo whether a booking's checkout was paid, and records it.
- * Returns 'paid', 'unpaid', 'refunded' (paid too late and sent back) or
- * 'review' (the amount did not match; staff need to look).
+ * Asks PayMongo whether a booking was paid (on its QR Ph code or checkout
+ * page), and records it. Returns 'paid', 'unpaid', 'refunded' (paid too late
+ * and sent back) or 'review' (the amount did not match; staff need to look).
  */
 function settle_booking(array $booking): string
 {
@@ -497,12 +553,8 @@ function settle_booking(array $booking): string
     if ($booking['status'] === 'refunded') {
         return 'refunded';
     }
-    $checkoutId = (string) ($booking['paymongo_checkout_id'] ?? '');
-    if ($checkoutId === '') {
-        return 'unpaid';
-    }
 
-    $payment = paymongo_paid_payment(paymongo_get_checkout($checkoutId));
+    $payment = booking_paid_payment($booking);
     if ($payment === null) {
         return 'unpaid';
     }
@@ -525,7 +577,9 @@ function settle_booking(array $booking): string
 
 /**
  * Cancels a booking that has not been paid, frees its seats and closes its
- * PayMongo checkout so it can no longer be paid.
+ * PayMongo checkout so it can no longer be paid. (A QR Ph code cannot be
+ * closed early: it runs out with the hold, and a payment made on it in the
+ * meantime is caught by settle_booking(), like any late payment.)
  */
 function cancel_pending_booking(array $booking): void
 {
@@ -651,12 +705,12 @@ function find_booking_by_qr(string $payload): ?array
 /**
  * Checks a ticket's QR code at the snack counter. Returns ['status' => ...,
  * 'booking' => ..., 'items' => the snack lines]:
- *   waiting     paid snacks for today, not yet handed to the kitchen
+ *   waiting     paid snacks, not yet handed to the kitchen (on any day,
+ *               not only the day of the showing)
  *   in_progress already confirmed: being prepared, or ready at the counter
  *   collected   already picked up
  *   no_snacks   a good ticket with no snacks on it
  *   refunded    the money was sent back
- *   wrong_day   the snacks are for a showing on another day
  *   invalid     not a Cinemax ticket, or not a paid one
  * 'booking' and 'items' are only filled in when the code is genuine.
  */
@@ -679,23 +733,20 @@ function check_snack_order(string $payload): array
     if ($booking['snack_status'] !== 'ordered') {
         return ['status' => 'in_progress', 'booking' => $booking, 'items' => $items];
     }
-    if ($booking['show_date'] !== today()) {
-        return ['status' => 'wrong_day', 'booking' => $booking, 'items' => $items];
-    }
     return ['status' => 'waiting', 'booking' => $booking, 'items' => $items];
 }
 
 /**
  * Sends a scanned snack order to the kitchen: 'ordered' becomes 'preparing',
- * and it appears under Preparing on the dashboard. Only once, and only for
- * a paid booking showing today, so two counters scanning the same ticket at
- * the same moment cannot both confirm it.
+ * it appears under Preparing on the dashboard, and the time it was scanned
+ * is kept. Only once, for a paid booking, so two counters scanning the same
+ * ticket at the same moment cannot both confirm it.
  */
 function confirm_snack_order(int $bookingId): bool
 {
     return db_exec(
-        "UPDATE bookings SET snack_status = 'preparing'
-         WHERE id = ? AND status = 'paid' AND snack_status = 'ordered' AND show_date = CURDATE()",
+        "UPDATE bookings SET snack_status = 'preparing', snack_scanned_at = NOW()
+         WHERE id = ? AND status = 'paid' AND snack_status = 'ordered'",
         [$bookingId]
     ) === 1;
 }
@@ -722,7 +773,8 @@ function settle_recent_bookings(int $userId): void
 {
     $waiting = db_all(
         "SELECT id FROM bookings
-         WHERE user_id = ? AND status IN ('pending', 'expired') AND paymongo_checkout_id IS NOT NULL
+         WHERE user_id = ? AND status IN ('pending', 'expired')
+           AND (paymongo_checkout_id IS NOT NULL OR paymongo_intent_id IS NOT NULL)
            AND created_at > NOW() - INTERVAL 1 DAY
          ORDER BY id DESC LIMIT 5",
         [$userId]
@@ -792,22 +844,26 @@ function dashboard_stats(): array
 /**
  * The snack counter's queue: ['preparing' => [...], 'ready' => [...],
  * 'sold' => [...]]. Each order has id, reference, snack_number (or null),
- * customer_name, items (one line), item_count and snacks_total. 'sold'
- * holds the latest 20.
+ * customer_name, items (one line), item_count and snacks_total. Preparing
+ * and Ready go by showtime; 'sold' holds the 20 picked up last, newest
+ * first, like the search above it.
  */
 function snack_queue(): array
 {
     $queue = ['preparing' => [], 'ready' => [], 'sold' => []];
-    $orders = db_all(
-        "(SELECT b.id, b.reference, b.snack_number, b.snack_status, b.snacks_total, b.show_date, b.show_time, b.paid_at, u.name AS customer_name
-          FROM bookings b JOIN users u ON u.id = b.user_id
-          WHERE b.status = 'paid' AND b.snack_status IN ('preparing', 'ready'))
-         UNION ALL
-         (SELECT b.id, b.reference, b.snack_number, b.snack_status, b.snacks_total, b.show_date, b.show_time, b.paid_at, u.name AS customer_name
-          FROM bookings b JOIN users u ON u.id = b.user_id
-          WHERE b.status = 'paid' AND b.snack_status = 'sold'
-          ORDER BY b.paid_at DESC LIMIT 20)
-         ORDER BY show_date, show_time, id"
+    $columns = 'b.id, b.reference, b.snack_number, b.snack_status, b.snacks_total, u.name AS customer_name
+                FROM bookings b JOIN users u ON u.id = b.user_id';
+    $orders = array_merge(
+        db_all(
+            "SELECT $columns
+             WHERE b.status = 'paid' AND b.snack_status IN ('preparing', 'ready')
+             ORDER BY b.show_date, b.show_time, b.id"
+        ),
+        db_all(
+            "SELECT $columns
+             WHERE b.status = 'paid' AND b.snack_status = 'sold'
+             ORDER BY b.snack_sold_at DESC, b.id DESC LIMIT 20"
+        )
     );
     foreach ($orders as $order) {
         $lines = booking_snacks((int) $order['id']);
@@ -821,7 +877,7 @@ function snack_queue(): array
 }
 
 /**
- * What the Snacks Claim monitor shows: the order numbers ('002', no '#')
+ * What the Snacks Claim monitor shows: the order numbers ('0002', no '#')
  * being prepared and ready to pick up, as ['preparing' => [...], 'ready' =>
  * [...]], lowest first. Only the numbers: the screen faces the customers,
  * so no names or orders are on it. An order paid before numbers were given
@@ -862,17 +918,67 @@ function dashboard_version(array $stats, array $queue): string
 
 /**
  * Moves a snack order one step on: preparing to ready, or ready to sold
- * (picked up). Only from the step it is really at, so a double click or a
- * stale page cannot skip a step.
+ * (picked up, and the time kept). Only from the step it is really at, so a
+ * double click or a stale page cannot skip a step.
  */
 function advance_snack_order(int $bookingId, string $from): bool
 {
-    $next = ['preparing' => 'ready', 'ready' => 'sold'][$from] ?? null;
-    if ($next === null) {
+    if ($from === 'preparing') {
+        $sql = "UPDATE bookings SET snack_status = 'ready' WHERE id = ? AND status = 'paid' AND snack_status = 'preparing'";
+    } elseif ($from === 'ready') {
+        $sql = "UPDATE bookings SET snack_status = 'sold', snack_sold_at = NOW() WHERE id = ? AND status = 'paid' AND snack_status = 'ready'";
+    } else {
         return false;
     }
-    return db_exec(
-        "UPDATE bookings SET snack_status = ? WHERE id = ? AND status = 'paid' AND snack_status = ?",
-        [$next, $bookingId, $from]
-    ) === 1;
+    return db_exec($sql, [$bookingId]) === 1;
+}
+
+/**
+ * The Dashboard's search above Sold. $typed is part or all of a reference
+ * number ('8F4', 'cmx-8f41k2'...). Returns ['orders' => up to 10 picked-up
+ * snack orders whose reference holds it, newest first, each with
+ * reference, snack_number, customer_name, items, item_count, snacks_total,
+ * snack_scanned_at and snack_sold_at; 'other' => for a whole reference that
+ * is not picked up: ['reference' => ..., 'stage' => ordered / preparing /
+ * ready / none / refunded / unpaid], else null].
+ */
+function search_sold_snacks(string $typed): array
+{
+    // Only the letters and digits after "CMX", so the search is a plain one
+    $code = strtoupper((string) preg_replace('/[^A-Za-z0-9]/', '', $typed));
+    if (strpos($code, 'CMX') === 0) {
+        $code = substr($code, 3);
+    }
+    $code = substr($code, 0, 6);
+    if ($code === '') {
+        return ['orders' => [], 'other' => null];
+    }
+
+    $orders = db_all(
+        "SELECT b.id, b.reference, b.snack_number, b.snacks_total, b.snack_scanned_at, b.snack_sold_at, u.name AS customer_name
+         FROM bookings b JOIN users u ON u.id = b.user_id
+         WHERE b.status = 'paid' AND b.snack_status = 'sold' AND b.reference LIKE ?
+         ORDER BY b.snack_sold_at DESC, b.id DESC LIMIT 10",
+        ['%' . $code . '%']
+    );
+    foreach ($orders as &$order) {
+        $lines = booking_snacks((int) $order['id']);
+        $order['items'] = snack_summary($lines);
+        $order['item_count'] = array_sum(array_map(static function (array $line): int {
+            return (int) $line['quantity'];
+        }, $lines));
+    }
+    unset($order);
+
+    // A whole reference with no picked-up order: say where that booking is
+    $other = null;
+    if ($orders === [] && strlen($code) === 6) {
+        $booking = find_booking('CMX-' . $code);
+        if ($booking !== null) {
+            $stage = $booking['status'] === 'refunded' ? 'refunded'
+                : ($booking['status'] !== 'paid' ? 'unpaid' : ($booking['snack_status'] ?? 'none'));
+            $other = ['reference' => (string) $booking['reference'], 'stage' => $stage];
+        }
+    }
+    return ['orders' => $orders, 'other' => $other];
 }

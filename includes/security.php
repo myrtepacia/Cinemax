@@ -1,7 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// Security headers, the session, CSRF tokens and rate limits.
+// Security headers, the session, CSRF tokens, rate limits and reading the
+// scanners' requests.
 
 if (!defined('CINEMAX_BOOTSTRAPPED')) {
     http_response_code(404);
@@ -246,4 +247,58 @@ function too_many_attempts(string $bucket, string $identifier, int $max, int $wi
 function clear_attempts(string $bucket, string $identifier): void
 {
     db_exec('DELETE FROM login_attempts WHERE bucket = ? AND identifier = ?', [$bucket, mb_strtolower($identifier)]);
+}
+
+// A scanner's request (api/scan.php, api/snack-scan.php) is a small JSON
+// body from staff: nothing bigger, and no code longer than a ticket's QR
+// code could be
+const SCAN_MAX_BODY_BYTES = 4096;
+const SCAN_MAX_CODE_LENGTH = 300;
+const SCAN_MAX_PER_MINUTE = 120;
+
+/**
+ * Reads a scanner's request, or answers it with an error and stops. Staff
+ * only, CSRF-checked and rate-limited per address under $bucket. Returns
+ * [the staff member, the action, the scanned code]; the action is one of
+ * $actions.
+ */
+function read_scan_request(string $bucket, array $actions): array
+{
+    if (!is_post()) {
+        header('Allow: POST');
+        json_response(['ok' => false, 'error' => 'Only POST requests are accepted here.'], 405);
+    }
+
+    $user = current_user();
+    if (!is_staff($user)) {
+        json_response(['ok' => false, 'error' => 'Please sign in again.'], 401);
+    }
+
+    verify_csrf(true);
+
+    // Counted before the body is read, so junk requests count too
+    record_attempt($bucket);
+    if (too_many_attempts($bucket, '', SCAN_MAX_PER_MINUTE, 60)) {
+        json_response(['ok' => false, 'error' => 'Too many scans in a short time. Wait a minute, then try again.'], 429);
+    }
+
+    // Small JSON only. One byte past the limit is read so an oversized body
+    // can be told apart from one exactly at the limit.
+    $contentType = strtolower((string) ($_SERVER['CONTENT_TYPE'] ?? ''));
+    if (strpos($contentType, 'application/json') !== 0) {
+        json_response(['ok' => false, 'error' => 'That request was not understood.'], 415);
+    }
+    $raw = file_get_contents('php://input', false, null, 0, SCAN_MAX_BODY_BYTES + 1);
+    if (!is_string($raw) || strlen($raw) > SCAN_MAX_BODY_BYTES) {
+        json_response(['ok' => false, 'error' => 'That request was too large.'], 413);
+    }
+
+    $body = json_decode($raw, true, 4);
+    $action = is_array($body) ? ($body['action'] ?? null) : null;
+    $code = is_array($body) ? ($body['code'] ?? null) : null;
+    if (!is_string($action) || !in_array($action, $actions, true)
+        || !is_string($code) || $code === '' || strlen($code) > SCAN_MAX_CODE_LENGTH) {
+        json_response(['ok' => false, 'error' => 'That request was not understood.'], 400);
+    }
+    return [$user, $action, $code];
 }

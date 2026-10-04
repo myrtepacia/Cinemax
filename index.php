@@ -6,14 +6,6 @@ declare(strict_types=1);
 
 require __DIR__ . '/includes/bootstrap.php';
 
-/**
- * '4 Films', '1 Film'.
- */
-function index_film_count(int $count): string
-{
-    return $count . ($count === 1 ? ' Film' : ' Films');
-}
-
 $lists = listing_movies();
 $showing = $lists['showing'];
 $soon = $lists['soon'];
@@ -41,7 +33,7 @@ render_header(['home' => true, 'current' => 'now-showing']);
 
       <div class="section-title-row">
         <h2 class="section-title">Now Showing</h2>
-        <span class="film-count" id="showing-count"><?= e(index_film_count(count($showing))) ?></span>
+        <span class="film-count" id="showing-count"><?= e(count_label(count($showing), 'Film', 'Films')) ?></span>
       </div>
       <p class="section-note">Reserve your seat and pre-order your snacks.<?php if ($lowestPrice !== null): ?> Tickets from <?= e(peso($lowestPrice)) ?>.<?php endif; ?></p>
 
@@ -79,7 +71,7 @@ render_header(['home' => true, 'current' => 'now-showing']);
 
       <div class="section-title-row">
         <h2 class="section-title">Upcoming Shows</h2>
-        <span class="film-count film-count-soon" id="soon-count"><?= e(index_film_count(count($soon))) ?></span>
+        <span class="film-count film-count-soon" id="soon-count"><?= e(count_label(count($soon), 'Film', 'Films')) ?></span>
       </div>
       <p class="section-note">Coming to Cinemax soon. Booking opens on release day.</p>
 

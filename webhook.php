@@ -1,12 +1,14 @@
 <?php
 declare(strict_types=1);
 
-// PayMongo's servers call this when a checkout is paid, so a customer who
+// PayMongo's servers call this when a booking is paid, so a customer who
 // closes the tab before coming back to the site still gets their ticket.
+// Register it in PayMongo for two events: checkout_session.payment.paid
+// (PayMongo's checkout page) and payment.paid (a QR Ph code from pay.php).
 //
 // Only calls signed with the webhook secret are accepted, each event is
 // handled once however often it is delivered, and even a genuine event is
-// not taken at its word: settle_booking() asks PayMongo about the checkout
+// not taken at its word: settle_booking() asks PayMongo about the payment
 // directly before marking anything paid.
 
 // A server-to-server call: no browser, so no session or cookies
@@ -70,16 +72,24 @@ function webhook_forget(string $eventId): void
 }
 
 try {
-    if ($eventType !== 'checkout_session.payment.paid') {
+    // A checkout page was paid, or a payment came in (a QR Ph code scanned:
+    // the payment names its Payment Intent)
+    $resource = $event['data']['attributes']['data'] ?? [];
+    $booking = null;
+    if ($eventType === 'checkout_session.payment.paid') {
+        $checkoutId = $resource['id'] ?? null;
+        if (is_string($checkoutId) && preg_match('/^cs_[A-Za-z0-9]{1,60}$/', $checkoutId)) {
+            $booking = find_booking_by_checkout($checkoutId);
+        }
+    } elseif ($eventType === 'payment.paid') {
+        $intentId = $resource['attributes']['payment_intent_id'] ?? null;
+        if (is_string($intentId) && preg_match('/^pi_[A-Za-z0-9]{1,60}$/', $intentId)) {
+            $booking = find_booking_by_intent($intentId);
+        }
+    } else {
         json_response(['ok' => true, 'ignored' => true]);
     }
 
-    $checkoutId = $event['data']['attributes']['data']['id'] ?? null;
-    if (!is_string($checkoutId) || !preg_match('/^cs_[A-Za-z0-9]{1,60}$/', $checkoutId)) {
-        json_response(['ok' => true, 'ignored' => true]);
-    }
-
-    $booking = find_booking_by_checkout($checkoutId);
     if ($booking === null) {
         // Not one of ours (another site on the same PayMongo account)
         json_response(['ok' => true, 'ignored' => true]);
@@ -87,7 +97,8 @@ try {
 
     $result = settle_booking($booking);
     if ($result === 'unpaid') {
-        // PayMongo says paid in the event but not yet on the checkout itself.
+        // PayMongo says paid in the event but not yet on the checkout or
+        // Payment Intent itself.
         // Answer with an error so PayMongo sends it again a little later.
         webhook_forget($eventId);
         json_response(['ok' => false], 503);

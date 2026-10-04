@@ -29,10 +29,11 @@ if ($booking === null) {
 $status = (string) $booking['status'];
 $ownBooking = (int) $booking['user_id'] === (int) $user['id'];
 
-// Still waiting for payment: the payment page asks PayMongo again and
-// shows the ticket as soon as the money is in.
+// Still waiting for payment: the QR Ph page (or the payment page) asks
+// PayMongo again and shows the ticket as soon as the money is in.
 if ($status === 'pending' && $ownBooking) {
-    redirect('payment-success.php?ref=' . rawurlencode($ref));
+    $paying = paymongo_qrph_only() || !empty($booking['paymongo_intent_id']) ? 'pay.php' : 'payment-success.php';
+    redirect($paying . '?ref=' . rawurlencode($ref));
 }
 
 // "Booking Confirmed!" is shown once, straight after paying; opened again
@@ -151,12 +152,17 @@ render_header();
 <?php if ($snacks !== ''): ?>
           <div class="ticket-pair" id="snack-pair">
             <div>
-              <p class="ticket-label">Snacks</p>
-              <p class="ticket-value ticket-value-small" id="snacks"><?php if ($snackNumber !== null): ?><strong class="snack-number"><?= e($snackNumber) ?></strong> - <?php endif; ?><?= e($snacks) ?></p>
+              <p class="ticket-label">Pickup Number</p>
+<?php if ($snackNumber !== null): ?>
+              <p class="ticket-value" id="pickup-number"><?= e($snackNumber) ?></p>
+<?php else: ?>
+              <!-- Refunded (its number was given back), or ordered before numbers were given out -->
+              <p class="ticket-value ticket-value-small" id="pickup-number"><?= $status === 'refunded' ? 'Refunded' : 'None' ?></p>
+<?php endif; ?>
             </div>
             <div>
-              <p class="ticket-label">Pickup</p>
-              <p class="ticket-value ticket-value-small"><?= $status === 'refunded' ? 'Refunded' : 'Concession counter' ?></p>
+              <p class="ticket-label">Snacks</p>
+              <p class="ticket-value ticket-value-small" id="snacks"><?= e($snacks) ?></p>
             </div>
           </div>
 <?php if ($status === 'paid' && $snackStatus !== null): ?>

@@ -152,12 +152,11 @@ function poster_url(array $movie): string
 }
 
 /**
- * 'Crime, Thriller, 2h 2m' — the genre and running time together.
+ * 'Crime, Thriller, 2h 2min, R-16': the genre, running time and rating.
  */
-function movie_details_line(array $movie, bool $withRating = false): string
+function movie_details_line(array $movie): string
 {
-    $line = $movie['genre'] . ', ' . duration_label((int) $movie['duration_minutes']);
-    return $withRating ? $line . ', ' . $movie['rating'] : $line;
+    return $movie['genre'] . ', ' . duration_tag((int) $movie['duration_minutes']) . ', ' . $movie['rating'];
 }
 
 /**
@@ -397,18 +396,18 @@ function movie_extend_limit(array $movie): ?array
 }
 
 /**
- * Why a run can go no further, for the Movies page: 'Can run until Fri, 16
- * Oct 2026 at the latest: Broken [of] Love uses Cinema 1 at those times
- * from Sat, 17 Oct.'
+ * Why a run can go no further, for the Movies page: 'Can run until Fri, Oct
+ * 16, 2026 at the latest: Broken [of] Love uses Cinema 1 at those times
+ * from Sat, Oct 17.'
  */
 function movie_extend_limit_text(array $movie, array $limit): string
 {
     $why = $limit['blocker'] . ' uses ' . cinema_label($limit['cinema']) . ' at those times from '
-        . (new DateTimeImmutable($limit['from']))->format('D, j M') . '.';
+        . (new DateTimeImmutable($limit['from']))->format('D, M j') . '.';
     if ($limit['last'] < movie_extend_from($movie)) {
         return 'This run cannot be extended: ' . $why;
     }
-    return 'Can run until ' . (new DateTimeImmutable($limit['last']))->format('D, j M Y') . ' at the latest: ' . $why;
+    return 'Can run until ' . format_day($limit['last']) . ' at the latest: ' . $why;
 }
 
 /**
@@ -429,7 +428,7 @@ function extend_movie(int $movieId, string $newLast): ?string
         }
         $from = movie_extend_from($movie);
         if ($newLast < $from) {
-            return 'Pick a new last day from ' . (new DateTimeImmutable($from))->format('D, j M Y') . ' on.';
+            return 'Pick a new last day from ' . format_day($from) . ' on.';
         }
         $limit = movie_extend_limit($movie);
         if ($limit !== null && $newLast > $limit['last']) {
@@ -450,7 +449,7 @@ function remove_movie(int $movieId): bool
 }
 
 /**
- * The snacks on sale, cheapest category first: ['Popcorn' => [...], ...].
+ * The snacks on sale, by category in menu order: ['Popcorn' => [...], ...].
  */
 function snacks_by_category(): array
 {

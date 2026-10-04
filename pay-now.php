@@ -27,9 +27,7 @@ if (too_many_attempts('settle', 'user:' . $user['id'], 30, 300)) {
 }
 record_attempt('settle', 'user:' . $user['id']);
 
-$filmPath = find_movie_by_slug((string) $booking['slug']) !== null
-    ? 'book.php?movie=' . rawurlencode((string) $booking['slug'])
-    : 'index.php';
+$filmPath = booking_film_path($booking);
 
 try {
     // Paid after all (or refunded meanwhile): no second payment
@@ -48,6 +46,11 @@ try {
         && strtotime((string) $booking['expires_at']) > time();
     if (!$stillHeld) {
         redirect($filmPath);
+    }
+
+    // Paying by QR Ph: back to the booking's code and its countdown
+    if (paymongo_qrph_only() || !empty($booking['paymongo_intent_id'])) {
+        redirect('pay.php?ref=' . rawurlencode($reference));
     }
 
     // The booking's own PayMongo page, if it is still open

@@ -32,7 +32,12 @@ return [
         // Left empty, webhook.php refuses every request, and payments are
         // confirmed when the customer returns from PayMongo instead.
         'webhook_secret' => '',
-        // The ways customers may pay on PayMongo's checkout page
+        // The ways customers may pay on PayMongo's checkout page. In live
+        // mode, list only the ones PayMongo has activated on your account,
+        // otherwise the checkout page says no payment methods are available.
+        // ['qrph'] alone (QR Ph, scanned with GCash, Maya or a bank app)
+        // shows the code on Cinemax's own page (pay.php) instead, with a
+        // countdown as long as the seat hold below.
         'payment_methods' => ['card', 'gcash', 'paymaya', 'grab_pay'],
     ],
 

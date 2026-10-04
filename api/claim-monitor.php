@@ -9,17 +9,6 @@ declare(strict_types=1);
 
 require __DIR__ . '/../includes/bootstrap.php';
 
-if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
-    header('Allow: GET');
-    json_response(['ok' => false, 'error' => 'Only GET requests are accepted here.'], 405);
-}
-
-$user = current_user();
-if ($user === null) {
-    json_response(['ok' => false, 'error' => 'Please sign in again.'], 401);
-}
-if ($user['role'] !== 'admin') {
-    json_response(['ok' => false, 'error' => 'Not allowed.'], 403);
-}
+require_admin_get();
 
 json_response(['ok' => true] + claim_monitor_orders());

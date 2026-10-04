@@ -1,6 +1,6 @@
 /* The booking page (book.php), and the payment pages that follow it.
    Only these pages load this file; the top bar, footer, buttons and the
-   shared calendar look come from cinemax.css. */
+   calendar under the date box come from cinemax.css. */
 
 /* Page layout */
 
@@ -13,7 +13,7 @@
 
 .back-link {
   display: inline-block;
-  color: #99a1af;
+  color: var(--muted);
   font-size: 14px;
   font-weight: 600;
   text-decoration: none;
@@ -21,7 +21,7 @@
 }
 
 .back-link:hover {
-  color: #101828;
+  color: var(--text);
 }
 
 .booking-layout {
@@ -71,14 +71,14 @@
 }
 
 .film-details {
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 14px;
   margin-top: 4px;
 }
 
 .field-label {
   display: block;
-  color: #99a1af;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -91,176 +91,40 @@
 .dropdown {
   width: 100%;
   padding: 11px 14px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  background-color: var(--white);
+  border: 1px solid var(--line);
   border-radius: 12px;
   font-family: inherit;
   font-size: 14px;
   font-weight: 700;
-  color: #101828;
+  color: var(--text);
   cursor: pointer;
 }
 
 .dropdown:hover {
-  border-color: #fb2c36;
+  border-color: var(--red);
 }
 
 .dropdown:focus {
   outline: none;
-  border-color: #fb2c36;
+  border-color: var(--red);
 }
 
 /* The showtime box before a date is picked: greyed out and not clickable */
 .dropdown:disabled,
 .dropdown:disabled:hover {
-  background-color: #f3f4f6;
-  border-color: #e5e7eb;
-  color: #99a1af;
+  background-color: var(--line-soft);
+  border-color: var(--line);
+  color: var(--muted);
   cursor: not-allowed;
-}
-
-/* The date box that drops the calendar open */
-
-.date-field {
-  position: relative;
-}
-
-.date-button {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  text-align: left;
-}
-
-.date-arrow {
-  color: #99a1af;
-  font-size: 11px;
-}
-
-/* The calendar, which hangs under the date box while it is open */
-
-.calendar {
-  position: absolute;
-  z-index: 5;
-  top: calc(100% + 6px);
-  left: 0;
-  width: 100%;
-  min-width: 260px;
-  padding: 14px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  box-shadow: 0 14px 30px rgba(16, 24, 40, 0.15);
-}
-
-.calendar-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.calendar-month {
-  font-size: 14px;
-  font-weight: 900;
-}
-
-.calendar-nav {
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 15px;
-  font-weight: 900;
-  line-height: 1;
-  color: #101828;
-  cursor: pointer;
-}
-
-.calendar-nav:hover {
-  border-color: #fb2c36;
-  color: #fb2c36;
-}
-
-.calendar-nav:disabled {
-  color: #e5e7eb;
-  border-color: #f3f4f6;
-  cursor: default;
-}
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-}
-
-.calendar-day-names span {
-  padding-bottom: 6px;
-  color: #99a1af;
-  font-size: 11px;
-  font-weight: 700;
-  text-align: center;
-}
-
-.calendar-date {
-  padding: 8px 0;
-  background-color: #ffffff;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  color: #101828;
-  cursor: pointer;
-}
-
-.calendar-date:hover {
-  background-color: #fef2f2;
-  border-color: #fb2c36;
-}
-
-/* Days that have already passed stay grey and dead */
-.calendar-date:disabled {
-  background-color: #ffffff;
-  border-color: transparent;
-  color: #d1d5dc;
-  cursor: default;
-}
-
-.calendar-date-today:enabled {
-  color: #4f39f6;
-  border-color: #e0e7ff;
-}
-
-.calendar-date-picked,
-.calendar-date-picked:enabled,
-.calendar-date-picked:hover {
-  background-color: #fb2c36;
-  border-color: #fb2c36;
-  color: #ffffff;
-}
-
-.calendar-until {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #f3f4f6;
-  color: #6a7282;
-  font-size: 12px;
-  font-weight: 600;
-  text-align: center;
 }
 
 .pick-first {
   padding: 48px 20px;
-  background-color: #ffffff;
-  border: 1px dashed #e5e7eb;
+  background-color: var(--white);
+  border: 1px dashed var(--line);
   border-radius: 16px;
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 14px;
   font-weight: 600;
   text-align: center;
@@ -269,7 +133,7 @@
 /* The film cannot be booked today: the same box, with a title in it */
 .pick-first strong {
   display: block;
-  color: #101828;
+  color: var(--text);
   font-size: 16px;
   margin-bottom: 4px;
 }
@@ -289,7 +153,7 @@
 }
 
 .screen-word {
-  color: #99a1af;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 5px;
@@ -325,7 +189,7 @@
 /* The row's letter, in the middle of the height of its seats */
 .row-letter {
   width: 20px;
-  color: #99a1af;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 900;
   line-height: 1;
@@ -363,25 +227,25 @@
   width: 28px;
   height: 28px;
   border-radius: 8px 8px 2px 2px;
-  background-color: #e0e7ff;
-  color: #4f39f6;
+  background-color: var(--indigo-light);
+  color: var(--indigo);
   font-size: 9px;
   font-weight: 900;
 }
 
 .seat input:checked + .seat-box {
-  background-color: #fb2c36;
-  color: #ffffff;
+  background-color: var(--red);
+  color: var(--white);
 }
 
 .seat input:focus-visible + .seat-box {
-  outline: 2px solid #4f39f6;
+  outline: 2px solid var(--indigo);
   outline-offset: 2px;
 }
 
 .seat-box-sold {
-  background-color: #e5e7eb;
-  color: #99a1af;
+  background-color: var(--line);
+  color: var(--muted);
   cursor: default;
 }
 
@@ -390,7 +254,7 @@
   justify-content: center;
   gap: 20px;
   margin-top: 22px;
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 12px;
   font-weight: 600;
 }
@@ -408,15 +272,15 @@
 }
 
 .key-free {
-  background-color: #e0e7ff;
+  background-color: var(--indigo-light);
 }
 
 .key-picked {
-  background-color: #fb2c36;
+  background-color: var(--red);
 }
 
 .key-sold {
-  background-color: #e5e7eb;
+  background-color: var(--line);
 }
 
 /* The snacks */
@@ -424,7 +288,7 @@
 .snacks {
   margin-top: 28px;
   padding-top: 24px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--line);
 }
 
 .snacks h3 {
@@ -433,13 +297,13 @@
 }
 
 .snacks-note {
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 13px;
   margin-bottom: 16px;
 }
 
 .snack-heading {
-  color: #99a1af;
+  color: var(--muted);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 2px;
@@ -459,14 +323,14 @@
   justify-content: space-between;
   gap: 10px;
   padding: 11px 14px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  background-color: var(--white);
+  border: 1px solid var(--line);
   border-radius: 12px;
 }
 
 .snack-box-picked {
-  background-color: #fef2f2;
-  border-color: #fb2c36;
+  background-color: var(--red-light);
+  border-color: var(--red);
 }
 
 .snack-name {
@@ -478,7 +342,7 @@
 
 .snack-detail {
   display: block;
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 12px;
 }
 
@@ -506,25 +370,25 @@
   width: 26px;
   height: 26px;
   padding: 0;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  background-color: var(--white);
+  border: 1px solid var(--line);
   border-radius: 8px;
   font-family: inherit;
   font-size: 15px;
   font-weight: 900;
   line-height: 1;
-  color: #101828;
+  color: var(--text);
   cursor: pointer;
 }
 
 .snack-step:hover {
-  border-color: #fb2c36;
-  color: #fb2c36;
+  border-color: var(--red);
+  color: var(--red);
 }
 
 .snack-step:disabled {
-  border-color: #f3f4f6;
-  color: #e5e7eb;
+  border-color: var(--line-soft);
+  color: var(--line);
   cursor: default;
 }
 
@@ -540,8 +404,8 @@
 .order-summary {
   margin-top: 24px;
   padding: 20px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  background-color: var(--white);
+  border: 1px solid var(--line);
   border-radius: 16px;
 }
 
@@ -560,14 +424,14 @@
 
 .summary-name {
   flex-shrink: 0;
-  color: #6a7282;
+  color: var(--text-soft);
   font-weight: 600;
 }
 
 .summary-total {
   margin-bottom: 16px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .summary-amount {
@@ -594,7 +458,7 @@
 /* Under a greyed-out Confirm button: why it cannot be used */
 .summary-note {
   margin-top: 10px;
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 13px;
   font-weight: 600;
   text-align: center;
@@ -647,20 +511,20 @@
   height: 64px;
   margin: 0 auto 16px auto;
   border-radius: 50%;
-  background-color: #fef9c2;
-  color: #a65f00;
+  background-color: var(--amber-light);
+  color: var(--amber);
   font-size: 30px;
   font-weight: 900;
 }
 
 .status-mark-stopped {
-  background-color: #ffe2e2;
-  color: #c10007;
+  background-color: var(--red-light);
+  color: var(--red-dark);
 }
 
 .status-note {
   margin-top: 20px;
-  color: #6a7282;
+  color: var(--text-soft);
   font-size: 13px;
   text-align: center;
 }
@@ -677,4 +541,90 @@
 
 .confirm-box-tight {
   margin-bottom: 6px;
+}
+
+/* Paying by QR Ph (pay.php): the code on the left and the booking on the
+   right, both from the top; one above the other on a phone, the code first */
+.pay-page {
+  max-width: 900px;
+}
+
+.pay-layout {
+  display: grid;
+  gap: 20px;
+}
+
+@media (min-width: 760px) {
+  .pay-layout {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+/* The code, the amount and a countdown to the end of the seat hold, in a box
+   like the e-ticket's */
+.qr-pay {
+  text-align: center;
+}
+
+.qr-pay-amount {
+  font-size: 28px;
+  font-weight: 900;
+  margin-top: 2px;
+}
+
+/* PayMongo's picture is larger than this; the browser shrinks it smoothly,
+   which keeps the squares even for scanning */
+.qr-pay-code {
+  width: 240px;
+  height: 240px;
+  margin: 14px auto;
+  transition: opacity 0.3s;
+}
+
+/* Paying on the same phone: save the code, then upload it in the app */
+.qr-pay-save {
+  margin-top: 14px;
+}
+
+.qr-pay-save p {
+  margin-top: 6px;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.qr-pay-ended .qr-pay-save {
+  display: none;
+}
+
+.qr-pay-timer {
+  color: var(--text-soft);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.qr-pay-timer strong {
+  display: block;
+  color: var(--text);
+  font-size: 32px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+/* The last minute */
+.qr-pay-hurry .qr-pay-timer strong {
+  color: var(--red);
+}
+
+.qr-pay-status {
+  margin-top: 10px;
+  color: var(--text-soft);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Time is up: the code no longer works */
+.qr-pay-ended .qr-pay-code {
+  opacity: 0.15;
 }

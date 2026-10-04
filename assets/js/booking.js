@@ -15,9 +15,13 @@
   var PESO = '₱';
   var TIMES = '×';
 
-  var monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'];
-  var dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  // The shared date helpers (dates.js)
+  var monthNames = window.CinemaxDates.monthNames;
+  var pad = window.CinemaxDates.pad;
+  var readDate = window.CinemaxDates.readDate;
+  var dateKey = window.CinemaxDates.dateKey;
+  var monthNumber = window.CinemaxDates.monthNumber;
+  var readableDate = window.CinemaxDates.readableDate;
 
   // What the server said about this film and this booking
   var seatsUrl = form.getAttribute('data-seats-url') || '';
@@ -58,34 +62,6 @@
 
   var seatInputs = Array.prototype.slice.call(seatMap.querySelectorAll('.seat input[type="checkbox"]'));
   var snacks = Array.prototype.slice.call(seatsAndSnacks.querySelectorAll('.snack'));
-
-  function pad(number) {
-    return (number < 10 ? '0' : '') + number;
-  }
-
-  // Turns '2026-09-18' into a date the browser can work with
-  function readDate(text) {
-    var parts = text.split('-');
-    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-  }
-
-  // Turns a date back into '2026-09-18'. Keys like this compare correctly
-  // as plain text, which is how every date below is compared.
-  function dateKey(date) {
-    return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
-  }
-
-  // Counts a month as one number so two months are easy to compare
-  function monthNumber(date) {
-    return date.getFullYear() * 12 + date.getMonth();
-  }
-
-  // How a picked date reads on the date box, like 'Fri, 18 Sep 2026'
-  function readableDate(key) {
-    var date = readDate(key);
-    return dayNames[date.getDay()] + ', ' + date.getDate() + ' ' +
-      monthNames[date.getMonth()].slice(0, 3) + ' ' + date.getFullYear();
-  }
 
   function peso(amount) {
     return PESO + amount.toLocaleString('en-US');

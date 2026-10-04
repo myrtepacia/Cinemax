@@ -5,9 +5,12 @@
 // server checks everything again anyway.
 (function () {
 
-  var monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'];
-  var dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  // The shared date helpers (dates.js)
+  var monthNames = window.CinemaxDates.monthNames;
+  var readDate = window.CinemaxDates.readDate;
+  var dateKey = window.CinemaxDates.dateKey;
+  var monthNumber = window.CinemaxDates.monthNumber;
+  var readableDate = window.CinemaxDates.readableDate;
 
   var addForm = document.getElementById('add-form');
   if (!addForm) {
@@ -46,33 +49,6 @@
   var calendarBack = document.getElementById('run-calendar-back');
   var calendarNext = document.getElementById('run-calendar-next');
   var calendarHint = document.getElementById('run-calendar-hint');
-
-  // Turns '2026-10-31' into a date the browser can compare
-  function readDate(text) {
-    var parts = text.split('-');
-    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-  }
-
-  // Turns a date back into '2026-10-31', the shape the server reads
-  function dateKey(date) {
-    var month = date.getMonth() + 1;
-    var day = date.getDate();
-    return date.getFullYear() +
-      '-' + (month < 10 ? '0' : '') + month +
-      '-' + (day < 10 ? '0' : '') + day;
-  }
-
-  // Counts a month as one number so two months are easy to compare
-  function monthNumber(date) {
-    return date.getFullYear() * 12 + date.getMonth();
-  }
-
-  // How a picked date reads on the box, like 'Sat, 31 Oct 2026'
-  function readableDate(key) {
-    var date = readDate(key);
-    return dayNames[date.getDay()] + ', ' + date.getDate() + ' ' +
-      monthNames[date.getMonth()].slice(0, 3) + ' ' + date.getFullYear();
-  }
 
   // Today, with the clock part dropped so only the day itself is compared
   var today = new Date();
@@ -181,7 +157,7 @@
     dateButton.setAttribute('aria-expanded', 'false');
   }
 
-  // The date box reads like 'Fri, 9 Oct 2026 – Sat, 31 Oct 2026', the same
+  // The date box reads like 'Fri, Oct 9, 2026 – Sat, Oct 31, 2026', the same
   // words the server writes into it
   function showDate() {
     if (openDate === '') {
@@ -194,14 +170,9 @@
     endsHolder.value = lastDate;
   }
 
-  // The two boxes read back as one length, like '1h 58m'
-  function readLength() {
-    var hours = parseInt(hoursInput.value, 10);
-    var minutes = parseInt(minutesInput.value, 10);
-    if (isNaN(hours) || isNaN(minutes)) {
-      return '';
-    }
-    return hours + 'h ' + minutes + 'm';
+  // Whether both length boxes hold a number
+  function lengthGiven() {
+    return !isNaN(parseInt(hoursInput.value, 10)) && !isNaN(parseInt(minutesInput.value, 10));
   }
 
   // Keeps the minutes a real number of minutes, and the hours sensible
@@ -340,7 +311,7 @@
         }
       });
 
-    var noLength = readLength() === '';
+    var noLength = !lengthGiven();
     hoursInput.classList.toggle('invalid', noLength);
     minutesInput.classList.toggle('invalid', noLength);
     if (noLength) {

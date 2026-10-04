@@ -6,9 +6,13 @@ declare(strict_types=1);
 // The flow:
 //   1. checkout.php makes a Checkout Session for the booking and sends the
 //      customer to PayMongo's own page to pay (card, GCash, Maya, GrabPay).
-//   2. PayMongo sends them back to payment-success.php, which asks PayMongo
-//      directly whether the session was paid. The browser's word is never
-//      taken for it.
+//      When QR Ph is the only way to pay (config: payment_methods ['qrph']),
+//      it makes a QR Ph payment instead (a Payment Intent with a QR Ph code)
+//      and shows the code on pay.php, valid exactly as long as the seats are
+//      held. PayMongo's own page would always give it 30 minutes.
+//   2. PayMongo sends them back to payment-success.php (or pay.php asks every
+//      few seconds), which asks PayMongo directly whether it was paid. The
+//      browser's word is never taken for it.
 //   3. webhook.php hears the same news from PayMongo's servers, so a customer
 //      who closes the tab before coming back still gets their ticket.
 //
@@ -132,6 +136,107 @@ function paymongo_create_checkout(array $booking, array $lineItems, array $custo
 }
 
 /**
+ * True when customers pay by QR Ph alone (config: payment_methods ['qrph']).
+ * The code is then shown on Cinemax's own page, pay.php.
+ */
+function paymongo_qrph_only(): bool
+{
+    return array_values((array) config('paymongo.payment_methods', [])) === ['qrph'];
+}
+
+/**
+ * Starts a QR Ph payment for a booking: a Payment Intent for its total, with
+ * a QR Ph code attached that stops working after $expirySeconds. Returns
+ * ['id' => 'pi_...', 'qr' => the code as a data: picture].
+ */
+function paymongo_create_qrph(array $booking, array $customer, int $expirySeconds): array
+{
+    $reference = (string) $booking['reference'];
+    $reply = paymongo_request('POST', 'payment_intents', ['data' => ['attributes' => [
+        'amount'                 => (int) $booking['total'] * 100,
+        'currency'               => 'PHP',
+        'payment_method_allowed' => ['qrph'],
+        'description'            => 'Cinemax booking ' . $reference,
+        'metadata'               => [
+            'booking_reference' => $reference,
+            'booking_id'        => (string) $booking['id'],
+        ],
+    ]]]);
+    $intentId = (string) ($reply['data']['id'] ?? '');
+    $clientKey = (string) ($reply['data']['attributes']['client_key'] ?? '');
+    if (!preg_match('/^pi_[A-Za-z0-9]+$/', $intentId) || $clientKey === '') {
+        throw new PayMongoException('PayMongo did not start the QR Ph payment.');
+    }
+    return ['id' => $intentId, 'qr' => paymongo_attach_qrph($intentId, $clientKey, $customer, $expirySeconds)];
+}
+
+/**
+ * Makes a QR Ph code that stops working after $expirySeconds (PayMongo
+ * allows 60 to 9000) and attaches it to a Payment Intent. Returns the code
+ * as a data: picture.
+ */
+function paymongo_attach_qrph(string $intentId, string $clientKey, array $customer, int $expirySeconds): string
+{
+    $method = paymongo_request('POST', 'payment_methods', ['data' => ['attributes' => [
+        'type'           => 'qrph',
+        'expiry_seconds' => max(60, min(9000, $expirySeconds)),
+        'billing'        => array_filter([
+            'name'  => mb_substr((string) $customer['name'], 0, 100),
+            'email' => (string) $customer['email'],
+            'phone' => (string) ($customer['mobile'] ?? ''),
+        ], static function ($value) {
+            return $value !== '';
+        }),
+    ]]]);
+    $methodId = (string) ($method['data']['id'] ?? '');
+    if ($methodId === '') {
+        throw new PayMongoException('PayMongo did not make the QR Ph code.');
+    }
+
+    $attached = paymongo_request('POST', 'payment_intents/' . $intentId . '/attach', ['data' => ['attributes' => [
+        'payment_method' => $methodId,
+        'client_key'     => $clientKey,
+    ]]]);
+    $qr = paymongo_qr_image((array) ($attached['data'] ?? []));
+    if ($qr === null) {
+        throw new PayMongoException('PayMongo did not return the QR Ph code.');
+    }
+    return $qr;
+}
+
+/**
+ * A Payment Intent as PayMongo has it right now.
+ */
+function paymongo_get_intent(string $intentId, int $timeoutSeconds = 30): array
+{
+    if (!preg_match('/^pi_[A-Za-z0-9]+$/', $intentId)) {
+        throw new PayMongoException('Not a payment intent id.');
+    }
+    $reply = paymongo_request('GET', 'payment_intents/' . $intentId, null, $timeoutSeconds);
+    return (array) ($reply['data'] ?? []);
+}
+
+/**
+ * The QR Ph code on a Payment Intent waiting to be scanned, as a data:
+ * picture (the page's Content Security Policy allows those), or null.
+ */
+function paymongo_qr_image(array $intent): ?string
+{
+    $image = trim((string) ($intent['attributes']['next_action']['code']['image_url'] ?? ''));
+    if (preg_match('~^data:image/(png|jpeg|gif|svg\+xml);base64,[A-Za-z0-9+/=]+$~', $image)) {
+        return $image;
+    }
+    $bare = (string) preg_replace('/\s+/', '', $image);
+    if ($bare !== '' && preg_match('~^[A-Za-z0-9+/=]+$~', $bare)) {
+        return 'data:image/png;base64,' . $bare;
+    }
+    if ($image !== '') {
+        error_log('[paymongo] QR Ph code in an unexpected form: ' . substr($image, 0, 60));
+    }
+    return null;
+}
+
+/**
  * A checkout session as PayMongo has it right now.
  */
 function paymongo_get_checkout(string $checkoutId, int $timeoutSeconds = 30): array
@@ -155,13 +260,17 @@ function paymongo_expire_checkout(string $checkoutId, int $timeoutSeconds = 30):
     try {
         paymongo_request('POST', 'checkout_sessions/' . $checkoutId . '/expire', null, $timeoutSeconds);
     } catch (PayMongoException $e) {
-        error_log('[paymongo] could not expire ' . $checkoutId . ': ' . $e->getMessage());
+        // Already closed is what was wanted, so only other problems are logged
+        if (stripos($e->getMessage(), 'already expired') === false) {
+            error_log('[paymongo] could not expire ' . $checkoutId . ': ' . $e->getMessage());
+        }
     }
 }
 
 /**
- * The paid payment inside a checkout session, as
- * ['id' => 'pay_...', 'amount' => pesos], or null if nothing is paid yet.
+ * The paid payment inside a checkout session or a Payment Intent (both list
+ * their payments the same way), as ['id' => 'pay_...', 'amount' => pesos],
+ * or null if nothing is paid yet.
  */
 function paymongo_paid_payment(array $checkout): ?array
 {

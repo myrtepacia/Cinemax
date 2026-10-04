@@ -15,47 +15,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../includes/bootstrap.php';
 
-const SCAN_MAX_BODY_BYTES = 4096;
-const SCAN_MAX_CODE_LENGTH = 300;
-const SCAN_MAX_PER_MINUTE = 120;
-
-if (!is_post()) {
-    header('Allow: POST');
-    json_response(['ok' => false, 'error' => 'Only POST requests are accepted here.'], 405);
-}
-
-$user = current_user();
-if (!is_staff($user)) {
-    json_response(['ok' => false, 'error' => 'Please sign in again.'], 401);
-}
-
-verify_csrf(true);
-
-// Counted before the body is read, so junk requests count too
-record_attempt('scan');
-if (too_many_attempts('scan', '', SCAN_MAX_PER_MINUTE, 60)) {
-    json_response(['ok' => false, 'error' => 'Too many scans in a short time. Wait a minute, then try again.'], 429);
-}
-
-// The body: small JSON only. One byte past the limit is read so an
-// oversized body can be told apart from one exactly at the limit.
-$contentType = strtolower((string) ($_SERVER['CONTENT_TYPE'] ?? ''));
-if (strpos($contentType, 'application/json') !== 0) {
-    json_response(['ok' => false, 'error' => 'That request was not understood.'], 415);
-}
-$raw = file_get_contents('php://input', false, null, 0, SCAN_MAX_BODY_BYTES + 1);
-if (!is_string($raw) || strlen($raw) > SCAN_MAX_BODY_BYTES) {
-    json_response(['ok' => false, 'error' => 'That request was too large.'], 413);
-}
-
-$body = json_decode($raw, true, 4);
-$action = is_array($body) ? ($body['action'] ?? null) : null;
-$code = is_array($body) ? ($body['code'] ?? null) : null;
-
-if (!is_string($action) || !in_array($action, ['check', 'admit'], true)
-    || !is_string($code) || $code === '' || strlen($code) > SCAN_MAX_CODE_LENGTH) {
-    json_response(['ok' => false, 'error' => 'That request was not understood.'], 400);
-}
+[$user, $action, $code] = read_scan_request('scan', ['check', 'admit']);
 
 /**
  * The reply for one ticket: its status and, for a genuine ticket, the few

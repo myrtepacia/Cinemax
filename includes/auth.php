@@ -190,6 +190,27 @@ function require_role(string ...$roles): array
 }
 
 /**
+ * For the admin pages' background requests (api/dashboard.php and the
+ * like): only a GET from a signed-in admin gets past; anything else is
+ * answered with a JSON error.
+ */
+function require_admin_get(): array
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+        header('Allow: GET');
+        json_response(['ok' => false, 'error' => 'Only GET requests are accepted here.'], 405);
+    }
+    $user = current_user();
+    if ($user === null) {
+        json_response(['ok' => false, 'error' => 'Please sign in again.'], 401);
+    }
+    if ($user['role'] !== 'admin') {
+        json_response(['ok' => false, 'error' => 'Not allowed.'], 403);
+    }
+    return $user;
+}
+
+/**
  * For pages only a signed-out visitor needs (sign in, sign up): anyone
  * already signed in is sent to their own home page.
  */

@@ -39,11 +39,11 @@ function account_status_label(array $booking): ?array
 {
     switch ($booking['status']) {
         case 'pending':
-            return ['Awaiting payment', 'booking-status-pending'];
+            return ['Awaiting payment', 'pill-amber'];
         case 'refunded':
-            return ['Refunded', 'booking-status-refunded'];
+            return ['Refunded', 'pill-red'];
         case 'paid':
-            return $booking['scanned_at'] !== null ? ['Used', 'booking-status-used'] : null;
+            return $booking['scanned_at'] !== null ? ['Used', 'pill-grey'] : null;
         default:
             return null;
     }
@@ -82,7 +82,7 @@ render_header(['current' => 'account']);
           <div class="booking-side">
             <p class="order-price"><?= e(peso((int) $booking['total'])) ?></p>
 <?php if ($label !== null): ?>
-            <span class="booking-status <?= e($label[1]) ?>"><?= e($label[0]) ?></span>
+            <span class="pill <?= e($label[1]) ?>"><?= e($label[0]) ?></span>
 <?php endif; ?>
           </div>
         </a>

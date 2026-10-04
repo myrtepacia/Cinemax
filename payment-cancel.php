@@ -62,16 +62,6 @@ function payment_cancel_booking(array $user, array $source): array
     return $booking;
 }
 
-/**
- * Where "back to the movie" goes: the film's page while it is still listed.
- */
-function payment_cancel_film_path(array $booking): string
-{
-    return find_movie_by_slug((string) $booking['slug']) !== null
-        ? 'book.php?movie=' . rawurlencode((string) $booking['slug'])
-        : 'index.php';
-}
-
 if (is_post()) {
     verify_csrf();
     $user = require_login();
@@ -88,7 +78,7 @@ if (is_post()) {
         payment_cancel_settle($user, $booking);
         cancel_pending_booking($booking);
     }
-    redirect(payment_cancel_film_path($booking));
+    redirect(booking_film_path($booking));
 }
 
 $user = require_login();
@@ -119,32 +109,7 @@ render_header(['current' => 'account']);
     </div>
 <?php endif; ?>
 
-    <div class="ticket">
-      <div class="ticket-body">
-        <div class="ticket-pair">
-          <div>
-            <p class="ticket-label">Reference No.</p>
-            <p class="ticket-value ticket-reference"><?= e($reference) ?></p>
-          </div>
-          <div>
-            <p class="ticket-label">Seat(s)</p>
-            <p class="ticket-value"><?= e($booking['seat_list']) ?></p>
-          </div>
-        </div>
-        <div class="ticket-pair">
-          <div>
-            <p class="ticket-label">Movie</p>
-            <p class="ticket-value ticket-value-small"><?= e($booking['title']) ?></p>
-          </div>
-          <div>
-            <p class="ticket-label"><?= $stillHeld ? 'Amount Due' : 'Total' ?></p>
-            <p class="ticket-value"><?= e(peso((int) $booking['total'])) ?></p>
-          </div>
-        </div>
-        <p class="ticket-label">Showing</p>
-        <p class="ticket-value ticket-value-small"><?= e(format_showing((string) $booking['show_date'], (string) $booking['show_time'], (int) $booking['cinema'])) ?></p>
-      </div>
-    </div>
+    <?php render_booking_summary($booking, $stillHeld ? 'Amount Due' : 'Total'); ?>
 
 <?php if ($stillHeld): ?>
     <div class="ticket-actions">

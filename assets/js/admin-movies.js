@@ -12,7 +12,7 @@
       }
 
       // One press is enough: a second would only find the film already gone
-      var button = form.querySelector('.remove-button');
+      var button = form.querySelector('button[type="submit"]');
       if (button) {
         button.disabled = true;
       }
@@ -22,7 +22,7 @@
   // Coming back with the browser's Back button can restore the page as it
   // was, with the button still switched off
   window.addEventListener('pageshow', function () {
-    document.querySelectorAll('form.remove-form .remove-button').forEach(function (button) {
+    document.querySelectorAll('form.remove-form button[type="submit"]').forEach(function (button) {
       button.disabled = false;
     });
   });
@@ -32,28 +32,13 @@
   // data-max (when set) can be picked: the server worked those out so the
   // film's shows stay clear of other films in the same cinema, and checks
   // the day again when it is saved.
-  var monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'];
-  var dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-  // '2026-10-31' <-> a date. 'YYYY-MM-DD' keys also compare as plain text.
-  function readDate(key) {
-    var parts = key.split('-');
-    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-  }
-
-  function dateKey(date) {
-    var month = date.getMonth() + 1;
-    var day = date.getDate();
-    return date.getFullYear() + '-' + (month < 10 ? '0' : '') + month + '-' + (day < 10 ? '0' : '') + day;
-  }
-
-  // 'Sat, 31 Oct 2026', the way the page writes dates
-  function readableDate(key) {
-    var date = readDate(key);
-    return dayNames[date.getDay()] + ', ' + date.getDate() + ' ' +
-      monthNames[date.getMonth()].slice(0, 3) + ' ' + date.getFullYear();
-  }
+  // The shared date helpers (dates.js)
+  var monthNames = window.CinemaxDates.monthNames;
+  var dayNames = window.CinemaxDates.dayNames;
+  var readDate = window.CinemaxDates.readDate;
+  var dateKey = window.CinemaxDates.dateKey;
+  var monthNumber = window.CinemaxDates.monthNumber;
+  var readableDate = window.CinemaxDates.readableDate;
 
   // The calendar's frame; the days are filled in by draw()
   function calendarFrame() {
@@ -113,10 +98,6 @@
     var first = readDate(minKey);
     var viewYear = first.getFullYear();
     var viewMonth = first.getMonth();
-
-    function monthNumber(date) {
-      return date.getFullYear() * 12 + date.getMonth();
-    }
 
     function draw() {
       monthLabel.textContent = monthNames[viewMonth] + ' ' + viewYear;

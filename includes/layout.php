@@ -166,18 +166,25 @@ function render_staff_sidebar(string $current): void
 
 /**
  * A booking's details laid out like the e-ticket's body, for the payment
+<<<<<<< HEAD
  * pages, under the name of the customer who booked. $amountLabel heads the
  * price: 'Amount Due' or 'Total'.
+=======
+ * pages. $amountLabel heads the price: 'Amount Due' or 'Total'.
+>>>>>>> 7c9a0f9974903781a2848a4882ebb68cc0b70671
  */
 function render_booking_summary(array $booking, string $amountLabel): void
 {
     ?>
     <div class="ticket">
       <div class="ticket-body">
+<<<<<<< HEAD
         <div class="ticket-row">
           <p class="ticket-label">Name</p>
           <p class="ticket-value ticket-value-small"><?= e($booking['customer_name']) ?></p>
         </div>
+=======
+>>>>>>> 7c9a0f9974903781a2848a4882ebb68cc0b70671
         <div class="ticket-pair">
           <div>
             <p class="ticket-label">Reference No.</p>

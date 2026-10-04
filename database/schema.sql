@@ -112,8 +112,12 @@ CREATE TABLE bookings (
   snack_number         SMALLINT UNSIGNED NULL,
   snack_scanned_at     DATETIME NULL,           -- confirmed at the snack counter
   snack_sold_at        DATETIME NULL,           -- picked up
+<<<<<<< HEAD
   paymongo_checkout_id VARCHAR(64) NULL,       -- PayMongo's checkout page (cs_...)
   paymongo_intent_id   VARCHAR(64) NULL,       -- or a QR Ph payment shown on pay.php (pi_...)
+=======
+  paymongo_checkout_id VARCHAR(64) NULL,
+>>>>>>> 7c9a0f9974903781a2848a4882ebb68cc0b70671
   paymongo_payment_id  VARCHAR(64) NULL,
   paymongo_refund_id   VARCHAR(64) NULL,
   expires_at           DATETIME NOT NULL,

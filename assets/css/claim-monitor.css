@@ -1,0 +1,192 @@
+/* Snacks Claim monitor (admin/claim-monitor.php): a screen at the snack
+   counter, read from across the room, so everything is large and sizes with
+   the screen. */
+
+/* Exactly the height of the screen, so the numbers can fill it downwards */
+.claim-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--white);
+  color: var(--text);
+}
+
+/* The title bar: CINEMAX on the left, the title in the middle */
+.claim-head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: clamp(12px, 2vw, 28px) clamp(16px, 3vw, 48px);
+  border-bottom: 2px solid var(--line);
+}
+
+.claim-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: clamp(16px, 1.8vw, 28px);
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.claim-brand img {
+  width: clamp(32px, 3vw, 56px);
+  height: auto;
+}
+
+.claim-head h1 {
+  font-size: clamp(26px, 3.6vw, 64px);
+  font-weight: 900;
+  text-align: center;
+}
+
+/* A small outlined button (.button) at the right of the bar */
+.claim-fullscreen {
+  justify-self: end;
+}
+
+.claim-fullscreen[hidden] {
+  display: none;
+}
+
+/* The two columns, Preparing and Ready, split by a line and filling the
+   rest of the screen */
+.claim-board {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  grid-template-columns: 1fr 1fr;
+}
+
+.claim-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: clamp(16px, 2.5vw, 40px) clamp(16px, 3vw, 48px);
+}
+
+.claim-column + .claim-column {
+  border-left: 2px solid var(--line);
+}
+
+/* PREPARING and READY, centred over their columns */
+.claim-column h2 {
+  margin-bottom: clamp(12px, 2vw, 32px);
+  font-size: clamp(18px, 2.4vw, 40px);
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.claim-preparing h2 {
+  color: var(--red);
+}
+
+.claim-ready h2 {
+  color: var(--green);
+}
+
+/* The order numbers (0001), one under another down the whole height of the
+   screen; when a column is full they carry on in a new one beside it */
+.claim-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 0.1em 1.4em;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  font-size: clamp(28px, min(4.6vw, 8vh), 84px);
+  list-style: none;
+}
+
+.claim-list li {
+  font-weight: 900;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.claim-preparing li {
+  color: var(--text);
+}
+
+.claim-ready li {
+  color: var(--green);
+}
+
+/* A number that has just become ready blinks a few times */
+.claim-ready li.claim-new {
+  animation: claim-arrive 1s ease-in-out 4;
+}
+
+@keyframes claim-arrive {
+  50% {
+    opacity: 0.15;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .claim-ready li.claim-new {
+    animation: none;
+  }
+}
+
+/* When the lists cannot be updated (signed out, connection lost) */
+.claim-problem {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 16px;
+  border-radius: 12px;
+  background-color: var(--amber-light);
+  color: var(--amber);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.claim-problem[hidden] {
+  display: none;
+}
+
+/* On a narrow screen the columns stack, each a plain list going down, and
+   the page scrolls if it has to */
+@media (max-width: 620px) {
+  .claim-screen {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .claim-column {
+    overflow: visible;
+  }
+
+  .claim-list {
+    flex-wrap: nowrap;
+  }
+
+  .claim-head {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .claim-fullscreen {
+    justify-self: center;
+  }
+
+  .claim-board {
+    grid-template-columns: 1fr;
+    align-content: start;
+  }
+
+  .claim-column + .claim-column {
+    border-left: none;
+    border-top: 2px solid var(--line);
+  }
+}

@@ -1,0 +1,110 @@
+/* Cinemax staff pages: Dashboard, Movies and Add Movie.
+   Everything else these pages use lives in cinemax.css. */
+
+/* 1. SNACK ORDERS ----------------------------------------------------------*/
+
+/* The search above Sold. Its box is the same as the Ticket Scanner's search
+   (.search-field in cinemax.css). */
+.sold-search {
+  margin: 10px 0 4px 0;
+}
+
+.sold-search-note {
+  padding: 10px 0 2px 0;
+  color: var(--text-soft);
+  font-size: 14px;
+}
+
+/* When a found order was scanned at the snack counter and picked up */
+.order-time {
+  margin-top: 2px;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+/* 2. MOVIES TABLE ----------------------------------------------------------*/
+
+/* Extend and Remove side by side at the end of each row */
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.last-day-cell {
+  white-space: nowrap;
+}
+
+/* The Extend panel under a film's row, folded away until Extend is pressed */
+.movie-table tr.extend-row[hidden] {
+  display: none;
+}
+
+/* The last film's row may be followed by its folded-away panel, so it is
+   marked from the page rather than found with :last-child */
+.movie-table tr.last-movie td {
+  border-bottom: none;
+}
+
+.movie-table .extend-row td {
+  padding: 14px 16px;
+  background-color: var(--page);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.extend-now {
+  margin-bottom: 10px;
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+.extend-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.extend-date-field {
+  flex: 0 1 280px;
+}
+
+.extend-date-field .calendar {
+  min-width: 280px;
+}
+
+.extend-note {
+  margin-top: 10px;
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 620px) {
+  .movie-table tr.extend-row {
+    display: block;
+    padding: 0 0 12px 0;
+    border-top: none;
+  }
+
+  .movie-table .extend-row td {
+    display: block;
+    border-radius: 12px;
+  }
+
+  .extend-date-field {
+    flex-basis: 100%;
+  }
+}
+
+/* 3. ADD MOVIE FORM --------------------------------------------------------*/
+
+/* The server's list of what to fix, inside the red message box */
+.form-error-list {
+  margin: 6px 0 0 0;
+  padding-left: 20px;
+}
+
+.form-error-list li + li {
+  margin-top: 2px;
+}

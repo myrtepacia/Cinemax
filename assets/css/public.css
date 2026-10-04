@@ -1,0 +1,90 @@
+/* Cinemax — styles for the customer pages that cinemax.css does not cover:
+   the My Bookings list and the e-ticket's extras. Loaded by account.php and
+   ticket.php only. */
+
+/* 1. MY BOOKINGS ------------------------------------------------------------*/
+
+/* One booking per row: poster | film and showing | price. The whole row is
+   the link to the ticket. (.order-row in cinemax.css is laid out for the
+   snack queue's buttons, so it is not reused here.) */
+.booking-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0 14px 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.booking-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.booking-link:hover .order-items {
+  color: var(--red);
+}
+
+.booking-link:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.booking-text {
+  min-width: 0;
+}
+
+.booking-text .order-items {
+  overflow-wrap: anywhere;
+}
+
+/* The price, with a small label (.pill) under it when the ticket is used,
+   refunded or not paid yet */
+.booking-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.empty-action {
+  padding-bottom: 12px;
+  text-align: center;
+}
+
+@media (max-width: 620px) {
+  .booking-row {
+    gap: 12px;
+  }
+}
+
+/* 2. E-TICKET ---------------------------------------------------------------*/
+
+/* The QR code is drawn a little larger than it is shown; keep its squares
+   sharp when the browser scales it, so it scans cleanly off a phone. */
+.ticket-qr-code {
+  image-rendering: pixelated;
+}
+
+.ticket-qr-noscript {
+  margin-bottom: 6px;
+}
+
+/* How the snack order is coming along, under the pickup number and snacks */
+.snack-status {
+  margin: 0 0 18px 0;
+  text-align: center;
+  white-space: nowrap;
+  /* Every snack message is black and bold, the same size as the snacks
+     line above it. One line even on a narrow phone: the text shrinks a
+     little there instead */
+  color: var(--text);
+  font-size: clamp(11px, 3.6vw, 14px);
+  font-weight: 900;
+}
+
+/* The used or refunded note sits between the ticket and its buttons */
+.ticket-note {
+  margin: 20px 0 0 0;
+}

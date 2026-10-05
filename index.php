@@ -1,8 +1,7 @@
 <?php
 declare(strict_types=1);
 
-// The home page: the films showing now and the ones coming soon, straight
-// from the database.
+// Home page: films showing now and coming soon.
 
 require __DIR__ . '/includes/bootstrap.php';
 
@@ -10,7 +9,7 @@ $lists = listing_movies();
 $showing = $lists['showing'];
 $soon = $lists['soon'];
 
-// The cheapest ticket among the films on now, for the line under the title
+// The cheapest ticket, for the line under the title
 $lowestPrice = null;
 foreach ($showing as $movie) {
     $price = (int) $movie['price'];
@@ -19,8 +18,7 @@ foreach ($showing as $movie) {
     }
 }
 
-// The first row of posters is on screen straight away, so those load first;
-// the rest wait until they are scrolled near.
+// The first row of posters loads first; the rest when scrolled near
 $eagerPosters = 4;
 $posterCount = 0;
 
@@ -51,7 +49,6 @@ render_header(['home' => true, 'current' => 'now-showing']);
           <div class="movie-poster">
             <img src="<?= e(poster_url($movie)) ?>" alt="<?= e($movie['title'] . ' poster') ?>"
                  width="900" height="1200" decoding="async" <?= $eager ? 'fetchpriority="high"' : 'loading="lazy"' ?>>
-            <span class="tag-status tag-showing">Showing</span>
             <span class="tag-rated"><?= e($movie['rating']) ?></span>
             <span class="tag-time"><?= e(duration_tag((int) $movie['duration_minutes'])) ?></span>
           </div>
@@ -71,7 +68,7 @@ render_header(['home' => true, 'current' => 'now-showing']);
 
       <div class="section-title-row">
         <h2 class="section-title">Upcoming Shows</h2>
-        <span class="film-count film-count-soon" id="soon-count"><?= e(count_label(count($soon), 'Film', 'Films')) ?></span>
+        <span class="film-count" id="soon-count"><?= e(count_label(count($soon), 'Film', 'Films')) ?></span>
       </div>
       <p class="section-note">Coming to Cinemax soon. Booking opens on release day.</p>
 
@@ -89,7 +86,6 @@ render_header(['home' => true, 'current' => 'now-showing']);
           <div class="movie-poster">
             <img src="<?= e(poster_url($movie)) ?>" alt="<?= e($movie['title'] . ' poster') ?>"
                  width="900" height="1200" decoding="async" <?= $eager ? 'fetchpriority="high"' : 'loading="lazy"' ?>>
-            <span class="tag-status tag-soon">Soon</span>
             <span class="tag-rated"><?= e($movie['rating']) ?></span>
             <span class="tag-time"><?= e(duration_tag((int) $movie['duration_minutes'])) ?></span>
           </div>

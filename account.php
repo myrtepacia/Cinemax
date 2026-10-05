@@ -1,26 +1,22 @@
 <?php
 declare(strict_types=1);
 
-// My Bookings: the signed-in customer's tickets, newest showing first.
+// My Bookings: the customer's tickets, newest first.
 
 require __DIR__ . '/includes/bootstrap.php';
 
-// The fewest seconds between two PayMongo checks for one visitor.
+// Seconds between PayMongo checks per visitor
 const ACCOUNT_SETTLE_EVERY_SECONDS = 60;
 
 $user = require_login();
 
-// Staff accounts cannot book, so they have no tickets here: send them to
-// their own home (the Dashboard for admin, the Scanner for the scanner).
+// Staff have no tickets: send them to their own home page
 if (is_staff($user)) {
     redirect(home_for($user));
 }
 
-// Someone who paid but never made it back from PayMongo (closed the tab,
-// lost signal) should still find their ticket here, so ask PayMongo first.
-// Each check can call PayMongo several times, so it runs at most once a
-// minute per visitor and shares payment-success.php's 'settle' limit;
-// reloads in between (or past the limit) show the bookings as they are.
+// Check PayMongo first, in case they paid but never came back (at most once a
+// minute)
 $lastSettled = (int) ($_SESSION['account_settled_at'] ?? 0);
 if (time() - $lastSettled >= ACCOUNT_SETTLE_EVERY_SECONDS
     && !too_many_attempts('settle', 'user:' . $user['id'], 30, 300)) {
@@ -31,10 +27,7 @@ if (time() - $lastSettled >= ACCOUNT_SETTLE_EVERY_SECONDS
 
 $bookings = user_bookings((int) $user['id']);
 
-/**
- * The small label beside a booking's price, as [text, class], or null when
- * it is simply a paid ticket waiting to be used.
- */
+/** The small label beside a price [text, class], or null. */
 function account_status_label(array $booking): ?array
 {
     switch ($booking['status']) {

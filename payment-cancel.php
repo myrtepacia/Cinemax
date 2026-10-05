@@ -1,20 +1,13 @@
 <?php
 declare(strict_types=1);
 
-// PayMongo sends the customer here when they back out of paying.
-//   GET  ?ref=CMX-XXXXXX  "Waiting for payment": how long the seats stay
-//        held ("Pay by ...") with Pay now and Back to Movies, laid out
-//        like payment-success.php. It changes nothing (apart from recording a
-//        payment PayMongo did take after all).
-//   POST ref=...         cancels the booking and frees its seats (the
-//        Cancel booking button on payment-success.php).
+// PayMongo sends customers here when they back out. GET shows "Waiting for
+// payment"; POST cancels the booking and frees its seats.
 
 require __DIR__ . '/includes/bootstrap.php';
 
 /**
- * Asks PayMongo about the booking once more (someone can pay in one tab and
- * cancel in another) and leaves this page if it turns out to be settled.
- * Returns quietly when it is still unpaid, or PayMongo cannot be asked.
+ * Asks PayMongo once more, and leaves this page if the booking is settled.
  */
 function payment_cancel_settle(array $user, array $booking): void
 {
@@ -34,8 +27,7 @@ function payment_cancel_settle(array $user, array $booking): void
 
     switch ($result) {
         case 'paid':
-            // "Booking Confirmed!" only when the payment has just come in,
-            // not when an old paid booking's cancel link is opened again
+            // "Booking Confirmed!" only when the payment just came in
             if (!$wasPaid) {
                 $_SESSION['just_paid'] = $reference;
             }
@@ -43,15 +35,12 @@ function payment_cancel_settle(array $user, array $booking): void
             break;
         case 'refunded':
         case 'review':
-            // My Bookings shows where it stands
             redirect('account.php');
             break;
     }
 }
 
-/**
- * The customer's own booking named by $source['ref'], or a 404 page.
- */
+/** The customer's own booking from $source['ref'], or a 404. */
 function payment_cancel_booking(array $user, array $source): array
 {
     $reference = normalize_reference(input_string($source, 'ref', 20));
@@ -67,14 +56,14 @@ if (is_post()) {
     $user = require_login();
     $booking = payment_cancel_booking($user, $_POST);
 
-    // A paid ticket is never cancelled from here (only staff can refund it)
+    // A paid ticket is never cancelled here
     if ($booking['status'] === 'paid') {
         redirect('ticket.php?ref=' . rawurlencode((string) $booking['reference']));
     }
 
-    // A booking already closed (cancelled, refunded) has nothing to cancel
+    // Already closed: nothing to cancel
     if (in_array($booking['status'], ['pending', 'expired'], true)) {
-        // Paid in the meantime? Then this leaves for the ticket instead.
+        // Paid meanwhile? Then go to the ticket
         payment_cancel_settle($user, $booking);
         cancel_pending_booking($booking);
     }
@@ -95,7 +84,6 @@ render_header(['current' => 'account']);
   <main class="ticket-page">
 
 <?php if ($stillHeld): ?>
-    <!-- Laid out like the payment page while seats are held -->
     <div class="confirm-box confirm-box-tight">
       <div class="status-mark">!</div>
       <h1>Waiting for payment</h1>
@@ -113,7 +101,7 @@ render_header(['current' => 'account']);
 
 <?php if ($stillHeld): ?>
     <div class="ticket-actions">
-      <!-- Back to PayMongo to finish paying (it checks for a payment first) -->
+      <!-- Back to paying (checks for a payment first) -->
       <form class="inline-form" method="post" action="<?= e(url('pay-now.php')) ?>">
         <?= csrf_field() ?>
         <input type="hidden" name="ref" value="<?= e($reference) ?>">

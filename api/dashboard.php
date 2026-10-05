@@ -1,12 +1,9 @@
 <?php
 declare(strict_types=1);
 
-// The dashboard's "has anything changed?" check, asked every few seconds by
-// assets/js/dashboard.js. It answers with a short fingerprint of the
-// figures and the snack queue; when that differs from the one the page was
-// drawn with, the page fetches itself again and swaps in the new parts.
-//
-// Admin only. It only reads, and it returns no names or amounts.
+// Asked every few seconds by dashboard.js: a short fingerprint of the figures
+// and the snack queue. When it changes, the page reloads its parts. Admin
+// only, read-only, no names or amounts.
 
 require __DIR__ . '/../includes/bootstrap.php';
 

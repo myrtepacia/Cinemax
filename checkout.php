@@ -1,10 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// The booking form from book.php lands here. Every choice is checked again,
-// the seats are held, and the customer is sent to PayMongo's own checkout
-// page to pay. Prices come from the database; the form only says which
-// seats and how many of each snack.
+// The booking form lands here: everything is checked again, seats are held,
+// then on to payment. Prices come from the database.
 
 require __DIR__ . '/includes/bootstrap.php';
 
@@ -18,14 +16,12 @@ if ($movie === null || (int) $movie['is_active'] !== 1) {
 }
 $bookPath = 'book.php?movie=' . rawurlencode((string) $movie['slug']);
 
-// Someone signed out (or whose session ran out) is sent to sign in and then
-// straight back to the film, rather than to this form-only address.
+// Signed out: sign in, then back to the film
 $signedIn = current_user();
 if ($signedIn === null) {
     redirect('signin.php?return=' . rawurlencode($bookPath));
 }
-// Staff see a greyed-out button; a form sent anyway just goes back to the
-// film's page rather than to an error page
+// Staff cannot book: back to the film
 if ($signedIn['role'] !== 'customer') {
     redirect($bookPath);
 }
@@ -37,10 +33,7 @@ if (!preg_match('/^\d{2}:\d{2}:\d{2}$/', $time)) {
     $time = '';
 }
 
-/**
- * The film's booking page again, with the date and showtime still picked,
- * so a bounced booking only needs new seats.
- */
+/** The film's page again, with the date and showtime kept. */
 function checkout_back_path(string $bookPath, ?string $date, string $time): string
 {
     $path = $bookPath;
@@ -55,8 +48,7 @@ function checkout_back_path(string $bookPath, ?string $date, string $time): stri
 
 $backPath = checkout_back_path($bookPath, $date, $time);
 
-// Seats: a list of seat codes. Anything else (a single value, nested lists)
-// counts as no seats at all. create_pending_booking() checks each code.
+// Seats: a list of seat codes
 $seats = [];
 $rawSeats = $_POST['seats'] ?? [];
 if (is_array($rawSeats)) {
@@ -69,8 +61,7 @@ if (is_array($rawSeats)) {
     }
 }
 
-// Snacks: snack id => how many. A quantity that is not a whole number from
-// 0 to the limit means the form was tampered with, so the booking goes back.
+// Snacks: id => how many; anything odd sends the booking back
 $snacks = [];
 $snackProblem = false;
 $rawSnacks = $_POST['snacks'] ?? [];
@@ -97,8 +88,7 @@ if ($snackProblem) {
     redirect($backPath);
 }
 
-// Each checkout opens a PayMongo session, so one account cannot start them
-// endlessly (holds are already capped by create_pending_booking()).
+// Limit how many payments one account can start
 if (too_many_attempts('checkout', 'user:' . $user['id'], 20, 3600, 60)) {
     redirect($backPath);
 }
@@ -111,8 +101,8 @@ try {
 record_attempt('checkout', 'user:' . $user['id']);
 
 /**
- * PayMongo could not start the payment: let the seats go again at once and
- * send the customer back to try again. Nothing was charged.
+ * PayMongo failed: free the seats and send the customer back. Nothing was
+ * charged.
  */
 function checkout_give_up(array $booking, Throwable $error, string $backPath): void
 {
@@ -120,7 +110,7 @@ function checkout_give_up(array $booking, Throwable $error, string $backPath): v
     try {
         cancel_pending_booking($booking);
     } catch (Throwable $cancelError) {
-        // The hold still runs out by itself after a few minutes
+        // The hold runs out by itself anyway
         error_log('[checkout] could not cancel ' . $booking['reference'] . ': ' . $cancelError->getMessage());
     }
     redirect($backPath);
@@ -132,8 +122,7 @@ $customer = [
     'mobile' => (string) ($user['mobile'] ?? ''),
 ];
 
-// Paying by QR Ph: the code is made here, valid exactly as long as the seats
-// are held, and shown on Cinemax's own page with a countdown
+// QR Ph: the code is shown on our own page
 if (paymongo_uses_qrph()) {
     try {
         $qr = paymongo_create_qrph($booking, $customer, booking_seconds_left($booking));
@@ -148,8 +137,7 @@ if (paymongo_uses_qrph()) {
 try {
     $checkout = paymongo_create_checkout($booking, booking_line_items($booking), $customer);
 } catch (Throwable $e) {
-    // PayMongoException mostly; anything else from the call (a missing
-    // extension, say) also must not leave the seats held for nothing
+    // Anything going wrong must not keep the seats held
     checkout_give_up($booking, $e, $backPath);
 }
 
@@ -159,6 +147,6 @@ $booking['paymongo_checkout_id'] = $checkout['id'];
 try {
     redirect_external($checkout['checkout_url']);
 } catch (RuntimeException $e) {
-    // PayMongo handed back an address that is not PayMongo's own
+    // Not a PayMongo address
     checkout_give_up($booking, $e, $backPath);
 }

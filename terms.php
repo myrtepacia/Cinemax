@@ -1,12 +1,11 @@
 <?php
 declare(strict_types=1);
 
-// The Terms of Service.
+// Terms of Service.
 
 require __DIR__ . '/includes/bootstrap.php';
 
-// How long seats are held while paying, worked out the same way the booking
-// code does it, so the terms always say what the site really does.
+// The seat hold, worked out as the booking code does
 $holdMinutes = max(5, min(60, (int) config('booking_hold_minutes', 15)));
 
 render_head('Terms of Service');

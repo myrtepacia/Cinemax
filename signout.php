@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// Signing out. Only the Sign Out button's form (a POST with the CSRF token)
-// can do it, so a link or image on another site cannot sign anyone out.
+// Sign out. Only the Sign Out form (POST with CSRF token) can do it, so other
+// sites cannot sign anyone out.
 
 require __DIR__ . '/includes/bootstrap.php';
 

@@ -1,13 +1,10 @@
--- Cinemax database schema (MariaDB 10.4+ / MySQL 8+)
---
--- Every amount of money is a whole number of pesos. PayMongo counts in
--- centavos, so the PayMongo code multiplies by 100 on the way out.
+-- Cinemax schema (MariaDB 10.4+ / MySQL 8+). Money is whole pesos; PayMongo
+-- uses centavos, so it is multiplied by 100 when sent.
 
 SET NAMES utf8mb4;
 SET time_zone = '+08:00';
 
--- People who can sign in. The role decides what they may do and is never
--- taken from a form: customers sign up as 'customer', staff are made here.
+-- People who can sign in. Sign-ups are always customer; staff are made here.
 CREATE TABLE users (
   id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
   name          VARCHAR(100) NOT NULL,
@@ -21,8 +18,8 @@ CREATE TABLE users (
   UNIQUE KEY uq_users_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Failed sign-ins, kept so that guessing passwords is slowed to a crawl.
--- Also used to rate-limit sign-ups and ticket scans per address.
+-- Failed sign-ins, to slow down password guessing. Also limits sign-ups and
+-- scans per address.
 CREATE TABLE login_attempts (
   id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   bucket       VARCHAR(40)  NOT NULL,           -- 'signin', 'signup', 'scan'
@@ -34,8 +31,8 @@ CREATE TABLE login_attempts (
   KEY idx_attempts_ip (bucket, ip_address, attempted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- The films. A 'now_showing' film runs until ends_on. An 'upcoming' film
--- opens on opens_on and can be booked from that day on.
+-- The films. now_showing films show until removed (ends_on is empty).
+-- upcoming films can be booked from opens_on.
 CREATE TABLE movies (
   id               INT UNSIGNED NOT NULL AUTO_INCREMENT,
   slug             VARCHAR(120) NOT NULL,
@@ -55,8 +52,7 @@ CREATE TABLE movies (
   KEY idx_movies_listing (is_active, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- The times each film plays every day it is showing, and in which of the
--- cinemas (1 or 2).
+-- Daily showtimes for each film and its cinema (1 or 2).
 CREATE TABLE showtimes (
   id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
   movie_id   INT UNSIGNED NOT NULL,
@@ -79,14 +75,12 @@ CREATE TABLE snacks (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- One booking: some seats for one showing, maybe some snacks, one payment.
---
--- status:
---   pending   seats are held while the customer pays (until expires_at)
---   paid      money received; this is a real ticket
---   expired   the hold ran out before payment
---   cancelled the customer backed out at PayMongo
---   refunded  the money was sent back; the seats are free again
+-- One booking: seats for one showing, maybe snacks, one payment.
+--   pending   seats held while paying (until expires_at)
+--   paid      a real ticket
+--   expired   not paid in time
+--   cancelled the customer backed out
+--   refunded  money sent back; seats free again
 CREATE TABLE bookings (
   id                   INT UNSIGNED NOT NULL AUTO_INCREMENT,
   reference            CHAR(10) NOT NULL,       -- CMX-XXXXXX
@@ -102,13 +96,11 @@ CREATE TABLE bookings (
   snacks_total         INT UNSIGNED NOT NULL DEFAULT 0,
   total                INT UNSIGNED NOT NULL,
   status               ENUM('pending', 'paid', 'expired', 'cancelled', 'refunded') NOT NULL DEFAULT 'pending',
-  -- The snack order: 'ordered' once paid, until staff scan the ticket at the
-  -- snack counter; then 'preparing', 'ready', and 'sold' when picked up.
-  -- NULL when the booking has no snacks.
+  -- Snack order: ordered when paid, preparing after the counter scan, then
+  -- ready, then sold when picked up. NULL when there are no snacks.
   snack_status         ENUM('ordered', 'preparing', 'ready', 'sold') NULL,
-  -- The snack order's number (#001), given when it is paid: the lowest one
-  -- not held by another order still waiting to be picked up, so numbers
-  -- are used again once their orders are collected.
+  -- Snack order number (#001), given when paid: the lowest one not in use, so
+  -- numbers are reused after pickup.
   snack_number         SMALLINT UNSIGNED NULL,
   snack_scanned_at     DATETIME NULL,           -- confirmed at the snack counter
   snack_sold_at        DATETIME NULL,           -- picked up
@@ -140,10 +132,8 @@ CREATE TABLE bookings (
   CONSTRAINT fk_bookings_refunded_by FOREIGN KEY (refunded_by) REFERENCES users (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- The seats a booking holds. The unique key is what makes double-booking
--- impossible: two customers racing for C5 at the same showing cannot both
--- insert it. Rows are deleted when a booking expires, is cancelled or is
--- refunded, which frees the seat again.
+-- Seats a booking holds. The unique key stops two people booking the same
+-- seat. Rows are deleted when a booking expires, is cancelled or refunded.
 CREATE TABLE booking_seats (
   id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
   booking_id INT UNSIGNED NOT NULL,
@@ -157,7 +147,7 @@ CREATE TABLE booking_seats (
   CONSTRAINT fk_booking_seats_booking FOREIGN KEY (booking_id) REFERENCES bookings (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Snacks on a booking, priced as they were when it was made.
+-- Snacks on a booking, at the price when booked.
 CREATE TABLE booking_snacks (
   booking_id INT UNSIGNED NOT NULL,
   snack_id   INT UNSIGNED NOT NULL,
@@ -168,8 +158,7 @@ CREATE TABLE booking_snacks (
   CONSTRAINT fk_booking_snacks_snack   FOREIGN KEY (snack_id)   REFERENCES snacks (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- PayMongo webhook events already handled, so a replayed or repeated
--- delivery is ignored instead of being applied twice.
+-- PayMongo webhook events already handled, so repeats are ignored.
 CREATE TABLE webhook_events (
   event_id    VARCHAR(64) NOT NULL,
   event_type  VARCHAR(80) NOT NULL,

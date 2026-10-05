@@ -1,30 +1,11 @@
 <?php
 declare(strict_types=1);
 
-// Talking to PayMongo (https://developers.paymongo.com).
-//
-// The flow:
-//   1. checkout.php makes a Checkout Session for the booking and sends the
-//      customer to PayMongo's own page to pay (card, GCash, Maya, GrabPay).
-//      When QR Ph is one of the ways to pay (config: payment_methods), it
-//      makes a QR Ph payment instead (a Payment Intent with a QR Ph code)
-//      and shows the code on pay.php, valid exactly as long as the seats are
-//      held. PayMongo's own page would always give it 30 minutes. The other
-//      ways listed are offered under the code ("Choose another payment",
-//      pay-other.php), once PayMongo has turned them on for a live account.
-//      A card is paid on Cinemax's own card.php: the card details go from
-//      the customer's browser straight to PayMongo with the public key
-//      (card.js), never through this server. GCash (and the other e-wallets)
-//      goes straight to the wallet's own page to authorize the payment, with
-//      no PayMongo checkout page in between.
-//   2. PayMongo sends them back to payment-success.php (or pay.php asks every
-//      few seconds), which asks PayMongo directly whether it was paid. The
-//      browser's word is never taken for it.
-//   3. webhook.php hears the same news from PayMongo's servers, so a customer
-//      who closes the tab before coming back still gets their ticket.
-//
-// The secret key only ever leaves this server inside the HTTPS request to
-// api.paymongo.com. PayMongo counts money in centavos: ₱220 is 22000.
+// PayMongo (https://developers.paymongo.com). QR Ph is shown on pay.php,
+// cards are paid on card.php (card details go straight to PayMongo), and
+// GCash opens the wallet's page. A payment is only trusted after asking
+// PayMongo directly; webhook.php hears it too. PayMongo counts in centavos:
+// 220 pesos is 22000.
 
 if (!defined('CINEMAX_BOOTSTRAPPED')) {
     http_response_code(404);
@@ -36,18 +17,14 @@ class PayMongoException extends RuntimeException
 }
 
 /**
- * PayMongo has no such thing (HTTP 404). For a payment the booking has on
- * record, that means it was made with the other keys (test or live): test
- * and live keys cannot see each other's payments.
+ * PayMongo has no such payment (HTTP 404): it was made with the other keys
+ * (test or live).
  */
 class PayMongoNotFoundException extends PayMongoException
 {
 }
 
-/**
- * One call to the PayMongo API. Returns the decoded reply, or throws a
- * PayMongoException carrying PayMongo's own explanation.
- */
+/** One PayMongo API call. Returns the reply or throws PayMongoException. */
 function paymongo_request(string $method, string $path, ?array $body = null, int $timeoutSeconds = 30): array
 {
     $secret = (string) config('paymongo.secret_key');
@@ -65,7 +42,6 @@ function paymongo_request(string $method, string $path, ?array $body = null, int
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_CONNECTTIMEOUT => min(10, $timeoutSeconds),
         CURLOPT_TIMEOUT        => $timeoutSeconds,
-        // Certificates are always checked: no talking to a fake PayMongo
         CURLOPT_SSL_VERIFYPEER => true,
         CURLOPT_SSL_VERIFYHOST => 2,
         CURLOPT_PROTOCOLS      => CURLPROTO_HTTPS,
@@ -104,9 +80,7 @@ function paymongo_request(string $method, string $path, ?array $body = null, int
     return $reply;
 }
 
-/**
- * The customer's details as PayMongo's billing (empty ones left out).
- */
+/** The customer's billing details, empty ones left out. */
 function paymongo_billing(array $customer): array
 {
     return array_filter([
@@ -118,11 +92,7 @@ function paymongo_billing(array $customer): array
     });
 }
 
-/**
- * Starts PayMongo's checkout for a booking. $lineItems are
- * ['name' => ..., 'amount' => pesos each, 'quantity' => n]. Returns
- * ['id' => 'cs_...', 'checkout_url' => 'https://checkout.paymongo.com/...'].
- */
+/** Starts PayMongo's checkout page. Returns ['id', 'checkout_url']. */
 function paymongo_create_checkout(array $booking, array $lineItems, array $customer): array
 {
     $items = [];
@@ -163,46 +133,31 @@ function paymongo_create_checkout(array $booking, array $lineItems, array $custo
     return ['id' => $id, 'checkout_url' => $url];
 }
 
-/**
- * True when customers pay by QR Ph (config: 'qrph' in payment_methods). The
- * code is then shown on Cinemax's own page, pay.php.
- */
+/** True when 'qrph' is a way to pay (the code is shown on pay.php). */
 function paymongo_uses_qrph(): bool
 {
     return in_array('qrph', (array) config('paymongo.payment_methods', []), true);
 }
 
-/**
- * True with live keys (real money), false with test keys.
- */
+/** True with live keys (real money). */
 function paymongo_is_live(): bool
 {
     return strpos((string) config('paymongo.secret_key'), 'sk_live_') === 0;
 }
 
-/**
- * A short fingerprint of the keys in use, kept beside anything that only
- * works with them (a QR Ph code on screen, the ways to pay PayMongo has
- * turned on), so switching keys (test and live) makes it again. It never
- * leaves the server.
- */
+/** A short id of the keys in use, so a switch (test/live) can be noticed. */
 function paymongo_keys_id(): string
 {
     return substr(hash('sha256', (string) config('paymongo.secret_key')), 0, 16);
 }
 
 /**
- * The ways to pay PayMongo has turned on for this live account, e.g.
- * ['qrph']. (Test keys get the live account's answer too, yet test checkout
- * pages take every way to pay, so it only matters with live keys.) They
- * change only when PayMongo activates one, so the answer is kept for an hour
- * (in storage/cache). If PayMongo cannot be asked, the answer is none for
- * five minutes: QR Ph still works, and nothing else is.
+ * The ways to pay PayMongo has turned on for this account, kept for an hour.
+ * Empty for five minutes if PayMongo cannot be asked.
  */
 function paymongo_enabled_methods(): array
 {
     $file = APP_ROOT . '/storage/cache/payment-methods.json';
-    // Saved for these keys only: switching test and live keys asks again
     $keys = paymongo_keys_id();
 
     $saved = is_file($file) ? json_decode((string) file_get_contents($file), true) : null;
@@ -226,15 +181,10 @@ function paymongo_enabled_methods(): array
     return $methods;
 }
 
-// The e-wallets: paid on the wallet's own page (pay-other.php)
+// The e-wallets, paid on the wallet's own page
 const PAYMONGO_WALLETS = ['gcash', 'paymaya', 'grab_pay'];
 
-/**
- * The other ways to pay offered under the QR Ph code on pay.php, as
- * method => name: the ones listed in the config, card first and the
- * e-wallets below it. They are shown whether or not PayMongo has turned them
- * on; pay-other.php checks that when one is chosen.
- */
+/** The other ways to pay under the QR code (method => name), card first. */
 function paymongo_other_methods(): array
 {
     $names = ['card' => 'Card', 'gcash' => 'GCash', 'paymaya' => 'Maya', 'grab_pay' => 'GrabPay'];
@@ -249,10 +199,8 @@ function paymongo_other_methods(): array
 }
 
 /**
- * Starts a payment for a booking: a Payment Intent for its total that takes
- * only $methods (['qrph'], ['card'], the e-wallets). Something to pay with is
- * then attached to it; one that fails can be followed by another on the same
- * intent. Returns ['id' => 'pi_...', 'client_key' => ...].
+ * Starts a payment (Payment Intent) for a booking. Returns ['id',
+ * 'client_key'].
  */
 function paymongo_create_intent(array $booking, array $methods): array
 {
@@ -276,9 +224,8 @@ function paymongo_create_intent(array $booking, array $methods): array
 }
 
 /**
- * Starts a QR Ph payment for a booking: a Payment Intent for its total, with
- * a QR Ph code attached that stops working after $expirySeconds. Returns
- * ['id' => 'pi_...', 'qr' => the code as a data: picture].
+ * Starts a QR Ph payment whose code ends after $expirySeconds. Returns ['id',
+ * 'qr'].
  */
 function paymongo_create_qrph(array $booking, array $customer, int $expirySeconds): array
 {
@@ -287,10 +234,8 @@ function paymongo_create_qrph(array $booking, array $customer, int $expirySecond
 }
 
 /**
- * Starts paying by e-wallet ($wallet: 'gcash', 'paymaya' or 'grab_pay') on a
- * Payment Intent that takes it. Returns the address of the wallet's own page,
- * where the customer authorizes the payment; the wallet then sends them to
- * $returnPath. Done again, it makes a fresh page on the same intent.
+ * Starts an e-wallet payment. Returns the wallet's page to send the customer
+ * to.
  */
 function paymongo_start_wallet(string $intentId, string $clientKey, string $wallet, array $customer, string $returnPath): string
 {
@@ -316,9 +261,8 @@ function paymongo_start_wallet(string $intentId, string $clientKey, string $wall
 }
 
 /**
- * Makes a QR Ph code that stops working after $expirySeconds (PayMongo
- * allows 60 to 9000) and attaches it to a Payment Intent. Returns the code
- * as a data: picture.
+ * Makes a QR Ph code (60 to 9000 seconds) and attaches it. Returns the
+ * picture.
  */
 function paymongo_attach_qrph(string $intentId, string $clientKey, array $customer, int $expirySeconds): string
 {
@@ -343,10 +287,7 @@ function paymongo_attach_qrph(string $intentId, string $clientKey, array $custom
     return $qr;
 }
 
-/**
- * Why the last card tried on a Payment Intent did not go through (declined,
- * or the bank's check failed), in PayMongo's words, or null.
- */
+/** Why the last card did not go through, or null. */
 function paymongo_card_error(array $intent): ?string
 {
     $error = $intent['attributes']['last_payment_error'] ?? null;
@@ -357,9 +298,7 @@ function paymongo_card_error(array $intent): ?string
     return $message !== '' ? $message : 'Your card was not charged.';
 }
 
-/**
- * A Payment Intent as PayMongo has it right now.
- */
+/** A Payment Intent as PayMongo has it now. */
 function paymongo_get_intent(string $intentId, int $timeoutSeconds = 30): array
 {
     if (!preg_match('/^pi_[A-Za-z0-9]+$/', $intentId)) {
@@ -369,10 +308,7 @@ function paymongo_get_intent(string $intentId, int $timeoutSeconds = 30): array
     return (array) ($reply['data'] ?? []);
 }
 
-/**
- * The QR Ph code on a Payment Intent waiting to be scanned, as a data:
- * picture (the page's Content Security Policy allows those), or null.
- */
+/** The QR Ph code as a data: picture, or null. */
 function paymongo_qr_image(array $intent): ?string
 {
     $image = trim((string) ($intent['attributes']['next_action']['code']['image_url'] ?? ''));
@@ -389,9 +325,7 @@ function paymongo_qr_image(array $intent): ?string
     return null;
 }
 
-/**
- * A checkout session as PayMongo has it right now.
- */
+/** A checkout session as PayMongo has it now. */
 function paymongo_get_checkout(string $checkoutId, int $timeoutSeconds = 30): array
 {
     if (!preg_match('/^cs_[A-Za-z0-9]+$/', $checkoutId)) {
@@ -401,10 +335,7 @@ function paymongo_get_checkout(string $checkoutId, int $timeoutSeconds = 30): ar
     return (array) ($reply['data'] ?? []);
 }
 
-/**
- * Closes a checkout session so it can no longer be paid. Quietly does
- * nothing if PayMongo has already closed it.
- */
+/** Closes a checkout session; does nothing if already closed. */
 function paymongo_expire_checkout(string $checkoutId, int $timeoutSeconds = 30): void
 {
     if (!preg_match('/^cs_[A-Za-z0-9]+$/', $checkoutId)) {
@@ -413,18 +344,13 @@ function paymongo_expire_checkout(string $checkoutId, int $timeoutSeconds = 30):
     try {
         paymongo_request('POST', 'checkout_sessions/' . $checkoutId . '/expire', null, $timeoutSeconds);
     } catch (PayMongoException $e) {
-        // Already closed is what was wanted, so only other problems are logged
         if (stripos($e->getMessage(), 'already expired') === false) {
             error_log('[paymongo] could not expire ' . $checkoutId . ': ' . $e->getMessage());
         }
     }
 }
 
-/**
- * The paid payment inside a checkout session or a Payment Intent (both list
- * their payments the same way), as ['id' => 'pay_...', 'amount' => pesos],
- * or null if nothing is paid yet.
- */
+/** The paid payment ['id', 'amount' in pesos], or null. */
 function paymongo_paid_payment(array $checkout): ?array
 {
     foreach (($checkout['attributes']['payments'] ?? []) as $payment) {
@@ -440,9 +366,7 @@ function paymongo_paid_payment(array $checkout): ?array
     return null;
 }
 
-/**
- * Sends money back for a payment. Returns PayMongo's refund id ('ref_...').
- */
+/** Refunds a payment. Returns the refund id. */
 function paymongo_refund(string $paymentId, int $amountPesos, string $reason, string $notes = ''): string
 {
     if (!preg_match('/^pay_[A-Za-z0-9]+$/', $paymentId)) {
@@ -466,10 +390,8 @@ function paymongo_refund(string $paymentId, int $amountPesos, string $reason, st
 }
 
 /**
- * Checks a webhook really came from PayMongo. The Paymongo-Signature header
- * is 't=<time>,te=<test sig>,li=<live sig>'; the signature is an HMAC-SHA256
- * of '<time>.<raw body>' made with the webhook's secret. Old deliveries (over
- * five minutes) are refused so a captured one cannot be replayed later.
+ * Checks a webhook really came from PayMongo (signed, and under five minutes
+ * old).
  */
 function paymongo_verify_webhook(string $payload, string $header): bool
 {

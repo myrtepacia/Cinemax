@@ -1,9 +1,6 @@
-// The booking page (book.php): the calendar, the showtimes, the seat map, the
-// snack counters and the running total.
-//
-// Everything the page needs from the server comes in data-* attributes on
-// the form. The script only helps people choose: checkout.php checks every
-// choice again and takes the prices from the database, never from here.
+// Booking page (book.php): calendar, showtimes, seat map, snacks and total.
+// Settings come from data-* on the form. checkout.php checks everything again
+// and takes prices from the database.
 (function () {
   'use strict';
 
@@ -15,7 +12,7 @@
   var PESO = '₱';
   var TIMES = '×';
 
-  // The shared date helpers (dates.js)
+  // Shared date helpers (dates.js)
   var monthNames = window.CinemaxDates.monthNames;
   var pad = window.CinemaxDates.pad;
   var readDate = window.CinemaxDates.readDate;
@@ -23,7 +20,7 @@
   var monthNumber = window.CinemaxDates.monthNumber;
   var readableDate = window.CinemaxDates.readableDate;
 
-  // What the server said about this film and this booking
+  // Settings from the server
   var seatsUrl = form.getAttribute('data-seats-url') || '';
   var movieId = form.getAttribute('data-movie-id') || '';
   var firstDay = form.getAttribute('data-from') || '';
@@ -67,9 +64,8 @@
     return PESO + amount.toLocaleString('en-US');
   }
 
-  // The cinema's own date and clock, worked out from this browser's clock and
-  // the cinema's time zone, so a visitor abroad still sees the right
-  // showtimes greyed out. The server checks again anyway.
+  // The cinema's own date and time, so visitors in other time zones see the
+  // right showtimes greyed out
   function cinemaNow() {
     var shifted = new Date(Date.now() + utcOffset * 1000);
     return {
@@ -78,7 +74,7 @@
     };
   }
 
-  // True once a showing ('2026-09-18' at '17:00:00') has begun
+  // True once a showing has started
   function hasStarted(key, time) {
     var now = cinemaNow();
     if (key !== now.date) {
@@ -93,7 +89,7 @@
     });
   }
 
-  // A day still has something to see if at least one showing has not begun
+  // A day is open if one showing has not started
   function hasShowingsLeft(key) {
     return showtimeOptions().some(function (option) {
       return !hasStarted(key, option.value);
@@ -117,9 +113,8 @@
   var viewYear = today.getFullYear();
   var viewMonth = today.getMonth();
 
-  // Why a day cannot be booked, or '' when it can. Days before the first
-  // bookable day and after the last are dead, and so is today once its last
-  // showing has begun.
+  // Why a day cannot be booked, or empty if it can: outside the booking
+  // window, or today after the last showing
   function whyNotAvailable(key) {
     if (key < firstDay) {
       return 'This date has already passed';
@@ -139,7 +134,7 @@
       calendarDates.removeChild(calendarDates.firstChild);
     }
 
-    // Empty boxes so the 1st lands under the right weekday
+    // Blank boxes so the 1st lands on the right weekday
     var startsOn = new Date(viewYear, viewMonth, 1).getDay();
     var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
     var count;
@@ -177,8 +172,7 @@
       calendarDates.appendChild(box);
     }
 
-    // Months that are wholly past are of no use to anyone. Going forward
-    // has no end: December rolls on into January of the next year.
+    // No going back to past months; forward has no limit
     calendarBack.disabled = (viewYear * 12 + viewMonth) <= monthNumber(today);
   }
 
@@ -193,13 +187,16 @@
   }
 
   function openCalendar() {
-    // Always open on the month of the date being held, or on this month
+    // Open on the chosen month, or this month
     var start = chosenDate === '' ? today : readDate(chosenDate);
     viewYear = start.getFullYear();
     viewMonth = start.getMonth();
     drawCalendar();
     calendar.hidden = false;
     dateButton.setAttribute('aria-expanded', 'true');
+    // Scroll so the whole calendar shows
+    var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    calendar.scrollIntoView({ block: 'nearest', behavior: still ? 'auto' : 'smooth' });
   }
 
   function closeCalendar() {
@@ -213,11 +210,10 @@
     dateText.textContent = readableDate(key);
   }
 
-  // The showtimes: on today's date the ones already begun are greyed out.
-  // If the one picked has just begun, the pick is dropped.
+  // Showtimes: today's started ones are greyed out, and a started pick is
+  // dropped.
   function refreshShowtimes() {
-    // No showtime can be picked before a day is: the box stays locked, and
-    // says so, until the calendar has a date in it.
+    // Locked until a date is picked
     var hasDate = chosenDate !== '';
     showtimeSelect.disabled = !hasDate;
     showtimePlaceholder.textContent = hasDate ? 'Choose a time' : 'Choose a date first';
@@ -244,12 +240,12 @@
   function showOrHideSeatsAndSnacks() {
     var ready = isReady();
     pickFirst.hidden = ready;
-    seatsAndSnacks.hidden = !ready;
+    // Keeps its space while hidden (.seats-waiting in booking.css)
+    seatsAndSnacks.classList.toggle('seats-waiting', !ready);
   }
 
-  // Taken seats for the chosen showing, from api/seats.php. Only the newest
-  // request counts, so a slow reply for an old choice cannot overwrite the
-  // seats of the showing now on screen.
+  // Taken seats from api/seats.php. Only the newest reply counts, so a slow
+  // old one cannot overwrite it.
 
   var lookupNumber = 0;
 
@@ -258,8 +254,8 @@
     seatMap.removeAttribute('aria-busy');
   }
 
-  // background: a quiet recheck (see below), which leaves any message on
-  // screen alone unless one of the customer's own seats was just taken
+  // background: a quiet recheck that leaves messages alone unless one of the
+  // customer's seats was taken
   function markTakenSeats(taken, background) {
     var takenSet = {};
     taken.forEach(function (code) {
@@ -328,7 +324,7 @@
           return;
         }
         if (background) {
-          // The showtime may have just started: the next full check says so
+          // The showtime may have just started; the next check says so
           return;
         }
         showError(body && typeof body.error === 'string'
@@ -346,14 +342,12 @@
       });
   }
 
-  // While the seats are on screen they are checked again every few seconds,
-  // so the map stays true without reloading: a seat someone else starts
-  // paying for turns grey, and one whose 10-minute hold ran out without
-  // payment turns free again. Nothing is checked while the tab is hidden or
-  // the page is on its way to checkout.
+  // Recheck the seats every few seconds while shown: newly held seats turn
+  // grey, expired holds turn free. Paused while the tab is hidden or the form
+  // is sending.
   var RECHECK_SEATS_MS = 10000;
   window.setInterval(function () {
-    if (document.visibilityState === 'visible' && !sending && isReady() && !seatsAndSnacks.hidden) {
+    if (document.visibilityState === 'visible' && !sending && isReady()) {
       loadTakenSeats(true);
     }
   }, RECHECK_SEATS_MS);
@@ -387,7 +381,7 @@
     var seats = chosenSeats();
     summarySeats.textContent = seats.length ? seats.join(', ') : 'Tap the seats above';
 
-    // Snacks, counted by how many of each were added
+    // Snacks
     var chosenSnackNames = [];
     var snackTotal = 0;
     snacks.forEach(function (snack) {
@@ -401,14 +395,14 @@
     });
     summarySnacks.textContent = chosenSnackNames.length ? chosenSnackNames.join(', ') : 'Use + to add any items above';
 
-    // Ticket count and grand total
+    // Tickets and grand total
     var ticketCount = seats.length;
     var ticketWord = ticketCount === 1 ? 'ticket' : 'tickets';
     summaryTickets.textContent = ticketCount + ' ' + ticketWord + ' ' + TIMES + ' ' + peso(ticketPrice);
     summaryAmount.textContent = peso(ticketCount * ticketPrice + snackTotal);
   }
 
-  // Shows a snack's count on its box and writes it to the hidden form field
+  // Show a snack's count and save it in its hidden field
   function setSnackQuantity(snack, howMany) {
     howMany = Math.max(0, Math.min(maxPerSnack, howMany));
     snack.querySelector('.snack-input').value = String(howMany);
@@ -418,7 +412,7 @@
     snack.querySelector('.snack-box').classList.toggle('snack-box-picked', howMany > 0);
   }
 
-  // The date box opens and shuts the calendar
+  // The date box opens and closes the calendar
   dateButton.addEventListener('click', function () {
     if (calendar.hidden) {
       openCalendar();
@@ -427,7 +421,7 @@
     }
   });
 
-  // Picking a day fills the box and shuts the calendar again
+  // Picking a day fills the box and closes the calendar
   calendarDates.addEventListener('click', function (event) {
     var box = event.target.closest('.calendar-date');
     if (!box || box.disabled) {
@@ -447,7 +441,7 @@
     moveMonth(1);
   });
 
-  // A click anywhere else, or the Escape key, puts the calendar away
+  // Click outside or press Escape to close the calendar
   document.addEventListener('click', function (event) {
     if (!dateField.contains(event.target)) {
       closeCalendar();
@@ -463,7 +457,7 @@
 
   showtimeSelect.addEventListener('change', choiceChanged);
 
-  // The + and - buttons on the snacks
+  // Snack + and - buttons
   seatsAndSnacks.addEventListener('click', function (event) {
     var step = event.target.closest('.snack-step');
     if (!step || step.disabled) {
@@ -474,7 +468,7 @@
     updateSummary();
   });
 
-  // The seats: one booking holds up to maxSeats of them
+  // Seats: up to maxSeats per booking
   seatMap.addEventListener('change', function (event) {
     var input = event.target;
     if (!input.matches('input[type="checkbox"]')) {
@@ -489,8 +483,8 @@
     updateSummary();
   });
 
-  // Nothing goes to checkout without a date, a showtime and a seat. Once it
-  // does go, the button is locked so a double click cannot send it twice.
+  // Needs a date, showtime and seat. The button locks after sending, so a
+  // double click sends once.
   var sending = false;
   form.addEventListener('submit', function (event) {
     var problem = '';
@@ -526,9 +520,7 @@
     }
   }
 
-  // Coming back with the Back button from PayMongo shows this page from the
-  // browser's memory: unlock the button and look the seats up again, since
-  // they may have changed in the meantime.
+  // Back from PayMongo: unlock the button and check the seats again
   window.addEventListener('pageshow', function (event) {
     if (event.persisted) {
       unlockConfirm();
@@ -538,16 +530,15 @@
     }
   });
 
-  // Seats can go while the page sits in a background tab
+  // Seats can go while the tab is in the background
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'visible') {
       loadTakenSeats();
     }
   });
 
-  // A showing that begins while the page is open is greyed out, and the
-  // seats are hidden again if it was the one picked (the showtime box then
-  // reads "Choose a showtime", with the started one marked as started).
+  // A showing that starts while the page is open is greyed out; if it was
+  // picked, the seats hide again.
   window.setInterval(function () {
     if (chosenDate === '') {
       return;
@@ -559,8 +550,8 @@
     }
   }, 60000);
 
-  // Starting state. A date and showtime handed back by checkout.php are
-  // picked again; so are counts a browser kept from an earlier visit.
+  // Start: pick again the date and time from checkout.php, and any counts the
+  // browser kept.
   var startDate = form.getAttribute('data-initial-date') || dateHolder.value || '';
   if (/^\d{4}-\d{2}-\d{2}$/.test(startDate) && whyNotAvailable(startDate) === '') {
     pickDate(startDate);

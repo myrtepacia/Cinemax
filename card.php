@@ -1,18 +1,10 @@
 <?php
 declare(strict_types=1);
 
-// Paying for a booking by card, on Cinemax's own page, with the same countdown
-// as the QR Ph code (pay.php). The card details never reach this server:
-// card.js sends them straight to PayMongo from the browser with the public
-// key, and attaches the card to the booking's card payment (a Payment Intent
-// made here with the secret key). If the bank wants to check it really is the
-// cardholder (3-D Secure), PayMongo sends the customer to the bank's page and
-// back here, where PayMongo is asked how it went. pay.js counts down and opens
-// the e-ticket as soon as PayMongo has the money.
-//
-// Reached from "Choose another payment" on pay.php (pay-other.php).
+// Pay by card. card.js sends the card straight to PayMongo, never to this
+// server. A bank check (3-D Secure) comes back here.
 
-// Lets this page's script send to PayMongo's API (send_security_headers())
+// Lets this page talk to PayMongo's API
 define('CINEMAX_CARD_FORM', true);
 
 require __DIR__ . '/includes/bootstrap.php';
@@ -28,7 +20,6 @@ if ($booking === null) {
 $payPath = 'pay.php?ref=' . rawurlencode($reference);
 $elsewhere = 'payment-success.php?ref=' . rawurlencode($reference);
 
-// Cards are offered (config), and with live keys PayMongo takes them
 if (!array_key_exists('card', paymongo_other_methods())) {
     redirect($payPath);
 }
@@ -41,9 +32,8 @@ if ($booking['status'] !== 'pending' || $secondsLeft <= 0) {
     redirect($elsewhere);
 }
 
-// The booking's card payment: made on the first visit, then used for every
-// card tried (a declined card can be followed by another). One made with
-// the other keys (switched between test and live since) is made again.
+// One card payment per booking, reused for every try; made again if it
+// belongs to the other keys
 $intentId = (string) ($booking['paymongo_card_intent_id'] ?? '');
 $cardError = null;
 $confirming = false;
@@ -53,7 +43,6 @@ try {
         try {
             $intent = paymongo_get_intent($intentId);
         } catch (PayMongoNotFoundException $e) {
-            // Made with the other keys
         }
     }
     if ($intent === null) {
@@ -64,13 +53,11 @@ try {
     } else {
         $status = (string) ($intent['attributes']['status'] ?? '');
         if ($status === 'succeeded') {
-            // Paid: the payment page records it and shows the ticket
+            // Paid: the payment page shows the ticket
             redirect($elsewhere);
         }
         $clientKey = (string) ($intent['attributes']['client_key'] ?? '');
-        // Back from the bank's check (card.js adds bank=1 to the way back):
-        // still being confirmed, or not done. PayMongo gives no reason when
-        // the check fails, only when a card is declined.
+        // Back from the bank's check (bank=1): still confirming, or failed
         $confirming = $status === 'processing';
         $fromBank = input_string($_GET, 'bank', 1) === '1';
         if ($status === 'awaiting_payment_method' || ($fromBank && $status === 'awaiting_next_action')) {
@@ -82,8 +69,7 @@ try {
     error_log('[card] ' . $reference . ': ' . $e->getMessage());
     redirect($payPath . '&other=failed');
 }
-// pay.js reloads the page if the keys are switched while it is open (the
-// form would send the card with the old public key)
+// pay.js reloads the page if the keys change
 remember_payment_keys();
 
 $amount = peso((int) $booking['total']);
@@ -98,12 +84,9 @@ render_header(['current' => 'account']);
       <p>Enter your debit or credit card. The card details go straight to PayMongo, our payment provider.</p>
     </div>
 
-    <!-- The card on the left and the booking on the right; on a phone the
-         card comes first -->
+    <!-- Card on the left, booking on the right -->
     <div class="pay-layout">
 
-      <!-- pay.js counts down from data-seconds-left and asks data-status-url
-           whether the booking is paid; card.js sends the card to PayMongo -->
       <div class="ticket card-pay" id="card-pay"
            data-status-url="<?= e(url('api/payment-status.php?ref=' . rawurlencode($reference))) ?>"
            data-seconds-left="<?= e($secondsLeft) ?>"
@@ -118,8 +101,8 @@ render_header(['current' => 'account']);
           <p class="ticket-label">Amount Due</p>
           <p class="pay-amount"><?= e($amount) ?></p>
 
-          <!-- The card fields have no names, so even without JavaScript the
-               form can never send a card number to this server -->
+          <!-- No name on the card fields, so a card number can never reach
+               this server -->
           <form class="card-form" id="card-form" novalidate>
             <noscript>
               <p class="form-message form-message-notice">Paying by card needs JavaScript. Please turn it on, or pay with the QR code.</p>

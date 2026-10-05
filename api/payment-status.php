@@ -1,23 +1,14 @@
 <?php
 declare(strict_types=1);
 
-// "Is it paid yet?", asked every few seconds by assets/js/pay.js while a
-// customer's QR Ph code is on screen (pay.php): GET ?ref=CMX-XXXXXX.
-//
-// Each check asks PayMongo directly. Answers:
-//   {"ok": true, "status": "waiting", "secondsLeft": n}   not paid, still held
-//   {"ok": true, "status": "paid", "next": <the e-ticket>}
-//   {"ok": true, "status": "ended", "next": <payment-success.php>}  the hold
-//        is over, or the booking changed some other way
-//   {"ok": true, "status": "refresh"}  the PayMongo keys were switched (test
-//        and live) since the page was made: its QR code or card form only
-//        works with the old keys, so the page is made again
-//
-// The customer's own bookings only; anyone else's is "not found".
+// Is it paid yet? Asked every few seconds by pay.js: ?ref=CMX-XXXXXX. Each
+// check asks PayMongo. Status is waiting (with secondsLeft), paid (next = the
+// ticket), ended (next = payment-success.php) or refresh (the PayMongo keys
+// changed, so the page reloads). Own bookings only.
 
 require __DIR__ . '/../includes/bootstrap.php';
 
-// A page left open for the whole 10 minutes asks about 150 times
+// A page left open 10 minutes asks about 150 times
 const PAY_CHECKS_PER_MINUTE = 40;
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
@@ -49,13 +40,13 @@ $wasPaid = $booking['status'] === 'paid';
 try {
     $result = settle_booking($booking);
 } catch (PayMongoException $e) {
-    // PayMongo did not answer: the page simply asks again
+    // PayMongo did not answer: ask again next time
     error_log('[payment-status] ' . $reference . ': ' . $e->getMessage());
     $result = 'unknown';
 }
 
 if ($result === 'paid') {
-    // "Booking Confirmed!" on the ticket, only when the money has just come in
+    // Shows Booking Confirmed! on the ticket
     if (!$wasPaid) {
         $_SESSION['just_paid'] = $reference;
     }

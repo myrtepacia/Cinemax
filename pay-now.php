@@ -1,13 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// "Pay now" on the payment pages: takes a customer back to PayMongo to
-// finish paying for a booking whose seats are still held.
-//
-// PayMongo is asked first whether the booking was paid after all, so nobody
-// is sent to pay twice. If it was not, the booking's own PayMongo page is
-// reopened; if PayMongo has already closed that page, a fresh one is made
-// for the same booking (same seats, same total, same hold time).
+// "Pay now": back to paying for a booking still held. Checks first it is not
+// already paid, then reopens its PayMongo page or makes a new one.
 
 require __DIR__ . '/includes/bootstrap.php';
 
@@ -21,7 +16,7 @@ if ($booking === null) {
     abort(404, 'We could not find that booking.');
 }
 
-// Each press asks PayMongo, so it shares the payment pages' limit
+// Shares the payment pages limit
 if (too_many_attempts('settle', 'user:' . $user['id'], 30, 300)) {
     abort(429);
 }
@@ -30,7 +25,7 @@ record_attempt('settle', 'user:' . $user['id']);
 $filmPath = booking_film_path($booking);
 
 try {
-    // Paid after all (or refunded meanwhile): no second payment
+    // Already paid: no second payment
     $result = settle_booking($booking);
     if ($result === 'paid') {
         $_SESSION['just_paid'] = $reference;
@@ -40,7 +35,7 @@ try {
         redirect('payment-success.php?ref=' . rawurlencode($reference));
     }
 
-    // Only a booking still holding its seats can be paid for
+    // Only a booking still held can be paid
     $booking = find_booking_by_id((int) $booking['id']);
     $stillHeld = $booking !== null && $booking['status'] === 'pending'
         && strtotime((string) $booking['expires_at']) > time();
@@ -48,12 +43,12 @@ try {
         redirect($filmPath);
     }
 
-    // Paying by QR Ph: back to the booking's code and its countdown
+    // QR Ph: back to the code and countdown
     if (paymongo_uses_qrph() || !empty($booking['paymongo_intent_id'])) {
         redirect('pay.php?ref=' . rawurlencode($reference));
     }
 
-    // The booking's own PayMongo page, if it is still open
+    // Its PayMongo page, if still open
     $checkoutId = (string) ($booking['paymongo_checkout_id'] ?? '');
     if ($checkoutId !== '') {
         $checkout = paymongo_get_checkout($checkoutId);
@@ -63,7 +58,7 @@ try {
         }
     }
 
-    // Otherwise a fresh PayMongo page for the same booking
+    // Otherwise a new one
     $fresh = paymongo_create_checkout($booking, booking_line_items($booking), [
         'name'   => (string) $user['name'],
         'email'  => (string) $user['email'],

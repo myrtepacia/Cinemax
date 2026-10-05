@@ -1,36 +1,16 @@
 <?php
 declare(strict_types=1);
 
-// The parts pages share: <head>, the top bar, the staff sidebar, the
-// payment pages' booking summary and the footer.
-//
-// A customer page:
-//   render_head('My Bookings');
-//   render_header(['current' => 'account']);
-//   ... <main> ...
-//   render_footer();
-//
-// A staff page:
-//   render_head('Movies');
-//   render_header(['staff' => true, 'current' => 'movies']);
-//   echo '<div class="admin-layout">';
-//   render_staff_sidebar('movies');
-//   ... <div class="admin-head">...</div> <main class="admin-page">...</main> ...
-//   echo '</div>';
-//   render_footer(['js' => ['assets/js/movies.js']]);
-//
-// Pages never write <script> or style="" inline: the Content Security
-// Policy blocks both. Scripts go in assets/js and are listed in 'js'.
+// Shared page parts: <head>, top bar, staff sidebar, booking summary and
+// footer. No inline scripts or styles (the CSP blocks them): scripts go in
+// assets/js and are listed in 'js'.
 
 if (!defined('CINEMAX_BOOTSTRAPPED')) {
     http_response_code(404);
     exit;
 }
 
-/**
- * Opens the page: doctype, <head> and <body>. $css lists extra style sheets
- * under assets/css, e.g. ['assets/css/booking.css'].
- */
+/** Opens the page. $css lists extra style sheets. */
 function render_head(string $title, array $css = []): void
 {
     ?>
@@ -55,9 +35,7 @@ function render_head(string $title, array $css = []): void
 <?php
 }
 
-/**
- * The staff links a user may see, as [key, label, path].
- */
+/** The staff links a user may see: [key, label, path]. */
 function staff_links(array $user): array
 {
     if ($user['role'] === 'admin') {
@@ -79,11 +57,8 @@ function staff_links(array $user): array
 }
 
 /**
- * The top bar. Options:
- *   'current' => which link is highlighted: 'now-showing', 'coming-soon',
- *                'account', or a staff key such as 'movies'
- *   'staff'   => true on staff pages: the phone menu lists the staff links
- *   'home'    => true on the home page, so its links jump down the page
+ * The top bar. Options: 'current' (highlighted link), 'staff' (staff pages),
+ * 'home' (home page: links jump down the page).
  */
 function render_header(array $options = []): void
 {
@@ -143,9 +118,7 @@ function render_header(array $options = []): void
 <?php
 }
 
-/**
- * The staff sidebar, with $current highlighted.
- */
+/** The staff sidebar. */
 function render_staff_sidebar(string $current): void
 {
     $user = current_user();
@@ -164,11 +137,7 @@ function render_staff_sidebar(string $current): void
 <?php
 }
 
-/**
- * A booking's details laid out like the e-ticket's body, for the payment
- * pages, under the name of the customer who booked. $amountLabel heads the
- * price: 'Amount Due' or 'Total'.
- */
+/** A booking's details for the payment pages. */
 function render_booking_summary(array $booking, string $amountLabel): void
 {
     ?>
@@ -205,13 +174,11 @@ function render_booking_summary(array $booking, string $amountLabel): void
 <?php
 }
 
-/**
- * The footer, the page's scripts, and the end of the page. Options:
- *   'js' => scripts under assets/, e.g. ['assets/js/booking.js']
- */
+/** The footer and the page's scripts. Option 'js': scripts under assets/. */
 function render_footer(array $options = []): void
 {
-    $scripts = array_merge(['assets/js/menu.js'], $options['js'] ?? []);
+    // password.js adds the show / hide button to every password box
+    $scripts = array_merge(['assets/js/menu.js', 'assets/js/password.js'], $options['js'] ?? []);
     ?>
   <footer class="site-footer">
     <div class="footer-inner">

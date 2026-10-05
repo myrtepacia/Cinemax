@@ -1,12 +1,9 @@
 <?php
 declare(strict_types=1);
 
-// The seats already taken for one showing, for the booking page's seat map:
-//   GET api/seats.php?movie=3&date=2026-10-01&time=17:00:00
-//   => {"ok": true, "taken": ["C5", "C6"]}
-//
-// Public, since anyone may look at the seat map before signing in. It only
-// ever reads, and says nothing about who holds a seat.
+// Seats already taken for one showing, for the seat map:
+// ?movie=3&date=2026-10-01&time=17:00:00 gives {"ok": true, "taken": ["C5",
+// "C6"]}. Public and read-only; never says who holds a seat.
 
 require __DIR__ . '/../includes/bootstrap.php';
 
@@ -15,9 +12,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') {
     json_response(['ok' => false, 'error' => 'Only GET is allowed here.'], 405);
 }
 
-// Plenty for someone clicking through dates and showtimes; stops a script
-// from hammering the database. Checked before counting, so a blocked
-// address stops adding rows.
+// Rate limit, checked first so a blocked address adds no rows
 if (too_many_attempts('seats', '', 240, 60)) {
     json_response(['ok' => false, 'error' => 'Too many requests. Please wait a moment and try again.'], 429);
 }

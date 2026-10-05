@@ -1,23 +1,21 @@
 <?php
 declare(strict_types=1);
 
-// Security headers, the session, CSRF tokens, rate limits and reading the
-// scanners' requests.
+// Security headers, the session, CSRF tokens, rate limits and scanner
+// requests.
 
 if (!defined('CINEMAX_BOOTSTRAPPED')) {
     http_response_code(404);
     exit;
 }
 
-// A session with no activity for this long is signed out
+// Signed out after this long with no activity
 const SESSION_IDLE_SECONDS = 7200;
-// The session id is swapped for a new one this often, so a leaked id goes stale
+// The session id changes this often
 const SESSION_ROTATE_SECONDS = 900;
 
 /**
- * Headers that stop the page being framed, sniffed or loaded with scripts
- * from anywhere but this site. No page has inline scripts or styles, which is
- * what lets the Content Security Policy be this strict.
+ * Security headers. No inline scripts or styles, so the CSP can be strict.
  */
 function send_security_headers(): void
 {
@@ -31,8 +29,7 @@ function send_security_headers(): void
     header('Cross-Origin-Opener-Policy: same-origin');
     header('Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=()');
     header('Cache-Control: no-store, max-age=0');
-    // The card page (card.php) alone may send to PayMongo's API: card.js
-    // hands the card details straight to PayMongo from the browser
+    // Only the card page may talk to PayMongo's API (card.js)
     $connect = defined('CINEMAX_CARD_FORM') ? "'self' https://api.paymongo.com" : "'self'";
     header("Content-Security-Policy: default-src 'self'; "
         . "script-src 'self'; "
@@ -43,13 +40,10 @@ function send_security_headers(): void
         . "media-src 'self' blob:; "
         . "object-src 'none'; "
         . "base-uri 'self'; "
-        // PayMongo is here because the booking form's reply sends the
-        // browser on to PayMongo's checkout page
+        // Forms may send the browser on to PayMongo's checkout
         . "form-action 'self' https://checkout.paymongo.com https://*.paymongo.com; "
         . "frame-ancestors 'none'");
-    // HSTS only for a real domain name. On localhost it would make the
-    // browser insist on https for every other project on this computer too,
-    // and browsers ignore it for bare IP addresses anyway.
+    // HSTS only on a real domain, never on localhost or an IP address
     $host = strtolower((string) parse_url(request_origin(), PHP_URL_HOST));
     $isDomain = $host !== 'localhost' && filter_var(trim($host, '[]'), FILTER_VALIDATE_IP) === false;
     if (is_https() && $isDomain) {
@@ -58,9 +52,8 @@ function send_security_headers(): void
 }
 
 /**
- * Starts the session with a cookie that scripts cannot read, that is not sent
- * along with other sites' requests, and that is only sent over HTTPS when the
- * site is on HTTPS. Signs out after a long idle spell and rotates the id.
+ * Starts the session with a safe cookie, signs out when idle and rotates the
+ * id.
  */
 function start_session(): void
 {
@@ -82,8 +75,7 @@ function start_session(): void
         'path'     => app_path() === '' ? '/' : app_path() . '/',
         'secure'   => is_https(),
         'httponly' => true,
-        // Lax, not Strict: coming back from PayMongo is a link from another
-        // site, and the customer must still be signed in when they land.
+        // Lax, so customers are still signed in when PayMongo sends them back
         'samesite' => 'Lax',
     ]);
     session_start();
@@ -103,10 +95,7 @@ function start_session(): void
     }
 }
 
-/**
- * The session's CSRF token. Every form that changes anything carries it, and
- * the server refuses the form when it does not match.
- */
+/** The session's CSRF token, carried by every form that changes data. */
 function csrf_token(): string
 {
     if (empty($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token'])) {
@@ -115,18 +104,15 @@ function csrf_token(): string
     return $_SESSION['csrf_token'];
 }
 
-/**
- * The hidden field that carries the CSRF token in a form.
- */
+/** The hidden CSRF field for a form. */
 function csrf_field(): string
 {
     return '<input type="hidden" name="csrf_token" value="' . e(csrf_token()) . '">';
 }
 
 /**
- * Checks the CSRF token from the form (or the X-CSRF-Token header for
- * fetch() calls) and that the request came from this site. Stops with an
- * error page, or a JSON error when $json is true, if either check fails.
+ * Checks the CSRF token and that the request came from this site; stops if
+ * not.
  */
 function verify_csrf(bool $json = false): void
 {
@@ -135,7 +121,7 @@ function verify_csrf(bool $json = false): void
     $tokenOk = is_string($sent) && is_string($expected) && $expected !== '' && hash_equals($expected, $sent);
 
     if (!$tokenOk || !same_origin_request()) {
-        // 403, not the 419 some frameworks use: Apache turns 419 into a 500
+        // 403, since Apache turns 419 into 500
         if ($json) {
             json_response(['ok' => false, 'error' => 'This page has expired. Refresh it and try again.'], 403);
         }
@@ -143,17 +129,11 @@ function verify_csrf(bool $json = false): void
     }
 }
 
-/**
- * When the browser says where a request came from (Origin, or else Referer),
- * it must be this site. Browsers send Origin with every POST, so a form on
- * another site is caught here as well as by the token.
- */
+/** True if the request came from this site (Origin, or else Referer). */
 function same_origin_request(): bool
 {
-    // The configured address, and the one this request was actually made
-    // to (so http://127.0.0.1/cinemax works as well as localhost). A forged
-    // form on another site carries that other site's origin, so it still
-    // matches neither.
+    // The configured address, or the one actually used (127.0.0.1 or
+    // localhost)
     $allowed = [strtolower(site_origin()), strtolower(request_origin())];
 
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
@@ -169,13 +149,11 @@ function same_origin_request(): bool
         $refOrigin = strtolower($parts['scheme'] . '://' . $parts['host'] . (isset($parts['port']) ? ':' . $parts['port'] : ''));
         return in_array($refOrigin, $allowed, true);
     }
-    // Neither header: some privacy tools strip both. The token still has to match.
+    // Neither header sent: the token still has to match
     return true;
 }
 
-/**
- * The scheme and host this request was made to, e.g. 'http://127.0.0.1'.
- */
+/** The scheme and host of this request, e.g. 'http://127.0.0.1'. */
 function request_origin(): string
 {
     $host = (string) ($_SERVER['HTTP_HOST'] ?? '');
@@ -185,9 +163,7 @@ function request_origin(): string
     return (is_https() ? 'https' : 'http') . '://' . $host;
 }
 
-/**
- * 'http://localhost' or 'https://cinemax.example', from the configured address.
- */
+/** The scheme and host from the configured address. */
 function site_origin(): string
 {
     $parts = parse_url((string) config('app_url'));
@@ -198,25 +174,22 @@ function site_origin(): string
     return $origin;
 }
 
-/**
- * Notes one try at something rate-limited (a failed sign-in, a sign-up...).
- */
+/** Notes one rate-limited try (a failed sign-in, a sign-up...). */
 function record_attempt(string $bucket, string $identifier = ''): void
 {
     db_exec(
         'INSERT INTO login_attempts (bucket, identifier, ip_address) VALUES (?, ?, ?)',
         [$bucket, mb_strtolower(mb_substr($identifier, 0, 190)), client_ip()]
     );
-    // Old rows are of no use; clear them out now and then
+    // Clear out old rows now and then
     if (random_int(1, 50) === 1) {
         db_exec('DELETE FROM login_attempts WHERE attempted_at < NOW() - INTERVAL 1 DAY');
     }
 }
 
 /**
- * True once there have been $max tries in $windowSeconds, counted for this
- * identifier (e.g. one email address) from anywhere, or from this address
- * for anything when $maxPerIp is given.
+ * True once there were $max tries in $windowSeconds for this identifier (or
+ * this address, with $maxPerIp).
  */
 function too_many_attempts(string $bucket, string $identifier, int $max, int $windowSeconds, ?int $maxPerIp = null): bool
 {
@@ -244,26 +217,20 @@ function too_many_attempts(string $bucket, string $identifier, int $max, int $wi
     return false;
 }
 
-/**
- * Forgets the tries for an identifier, e.g. after a successful sign-in.
- */
+/** Forgets the tries for an identifier, e.g. after signing in. */
 function clear_attempts(string $bucket, string $identifier): void
 {
     db_exec('DELETE FROM login_attempts WHERE bucket = ? AND identifier = ?', [$bucket, mb_strtolower($identifier)]);
 }
 
-// A scanner's request (api/scan.php, api/snack-scan.php) is a small JSON
-// body from staff: nothing bigger, and no code longer than a ticket's QR
-// code could be
+// A scanner request is a small JSON body, and a code no longer than a QR code
 const SCAN_MAX_BODY_BYTES = 4096;
 const SCAN_MAX_CODE_LENGTH = 300;
 const SCAN_MAX_PER_MINUTE = 120;
 
 /**
- * Reads a scanner's request, or answers it with an error and stops. Staff
- * only, CSRF-checked and rate-limited per address under $bucket. Returns
- * [the staff member, the action, the scanned code]; the action is one of
- * $actions.
+ * Reads a scanner request (staff only, CSRF-checked, rate-limited). Returns
+ * [staff member, action, code].
  */
 function read_scan_request(string $bucket, array $actions): array
 {
@@ -279,14 +246,13 @@ function read_scan_request(string $bucket, array $actions): array
 
     verify_csrf(true);
 
-    // Counted before the body is read, so junk requests count too
+    // Counted first, so junk requests count too
     record_attempt($bucket);
     if (too_many_attempts($bucket, '', SCAN_MAX_PER_MINUTE, 60)) {
         json_response(['ok' => false, 'error' => 'Too many scans in a short time. Wait a minute, then try again.'], 429);
     }
 
-    // Small JSON only. One byte past the limit is read so an oversized body
-    // can be told apart from one exactly at the limit.
+    // Small JSON only; one extra byte shows an oversized body
     $contentType = strtolower((string) ($_SERVER['CONTENT_TYPE'] ?? ''));
     if (strpos($contentType, 'application/json') !== 0) {
         json_response(['ok' => false, 'error' => 'That request was not understood.'], 415);

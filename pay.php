@@ -1,17 +1,9 @@
 <?php
 declare(strict_types=1);
 
-// Paying for a booking by QR Ph. The code PayMongo made for it is shown here,
-// on Cinemax's own page, with a countdown to the end of the seat hold (10
-// minutes): the code stops working at the same moment. pay.js asks
-// api/payment-status.php every few seconds and opens the e-ticket as soon as
-// PayMongo has the money.
-//
-// Used when QR Ph is one of the ways to pay (config: payment_methods). The
-// others listed there (GCash, card) are offered under the booking ("Choose
-// another payment", pay-other.php), and GCash sends the customer back here
-// with wallet=gcash. Anything else (already paid, the hold over, QR Ph not
-// used) goes to payment-success.php, which says where the booking stands.
+// Pay by QR Ph. The code works for exactly as long as the seats are held.
+// pay.js checks the payment and opens the ticket when paid. GCash and card
+// are under "Choose another payment".
 
 require __DIR__ . '/includes/bootstrap.php';
 
@@ -30,15 +22,13 @@ if ($booking['status'] !== 'pending' || $secondsLeft <= 0 || ($intentId === '' &
     redirect($elsewhere);
 }
 
-// A message under Cancel booking: ['error' or 'notice', text], or null
+// A message under Cancel booking, or null
 $notice = null;
 if (input_string($_GET, 'other', 10) === 'failed') {
-    // Back from pay-other.php because that way to pay could not be opened
     $notice = ['error', 'That way to pay is not available right now. Please scan the QR code instead.'];
 }
 
-// Back from GCash (or another e-wallet): paid, still being confirmed, or not
-// done (failed, or the customer went back)
+// Back from GCash: paid, still confirming, or not done
 $wallet = input_string($_GET, 'wallet', 20);
 $walletIntent = (string) ($booking['paymongo_wallet_intent_id'] ?? '');
 if (in_array($wallet, PAYMONGO_WALLETS, true) && $walletIntent !== '') {
@@ -46,16 +36,15 @@ if (in_array($wallet, PAYMONGO_WALLETS, true) && $walletIntent !== '') {
     try {
         $status = (string) (paymongo_get_intent($walletIntent)['attributes']['status'] ?? '');
         if ($status === 'succeeded') {
-            // The payment page records it and shows the ticket
             redirect($elsewhere);
         }
         $notice = $status === 'processing'
             ? ['notice', $walletName . ' is confirming your payment. Your ticket opens as soon as it is done.']
             : ['error', 'Your ' . $walletName . ' payment did not go through, so nothing was charged. Please try again or scan the QR code instead.'];
     } catch (PayMongoNotFoundException $e) {
-        // Made with the other keys (switched between test and live since)
+        // Made with the other keys
     } catch (PayMongoException $e) {
-        // pay.js keeps asking whether it was paid
+        // pay.js keeps checking
         error_log('[pay] ' . $reference . ' (' . $wallet . '): ' . $e->getMessage());
     }
 }
@@ -66,10 +55,8 @@ $customer = [
     'mobile' => (string) ($user['mobile'] ?? ''),
 ];
 
-// The code: kept from when it was made, or else asked from PayMongo again
-// (opened in another browser, say). A booking made before QR Ph was a way to
-// pay gets one now, and so does one whose code was made with the other keys
-// (switched between test and live since): that code cannot be paid now.
+// The code: kept from before, or fetched again; made again if it belongs to
+// the other keys
 $qr = remembered_qr($reference);
 if ($qr === null) {
     try {
@@ -78,7 +65,6 @@ if ($qr === null) {
             try {
                 $intent = paymongo_get_intent($intentId);
             } catch (PayMongoNotFoundException $e) {
-                // Made with the other keys
             }
         }
         if ($intent === null) {
@@ -87,7 +73,6 @@ if ($qr === null) {
             $qr = $made['qr'];
         } else {
             if (($intent['attributes']['status'] ?? '') === 'succeeded') {
-                // Paid already: the payment page records it and shows the ticket
                 redirect($elsewhere);
             }
             $qr = paymongo_qr_image($intent)
@@ -99,10 +84,9 @@ if ($qr === null) {
         redirect($elsewhere);
     }
 }
-// pay.js reloads the page if the keys are switched while it is open
+// pay.js reloads the page if the keys change
 remember_payment_keys();
 
-// GCash, card: the other ways listed in the config (none hides the choice)
 $otherMethods = paymongo_other_methods();
 $methodLogos = ['gcash' => 'assets/img/pay-gcash.svg', 'card' => 'assets/img/pay-card.svg'];
 
@@ -116,12 +100,9 @@ render_header(['current' => 'account']);
       <p>Open GCash, Maya or your bank&rsquo;s app, choose Scan or QR Ph, and scan this code.</p>
     </div>
 
-    <!-- The code on the left and the booking on the right; on a phone the
-         code comes first -->
+    <!-- Code on the left, booking on the right -->
     <div class="pay-layout">
 
-      <!-- pay.js counts down from data-seconds-left and asks data-status-url
-           whether the booking is paid -->
       <div class="ticket qr-pay" id="qr-pay"
            data-status-url="<?= e(url('api/payment-status.php?ref=' . rawurlencode($reference))) ?>"
            data-seconds-left="<?= e($secondsLeft) ?>"
@@ -144,7 +125,6 @@ render_header(['current' => 'account']);
         <?php render_booking_summary($booking, 'Amount Due'); ?>
 
 <?php if ($otherMethods !== []): ?>
-        <!-- Opens to one row per way to pay; tapping one goes to PayMongo's page -->
         <details class="pay-other">
           <summary>Choose another payment</summary>
           <form method="post" action="<?= e(url('pay-other.php')) ?>">

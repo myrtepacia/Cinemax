@@ -1,10 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// The snack counter's scanner. The camera reads the QR code on a customer's
-// ticket and scanner.js asks api/snack-scan.php what they ordered. Staff
-// check it and press Confirm order, which sends it to Preparing on the
-// dashboard. The page itself holds no order data.
+// Snack counter scanner: reads a ticket, shows the order (api/snack-
+// scan.php), and Confirm order sends it to Preparing.
 
 require __DIR__ . '/../includes/bootstrap.php';
 
@@ -33,7 +31,7 @@ render_header(['staff' => true, 'current' => 'snack-scanner']);
         <div class="scan-result scan-result-good hidden" id="scan-result" role="status" aria-live="polite">
           <span id="scan-result-title"></span>
           <span class="scan-result-who" id="scan-result-who"></span>
-          <!-- The order's items, filled in by scanner.js -->
+          <!-- Filled in by scanner.js -->
           <ul class="scan-items hidden" id="scan-items"></ul>
         </div>
 

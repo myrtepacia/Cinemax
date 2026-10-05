@@ -1,8 +1,6 @@
 // On every page.
 (function () {
-  // Links in the phone menu that jump down the same page (like "Now
-  // Showing" on the home page) do not load a new page, so the drop-down
-  // menu would stay open over the content. This shuts it.
+  // Close the phone menu after a link that jumps down the same page
   var toggle = document.getElementById('menu-open');
   if (toggle) {
     document.querySelectorAll('.menu a').forEach(function (link) {
@@ -12,10 +10,53 @@
     });
   }
 
-  // The site used to install a service worker (for the phone app). A browser
-  // that still has it drops it, and the files it stored. Only this site's
-  // own is touched: the site's folder is worked out from this script's
-  // address, .../assets/js/menu.js, and other projects on localhost keep theirs.
+  // Home page: highlight the header link for the part being read (Now Showing
+  // or Upcoming Shows)
+  var parts = [];
+  document.querySelectorAll('.menu a[href^="#"]').forEach(function (link) {
+    var section = document.getElementById(link.getAttribute('href').slice(1));
+    if (section) {
+      parts.push({ link: link, section: section });
+    }
+  });
+  if (parts.length > 1) {
+    var bar = document.querySelector('.top-bar');
+
+    var highlight = function () {
+      // The last part whose top passed a line just under the header
+      var line = (bar ? bar.offsetHeight : 0) + 80;
+      var reading = parts[0];
+      parts.forEach(function (part) {
+        if (part.section.getBoundingClientRect().top <= line) {
+          reading = part;
+        }
+      });
+      // At the very bottom, the last part counts
+      var page = document.documentElement;
+      if (window.innerHeight + window.scrollY >= page.scrollHeight - 2) {
+        reading = parts[parts.length - 1];
+      }
+      parts.forEach(function (part) {
+        part.link.classList.toggle('current', part === reading);
+      });
+    };
+
+    var waiting = false;
+    window.addEventListener('scroll', function () {
+      if (!waiting) {
+        waiting = true;
+        window.requestAnimationFrame(function () {
+          waiting = false;
+          highlight();
+        });
+      }
+    }, { passive: true });
+    window.addEventListener('resize', highlight);
+    highlight();
+  }
+
+  // Remove the old service worker and its stored files, for this site only
+  // (found from this script's address)
   var script = document.currentScript;
   if ('serviceWorker' in navigator && script && script.src) {
     var base = new URL('../../', script.src).href;

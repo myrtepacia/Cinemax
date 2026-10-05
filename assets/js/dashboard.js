@@ -1,13 +1,7 @@
-// Keeps the Staff Dashboard up to date on its own. Every few seconds it asks
-// api/dashboard.php for a fingerprint of the figures and the snack queue.
-// When that changes (a customer paid, the snack counter confirmed an order,
-// another staff member pressed Ready), it fetches this page again and swaps
-// in the new figures and orders, without reloading or losing your place.
-//
-// Also the search above Sold: as the admin types a reference number, it asks
-// api/snack-search.php for the picked-up orders that match and shows each
-// one's snacks, when it was scanned at the snack counter and when it was
-// picked up, in place of the Sold list.
+// Staff Dashboard. Every few seconds asks api/dashboard.php for a
+// fingerprint; when it changes, fetches the page again and swaps in the new
+// figures and orders without a reload. Also the search above Sold, which asks
+// api/snack-search.php as the admin types.
 (function () {
   var main = document.getElementById('dashboard');
   if (!main || !window.fetch || !window.DOMParser) {
@@ -18,8 +12,8 @@
   var version = main.getAttribute('data-version') || '';
   var CHECK_EVERY_MS = 4000;
 
-  // True while a Ready / Picked Up form is on its way, so the page is not
-  // swapped out from under it
+  // True while a Ready / Picked Up form is being sent, so the page is not
+  // swapped under it
   var submitting = false;
   var checking = false;
   var stopped = false;
@@ -28,7 +22,7 @@
     submitting = true;
   });
 
-  // ---- The search above Sold ------------------------------------------------
+  // ---- Search above Sold ----
 
   var search = document.getElementById('sold-search');
   var searchInput = document.getElementById('sold-search-input');
@@ -38,8 +32,7 @@
   var searchTimer = null;
   var searchNumber = 0;
 
-  // The Sold group's own list and "Nothing handed over yet" line, which make
-  // way for the results while something is typed
+  // Sold list and its empty line, hidden while searching
   function soldParts() {
     var group = search ? search.closest('.order-group') : null;
     return group ? group.querySelectorAll('.order-list, .empty-note') : [];
@@ -58,7 +51,7 @@
     return p;
   }
 
-  // One found order, laid out like the rows of the Sold list, with its times
+  // One found order, laid out like a Sold row, with its times
   function orderRow(order) {
     var row = document.createElement('div');
     row.className = 'order-row';
@@ -114,7 +107,7 @@
         return response.ok ? response.json() : null;
       })
       .then(function (data) {
-        // Only the answer for what is typed now counts
+        // Only the latest search counts
         if (mine !== searchNumber) {
           return;
         }
@@ -138,20 +131,20 @@
   }
 
   if (search) {
-    // A moment after typing stops, so it does not ask on every key
+    // Wait until typing stops
     searchInput.addEventListener('input', function () {
       clearTimeout(searchTimer);
       searchTimer = setTimeout(runSearch, 250);
     });
   }
 
-  // ---- Keeping the page up to date ------------------------------------------
+  // ---- Live updates ----
 
   function swapIn(html) {
     var fresh = new DOMParser().parseFromString(html, 'text/html');
     var freshMain = fresh.getElementById('dashboard');
     if (!freshMain) {
-      // Not the dashboard (signed out, say): stop and leave the page as it is
+      // Not the dashboard (signed out): stop
       stopped = true;
       return;
     }
@@ -162,9 +155,8 @@
         now.replaceWith(document.importNode(next, true));
       }
     });
-    // The search box stays as it was (what is typed and what it found), in
-    // place of the fresh empty one, and looks again in case an order matching
-    // it was just picked up
+    // Keep the search box as it was and search again, in case a match was
+    // just picked up
     var freshSearch = document.getElementById('sold-search');
     if (search && freshSearch && freshSearch !== search) {
       freshSearch.replaceWith(search);
@@ -204,7 +196,7 @@
           });
       })
       .catch(function () {
-        // A dropped connection: just try again next time
+        // Connection dropped: try again next time
       })
       .then(function () {
         checking = false;
@@ -213,7 +205,7 @@
 
   window.setInterval(check, CHECK_EVERY_MS);
 
-  // Coming back to the tab: catch up straight away
+  // Back on the tab: update now
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'visible') {
       check();

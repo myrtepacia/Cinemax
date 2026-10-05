@@ -1,46 +1,42 @@
 <?php
-// Cinemax settings: the template.
-//
-// Copy this file to config.php in this folder and fill in the database
-// password and your PayMongo test keys. config.php holds secrets, so it is
-// left out of git (see .gitignore) and blocked from the web (.htaccess).
+// Cinemax settings template. Copy it to config.php in this folder and fill in
+// the database password and PayMongo keys. config.php is kept out of git and
+// blocked from the web.
 
 return [
-    // The address the site is reached at, with no slash at the end. PayMongo
-    // sends customers back here after they pay.
+    // The site address, no slash at the end. PayMongo sends customers back
+    // here.
     'app_url' => 'http://localhost/cinemax',
 
-    // true shows PHP errors on the page. Keep false except while debugging.
+    // true shows PHP errors on the page. Keep false unless debugging.
     'debug' => false,
 
     'db' => [
         'host' => '127.0.0.1',
         'port' => 3306,
         'name' => 'cinemax',
-        // A database user that can only read and write the cinemax tables,
-        // made by database/setup.php with this password. It is not the MySQL
-        // root account. Use a long random password (16 characters or more).
+        // The cinemax database user made by database/setup.php with this
+        // password (not root). Use 16 or more random characters.
         'user' => 'cinemax_app',
         'pass' => 'change-me-to-a-long-random-password',
     ],
 
     'paymongo' => [
-        // Test keys: no real money moves. Swap for live keys to go live.
+        // Live keys (sk_live_, pk_live_) take real money; test keys
+        // (sk_test_, pk_test_) do not. Use both from the same mode, and
+        // switch only while nobody is paying.
         'secret_key' => 'sk_test_...',
         'public_key' => 'pk_test_...',
-        // Filled in after registering webhook.php with PayMongo (whsk_...).
-        // Left empty, webhook.php refuses every request, and payments are
-        // confirmed when the customer returns from PayMongo instead.
+        // Webhook secret (whsk_...) from registering webhook.php with
+        // PayMongo. Empty: webhook.php refuses every call and payments are
+        // confirmed when the customer comes back.
         'webhook_secret' => '',
-        // The ways customers may pay on PayMongo's checkout page. In live
-        // mode, list only the ones PayMongo has activated on your account,
-        // otherwise the checkout page says no payment methods are available.
-        // ['qrph'] alone (QR Ph, scanned with GCash, Maya or a bank app)
-        // shows the code on Cinemax's own page (pay.php) instead, with a
-        // countdown as long as the seat hold below.
-        'payment_methods' => ['card', 'gcash', 'paymaya', 'grab_pay'],
+        // qrph shows the QR code on the pay page; gcash and card appear under
+        // Choose another payment. With live keys, a way PayMongo has not
+        // turned on yet asks the customer to scan the QR code instead.
+        'payment_methods' => ['qrph', 'gcash', 'card'],
     ],
 
-    // How long seats are held while a customer is paying, in minutes
+    // Minutes seats are held while paying
     'booking_hold_minutes' => 10,
 ];

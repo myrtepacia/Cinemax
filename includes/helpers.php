@@ -1,17 +1,15 @@
 <?php
 declare(strict_types=1);
 
-// Small tools used on every page: settings, links, escaping, money and dates,
-// redirects, one-time messages and reading form input safely.
+// Small tools used everywhere: settings, links, escaping, money, dates,
+// redirects and safe form input.
 
 if (!defined('CINEMAX_BOOTSTRAPPED')) {
     http_response_code(404);
     exit;
 }
 
-/**
- * A setting from config/config.php, by dotted name: config('db.host').
- */
+/** A setting from config/config.php: config('db.host'). */
 function config(string $key, $default = null)
 {
     static $settings = null;
@@ -28,45 +26,33 @@ function config(string $key, $default = null)
     return $value;
 }
 
-/**
- * The folder the site lives in on the server, like '/cinemax' ('' at the root).
- */
+/** The site's folder on the server, like '/cinemax'. */
 function app_path(): string
 {
     $path = (string) parse_url((string) config('app_url'), PHP_URL_PATH);
     return rtrim($path, '/');
 }
 
-/**
- * A link to a page or file of the site: url('admin/movies.php') gives
- * '/cinemax/admin/movies.php'. Works the same from any folder.
- */
+/** A link inside the site: url('admin/movies.php'). */
 function url(string $path = ''): string
 {
     return app_path() . '/' . ltrim($path, '/');
 }
 
 /**
- * The full address, with http://host, for links that leave the site and come
- * back, such as PayMongo's return pages.
+ * A full address with the host, for links that leave the site and come back.
  */
 function absolute_url(string $path = ''): string
 {
-    // The address the visitor is really using, so a phone that opened the
-    // site at http://192.168.1.5/cinemax comes back there from PayMongo,
-    // not to "localhost" (which on a phone is the phone itself). With no
-    // visitor (the PayMongo webhook, the command line) it is the configured
-    // address.
+    // Use the address the visitor used (a phone on 192.168.x.x comes back
+    // there, not to localhost); the config's when there is no visitor
     if (PHP_SAPI !== 'cli' && !empty($_SERVER['HTTP_HOST']) && function_exists('request_origin')) {
         return request_origin() . app_path() . '/' . ltrim($path, '/');
     }
     return rtrim((string) config('app_url'), '/') . '/' . ltrim($path, '/');
 }
 
-/**
- * A CSS, JS or image link with its modified time added, so browsers pick up
- * a changed file straight away instead of using an old cached copy.
- */
+/** A file link with its modified time, so browsers load changed files. */
 function asset(string $path): string
 {
     $file = APP_ROOT . '/' . ltrim($path, '/');
@@ -74,28 +60,20 @@ function asset(string $path): string
     return url($path) . '?v=' . $version;
 }
 
-/**
- * Makes text safe to put inside HTML, including inside attribute quotes.
- */
+/** Makes text safe for HTML. */
 function e($value): string
 {
     return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
 }
 
-/**
- * Sends the browser to another page of the site and stops. Only ever takes
- * a path inside the site, never a full address, so it cannot be turned into
- * an open redirect.
- */
+/** Redirects to a page of the site and stops. Only paths inside the site. */
 function redirect(string $path, int $status = 303): void
 {
     header('Location: ' . url($path), true, $status);
     exit;
 }
 
-/**
- * Sends the browser to an outside address (PayMongo's checkout page only).
- */
+/** Redirects to PayMongo's checkout page only. */
 function redirect_external(string $address): void
 {
     $host = (string) parse_url($address, PHP_URL_HOST);
@@ -107,16 +85,12 @@ function redirect_external(string $address): void
     exit;
 }
 
-/**
- * A return path from a query string, kept only if it points inside the site.
- * Anything else (another site, '//evil.test', 'javascript:') gives null.
- */
+/** A return path from the query string, only if it stays inside the site. */
 function safe_return_path($path): ?string
 {
     if (!is_string($path) || $path === '' || strlen($path) > 300) {
         return null;
     }
-    // Only plain page paths with an optional simple query string
     if (!preg_match('~^[a-z0-9][a-z0-9/_-]*\.php(\?[A-Za-z0-9_=&%.-]*)?$~', $path)) {
         return null;
     }
@@ -126,10 +100,7 @@ function safe_return_path($path): ?string
     return $path;
 }
 
-/**
- * The page being viewed, relative to the site folder, with its query
- * string: 'book.php?movie=joker'. Used as a sign-in return path.
- */
+/** The page being viewed with its query string, as a sign-in return path. */
 function current_path(): string
 {
     $uri = (string) ($_SERVER['REQUEST_URI'] ?? '');
@@ -148,10 +119,7 @@ function is_post(): bool
     return ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
 }
 
-/**
- * Stops anything but a POST request. Every change to data goes through POST
- * with a CSRF token; links and GET requests only ever read.
- */
+/** Stops anything that is not a POST. */
 function require_post(): void
 {
     if (!is_post()) {
@@ -160,11 +128,7 @@ function require_post(): void
     }
 }
 
-/**
- * A text value from a form or query string. Arrays and anything that is not
- * text come back as '', surrounding spaces are trimmed, control characters
- * are removed and the length is capped.
- */
+/** A trimmed, length-capped text value from a form, or ''. */
 function input_string(array $source, string $key, int $maxLength = 255): string
 {
     $value = $source[$key] ?? '';
@@ -179,9 +143,7 @@ function input_string(array $source, string $key, int $maxLength = 255): string
     return $value;
 }
 
-/**
- * A whole number from a form, or null when it is missing or not a number.
- */
+/** A whole number from a form, or null. */
 function input_int(array $source, string $key, int $min = PHP_INT_MIN, int $max = PHP_INT_MAX): ?int
 {
     $value = $source[$key] ?? null;
@@ -195,9 +157,7 @@ function input_int(array $source, string $key, int $min = PHP_INT_MIN, int $max 
     return ($number < $min || $number > $max) ? null : $number;
 }
 
-/**
- * A 'YYYY-MM-DD' date that really exists, or null.
- */
+/** A real 'YYYY-MM-DD' date, or null. */
 function input_date(array $source, string $key): ?string
 {
     $value = input_string($source, $key, 10);
@@ -208,8 +168,8 @@ function input_date(array $source, string $key): ?string
 }
 
 /**
- * The visitor's address, from the connection itself. Forwarding headers are
- * ignored on purpose: anyone can type those.
+ * The visitor's address. Forwarding headers are ignored (anyone can fake
+ * them).
  */
 function client_ip(): string
 {
@@ -222,25 +182,19 @@ function is_https(): bool
         || (int) ($_SERVER['SERVER_PORT'] ?? 0) === 443;
 }
 
-/**
- * Pesos as the site shows them: 1140 becomes '₱1,140'.
- */
+/** Pesos as shown: 1140 becomes '₱1,140'. */
 function peso(int $amount): string
 {
     return "\u{20B1}" . number_format($amount);
 }
 
-/**
- * A number with its word: '1 snack', '3 snacks', '1,200 tickets'.
- */
+/** A number with its word: '1 snack', '3 snacks'. */
 function count_label(int $count, string $one, string $many): string
 {
     return number_format($count) . ' ' . ($count === 1 ? $one : $many);
 }
 
-/**
- * A running time: 112 becomes '1h 52min', 120 '2h', 45 '45min'.
- */
+/** A running time: 112 becomes '1h 52min'. */
 function duration_tag(int $minutes): string
 {
     $hours = intdiv($minutes, 60);
@@ -256,8 +210,8 @@ function duration_tag(int $minutes): string
 }
 
 /**
- * A showing as tickets print it: '4:00 PM, Saturday, September 12, 2026',
- * led by the cinema when given: 'Cinema 2, 4:00 PM, Saturday, ...'.
+ * A showing as tickets print it: 'Cinema 2, 4:00 PM, Saturday, September 12,
+ * 2026'.
  */
 function format_showing(string $date, string $time, ?int $cinema = null): string
 {
@@ -265,51 +219,36 @@ function format_showing(string $date, string $time, ?int $cinema = null): string
     return $cinema !== null ? cinema_label($cinema) . ', ' . $when : $when;
 }
 
-/**
- * 'Cinema 2'.
- */
 function cinema_label(int $cinema): string
 {
     return 'Cinema ' . $cinema;
 }
 
-/**
- * A clock time alone: '17:00:00' becomes '5:00 PM'.
- */
+/** '17:00:00' becomes '5:00 PM'. */
 function format_time(string $time): string
 {
     return (new DateTimeImmutable('2000-01-01 ' . $time))->format('g:i A');
 }
 
-/**
- * A short date: 'Oct 25, 2026'.
- */
+/** 'Oct 25, 2026'. */
 function format_date_short(string $date): string
 {
     return (new DateTimeImmutable($date))->format('M j, Y');
 }
 
-/**
- * A date with its day of the week: 'Sun, Oct 25, 2026'. The calendars'
- * scripts write picked days the same way.
- */
+/** 'Sun, Oct 25, 2026'. */
 function format_day(string $date): string
 {
     return (new DateTimeImmutable($date))->format('D, M j, Y');
 }
 
-/**
- * A date written out in full: 'Sunday, October 25, 2026'.
- */
+/** 'Sunday, October 25, 2026'. */
 function format_date_long(string $date): string
 {
     return (new DateTimeImmutable($date))->format('l, F j, Y');
 }
 
-/**
- * A date and time from the database as people read it:
- * '4:02 PM, Saturday, September 12, 2026'.
- */
+/** A database date and time as people read it. */
 function format_datetime(string $datetime): string
 {
     return (new DateTimeImmutable($datetime))->format('g:i A, l, F j, Y');
@@ -320,9 +259,7 @@ function today(): string
     return date('Y-m-d');
 }
 
-/**
- * Replies to a script's fetch() call with JSON and stops.
- */
+/** Replies with JSON and stops. */
 function json_response(array $data, int $status = 200): void
 {
     http_response_code($status);
@@ -334,12 +271,8 @@ function json_response(array $data, int $status = 200): void
 }
 
 /**
- * A plain error page with the site's look, then stop. Used for 403, 404,
- * 405, 429 and 500, with $title to override the usual heading. The message
- * is shown as text, never as HTML.
- *
- * Only standard status codes are used: Apache turns ones it does not know,
- * such as 419, into 500 Internal Server Error.
+ * A plain error page, then stop. Only standard status codes (Apache turns
+ * unknown ones like 419 into 500).
  */
 function render_error_page(int $status, string $message, ?string $title = null): void
 {
@@ -355,8 +288,7 @@ function render_error_page(int $status, string $message, ?string $title = null):
     ];
     $title = $title ?? ($titles[$status] ?? 'Error');
 
-    // The error may come before the layout code is loaded, or from inside
-    // it, so this page is kept self-contained.
+    // Kept self-contained: the error may come before the layout code loads
     $css = function_exists('asset') ? asset('assets/css/cinemax.css') : '';
     $home = function_exists('url') ? url('index.php') : '/';
     echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
@@ -370,10 +302,7 @@ function render_error_page(int $status, string $message, ?string $title = null):
     exit;
 }
 
-/**
- * Stops with an error page: abort(404) for a missing page, abort(403) for
- * one this person may not see.
- */
+/** Stops with an error page: abort(404), abort(403). */
 function abort(int $status, string $message = ''): void
 {
     $defaults = [

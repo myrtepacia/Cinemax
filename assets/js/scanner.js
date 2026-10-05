@@ -1,22 +1,9 @@
-// The door scanner and the snack counter's scanner. The camera opens when
-// staff press Open camera, and from then on never needs a refresh: a few
-// times a second the picture is drawn onto a hidden canvas and jsQR looks
-// for a QR code in it.
-//
-//   Nothing in view   the last result clears and it says so, ready for the
-//                     next ticket
-//   Not a Cinemax QR  (a web link, a payment code...) shown as not a ticket
-//                     straight away
-//   A Cinemax QR      sent to the page's API (data-api-url), which says what
-//                     it is: the page never decides that itself
-//
-//   data-mode="ticket"  (Ticket Scanner) a good ticket is let in when staff
-//                                        press Confirm booking
-//   data-mode="snack"   (Snack Scanner)  the customer's snack order is shown,
-//                                        and Confirm order sends it to
-//                                        Preparing on the dashboard
-//
-// Everything the server sends back is shown with textContent, never as HTML.
+// Ticket Scanner and Snack Scanner. After Open camera, frames go to a hidden
+// canvas a few times a second and jsQR looks for a code. Non-Cinemax codes
+// are turned away at once; Cinemax codes are sent to data-api-url, and the
+// server decides. data-mode=ticket admits a good ticket on Confirm; data-
+// mode=snack shows the order and Confirm sends it to Preparing. Replies are
+// shown with textContent, never as HTML.
 (function () {
   var panel = document.getElementById('scanner');
   if (!panel) {
@@ -35,31 +22,27 @@
   var result = document.getElementById('scan-result');
   var resultTitle = document.getElementById('scan-result-title');
   var resultWho = document.getElementById('scan-result-who');
-  // Only on the Snack Scanner: the lines of the order
+  // Snack Scanner only: the order lines
   var itemsList = document.getElementById('scan-items');
   var actions = document.getElementById('scan-actions');
   var confirmBtn = document.getElementById('confirm-booking');
   var cancelBtn = document.getElementById('cancel-booking');
 
-  // How often a frame is searched for a code
+  // How often a frame is searched
   var SCAN_EVERY_MS = 250;
-  // A code not seen for this long has left the camera's view. Until then the
-  // same code is not checked again (a ticket held still is read over and
-  // over); once it has left, showing it again checks it again.
+  // A code unseen this long has left the view. Until then it is not checked
+  // again; shown again after that, it is checked again.
   var LEFT_VIEW_MS = 1200;
-  // Frames are shrunk to this width first: plenty for a ticket's code on a
-  // phone screen or paper, and much quicker to search
+  // Frames are shrunk to this width: enough for a ticket and faster to search
   var MAX_FRAME_WIDTH = 640;
-  // The server refuses anything longer, and no ticket code is near it
+  // The server refuses longer codes
   var MAX_CODE_LENGTH = 300;
-  // What a Cinemax e-ticket's QR code holds. Anything else cannot be a
-  // ticket, so it is turned away without asking the server. A code that does
-  // look like this is still checked by the server, which alone knows whether
-  // it is real.
+  // What a Cinemax ticket code looks like. Anything else is turned away
+  // without asking the server; the server still checks the rest.
   var TICKET_PATTERN = /^CINEMAX\|CMX-[A-Z0-9]{6}\|[a-f0-9]{32}$/;
 
   var IDLE_TEXT = 'No QR code in view. Point the camera at the QR code on the ticket.';
-  // Nothing is said while the camera is off: the Open camera button is enough
+  // Say nothing while the camera is off
   var OFF_TEXT = '';
 
   var stream = null;
@@ -68,21 +51,21 @@
   var context = canvas.getContext('2d', { willReadFrequently: true });
   var scanTimer = null;
   var retryTimer = null;
-  // True while a code is being checked, or a good ticket waits for staff
+  // True while a code is checked, or a good ticket waits for staff
   var busy = false;
-  // True once signed out: the page is on its way to the sign-in page
+  // True once signed out (going to sign-in)
   var stopped = false;
-  // The code last read, and when it was last seen in a frame
+  // Last code read, and when it was last seen
   var lastCode = '';
   var lastSeenAt = 0;
-  // The good ticket on screen, waiting for Confirm or Cancel
+  // Good ticket on screen, waiting for Confirm or Cancel
   var pendingCode = '';
 
   function idleMessage() {
     message.textContent = stream ? IDLE_TEXT : OFF_TEXT;
   }
 
-  // ---- Showing results ------------------------------------------------------
+  // ---- Showing results ----
 
   var RESULT_CLASSES = {
     good: 'scan-result-good',
@@ -100,7 +83,7 @@
     result.classList.remove('hidden');
   }
 
-  // One line per snack, like '2 × Popcorn, Large'
+  // One line per snack, like 2 × Popcorn, Large
   function showItems(items) {
     if (!itemsList) {
       return;
@@ -126,12 +109,12 @@
     showItems([]);
   }
 
-  // A text field from the reply, or '' if it is missing or not text
+  // A text field from the reply, or empty
   function field(data, key) {
     return typeof data[key] === 'string' ? data[key] : '';
   }
 
-  // 'Juan Dela Cruz • Joker • Seats C5, C6', skipping any blank parts
+  // Name • Movie • Seats C5, C6, skipping blanks
   function joinParts(parts) {
     return parts.filter(function (part) {
       return part !== '';
@@ -149,15 +132,15 @@
     return joinParts([field(data, 'name'), field(data, 'movie'), seatsText(field(data, 'seats'))]);
   }
 
-  // ---- Talking to the server ---------------------------------------------------
+  // ---- Server ----
 
-  // The site's folder, worked out from the API's address (.../api/scan.php)
+  // Site folder, from the API address (.../api/scan.php)
   function siteBase() {
     return new URL('../', new URL(apiUrl, window.location.href));
   }
 
-  // The security token is fetched again from this page when the server says
-  // it has expired, so staff never have to refresh by hand
+  // Get a fresh security token from this page when it expires, so staff never
+  // refresh
   function refreshToken() {
     return fetch(window.location.href, { credentials: 'same-origin', cache: 'no-store' })
       .then(function (response) {
@@ -167,7 +150,7 @@
         var page = new DOMParser().parseFromString(html, 'text/html');
         var meta = page.querySelector('meta[name="csrf-token"]');
         var fresh = meta ? (meta.getAttribute('content') || '') : '';
-        // Signed out meanwhile: the reply was the sign-in page, not this one
+        // Signed out: the reply was the sign-in page
         if (fresh === '' || !page.getElementById('scanner')) {
           return false;
         }
@@ -204,7 +187,7 @@
     });
   }
 
-  // One request, retried once with a fresh token if the old one expired
+  // One request, retried once with a fresh token if needed
   function send(action, code) {
     return post(action, code).catch(function (error) {
       if (error && error.status === 403) {
@@ -221,7 +204,7 @@
     });
   }
 
-  // ---- What each answer looks like -------------------------------------------
+  // ---- Answers ----
 
   function showAnswer(data, code) {
     if (snackMode) {
@@ -231,7 +214,7 @@
     }
   }
 
-  // A good ticket or order: scanning waits for Confirm or Cancel
+  // Good ticket or order: wait for Confirm or Cancel
   function awaitConfirm(code, hint) {
     pendingCode = code;
     confirmBtn.disabled = false;
@@ -240,10 +223,8 @@
     message.textContent = hint;
   }
 
-  // Any other answer: it stays up while the code is in view and clears a
-  // moment after it is not (even if it left before the answer came, as when
-  // Confirm is pressed after the ticket is put away). Scanning carries
-  // straight on, so the next ticket can be read at once.
+  // Any other answer stays while the code is in view and clears soon after.
+  // Scanning carries on at once.
   function doneWith(code) {
     busy = false;
     lastCode = code;
@@ -251,7 +232,7 @@
     message.textContent = 'Take the ticket away, or show the next one.';
   }
 
-  // The snack counter: what the server said about an order
+  // Snack counter answer
   function showSnackAnswer(data, code) {
     var status = data.status;
     var items = Array.isArray(data.items) ? data.items : [];
@@ -284,7 +265,7 @@
     doneWith(code);
   }
 
-  // The door: what the server said about a ticket
+  // Door answer
   function showTicketAnswer(data, code) {
     var status = data.status;
 
@@ -312,17 +293,16 @@
     doneWith(code);
   }
 
-  // The request did not get an answer about the ticket
+  // No answer about the ticket
   function showProblem(error) {
     var status = error && error.status ? error.status : 0;
     hideResult();
     pendingCode = '';
-    // Forget the code, so the same ticket is tried again as soon as it is seen
+    // Forget the code so it is tried again when seen
     lastCode = '';
 
     if (status === 401) {
-      // Signed out (the session ran out, or signed out elsewhere): go and
-      // sign in, and come straight back to this scanner afterwards
+      // Signed out: go sign in, then come back here
       stopped = true;
       message.textContent = 'You have been signed out. Taking you to sign in…';
       var base = siteBase();
@@ -335,7 +315,7 @@
       return;
     }
 
-    // Anything else is worth another go in a moment, by itself
+    // Anything else: try again in a moment
     var wait = status === 429 ? 15000 : 3000;
     message.textContent = status === 429
       ? 'Too many scans in a short time. Scanning again in a few seconds…'
@@ -347,12 +327,12 @@
     }, wait);
   }
 
-  // ---- Reading codes -------------------------------------------------------------
+  // ---- Reading codes ----
 
   function codeFound(text) {
     var now = Date.now();
     if (text === lastCode && now - lastSeenAt < LEFT_VIEW_MS) {
-      // The same code, still in view: already dealt with
+      // Same code still in view: already done
       lastSeenAt = now;
       return;
     }
@@ -361,7 +341,7 @@
     busy = true;
     hideResult();
 
-    // Not shaped like a Cinemax ticket at all: no need to ask the server
+    // Not a Cinemax ticket: no need to ask the server
     if (text.length > MAX_CODE_LENGTH || !TICKET_PATTERN.test(text)) {
       showAnswer({ status: 'not_cinemax' }, text);
       return;
@@ -373,8 +353,8 @@
     }, showProblem);
   }
 
-  // No code in this frame. Once the last one has been out of view a moment,
-  // its result is cleared, unless it is a good ticket waiting for staff.
+  // No code: clear the last result after a moment, unless a good ticket is
+  // waiting
   function nothingInView() {
     if (lastCode === '' || Date.now() - lastSeenAt < LEFT_VIEW_MS) {
       return;
@@ -414,7 +394,7 @@
       return;
     }
 
-    // attemptBoth also reads light-on-dark codes, as on a phone in dark mode
+    // attemptBoth also reads light-on-dark codes (dark mode)
     var found = window.jsQR(frame.data, w, h, { inversionAttempts: 'attemptBoth' });
     var text = found && typeof found.data === 'string' ? found.data : '';
 
@@ -423,13 +403,11 @@
       return;
     }
     if (text === lastCode) {
-      // Keep noting a code that is still in view, even while it is being
-      // checked or waits for Confirm, so it is not taken for a new one
+      // Keep noting a code still in view so it is not taken as new
       lastSeenAt = Date.now();
       return;
     }
-    // A different code: read it, unless one is being checked or waits for
-    // staff to press Confirm or Cancel
+    // A new code: read it, unless one is being checked or waiting
     if (!busy && pendingCode === '') {
       codeFound(text);
     }
@@ -440,11 +418,11 @@
     scanTimer = setInterval(scanFrame, SCAN_EVERY_MS);
   }
 
-  // ---- The camera ----------------------------------------------------------------
+  // ---- Camera ----
 
   function startCamera() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      // Browsers only offer the camera to https pages (and localhost)
+      // Browsers only allow the camera on https pages and localhost
       message.textContent = window.isSecureContext === false
         ? 'The camera only works when the site is opened over https.'
         : 'This browser cannot access the camera.';
@@ -455,7 +433,7 @@
       return;
     }
 
-    // No second press while the browser is still asking for the camera
+    // No second press while the browser asks for the camera
     startBtn.classList.add('hidden');
     message.textContent = 'Requesting camera access…';
 
@@ -463,8 +441,8 @@
       .then(function (mediaStream) {
         stream = mediaStream;
 
-        // The phone can stop the camera (screen off, another app): start it
-        // again as soon as the page is looked at
+        // The phone may stop the camera; restart it when the page is looked
+        // at again
         stream.getVideoTracks().forEach(function (track) {
           track.addEventListener('ended', function () {
             if (document.visibilityState === 'visible') {
@@ -478,8 +456,7 @@
         video.playsInline = true;
         video.muted = true;
         video.setAttribute('playsinline', '');
-        // A block, not inline, so no gap for text descenders opens up
-        // under the picture and shows as a dark strip at the bottom
+        // Block, not inline, so no dark strip shows under the picture
         video.style.display = 'block';
         video.style.width = '100%';
         video.style.height = '100%';
@@ -494,8 +471,7 @@
           playing.catch(function () {});
         }
 
-        // After a restart, a good ticket may still be waiting for Confirm:
-        // its hint stays
+        // A good ticket may still wait after a restart: keep its hint
         if (pendingCode === '') {
           idleMessage();
         }
@@ -505,7 +481,7 @@
       })
       .catch(function (error) {
         var name = error && error.name ? error.name : '';
-        // Blocked access is the usual reason, and the one staff can fix
+        // Blocked access is the usual reason, and staff can fix it
         if (name === 'NotAllowedError' || name === 'SecurityError') {
           message.textContent = 'Camera access is blocked. Allow the camera in your browser, then press Open camera.';
         } else if (name === 'NotFoundError' || name === 'OverconstrainedError') {
@@ -544,7 +520,7 @@
     startBtn.classList.remove('hidden');
   }
 
-  // A good ticket waiting on screen survives a camera restart
+  // A waiting good ticket survives a camera restart
   function restartCamera() {
     stopStream();
     startCamera();
@@ -566,7 +542,7 @@
     }
   });
 
-  // ---- Buttons -------------------------------------------------------------------
+  // ---- Buttons ----
 
   confirmBtn.addEventListener('click', function () {
     if (pendingCode === '') {
@@ -594,9 +570,8 @@
   startBtn.addEventListener('click', startCamera);
   closeBtn.addEventListener('click', closeCamera);
 
-  // The camera stays off until staff press Open camera, so it only runs
-  // while someone is actually scanning. The first time, the browser also
-  // asks whether this site may use the camera.
+  // The camera stays off until Open camera is pressed. The first time, the
+  // browser asks for permission.
   message.textContent = OFF_TEXT;
   startBtn.classList.remove('hidden');
 })();

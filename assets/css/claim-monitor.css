@@ -1,8 +1,7 @@
-/* Snacks Claim monitor (admin/claim-monitor.php): a screen at the snack
-   counter, read from across the room, so everything is large and sizes with
-   the screen. */
+/* Snacks Claim monitor (admin/claim-monitor.php): read from across the room,
+   so text is large and scales with the screen. */
 
-/* Exactly the height of the screen, so the numbers can fill it downwards */
+/* Full screen height */
 .claim-screen {
   display: flex;
   flex-direction: column;
@@ -11,7 +10,7 @@
   color: var(--text);
 }
 
-/* The title bar: CINEMAX on the left, the title in the middle */
+/* Title bar: CINEMAX left, title centred */
 .claim-head {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -41,7 +40,7 @@
   text-align: center;
 }
 
-/* A small outlined button (.button) at the right of the bar */
+/* Small outlined button on the right */
 .claim-fullscreen {
   justify-self: end;
 }
@@ -50,8 +49,7 @@
   display: none;
 }
 
-/* The two columns, Preparing and Ready, split by a line and filling the
-   rest of the screen */
+/* Preparing and Ready columns, split by a line */
 .claim-board {
   display: grid;
   flex: 1;
@@ -71,7 +69,7 @@
   border-left: 2px solid var(--line);
 }
 
-/* PREPARING and READY, centred over their columns */
+/* Column titles */
 .claim-column h2 {
   margin-bottom: clamp(12px, 2vw, 32px);
   font-size: clamp(18px, 2.4vw, 40px);
@@ -89,8 +87,7 @@
   color: var(--green);
 }
 
-/* The order numbers (0001), one under another down the whole height of the
-   screen; when a column is full they carry on in a new one beside it */
+/* Order numbers run down the screen and wrap into new columns when full */
 .claim-list {
   display: flex;
   flex: 1;
@@ -119,7 +116,7 @@
   color: var(--green);
 }
 
-/* A number that has just become ready blinks a few times */
+/* A number that just became ready blinks */
 .claim-ready li.claim-new {
   animation: claim-arrive 1s ease-in-out 4;
 }
@@ -136,7 +133,7 @@
   }
 }
 
-/* When the lists cannot be updated (signed out, connection lost) */
+/* Lists cannot update (signed out, offline) */
 .claim-problem {
   position: fixed;
   bottom: 16px;
@@ -155,8 +152,7 @@
   display: none;
 }
 
-/* On a narrow screen the columns stack, each a plain list going down, and
-   the page scrolls if it has to */
+/* Narrow screens: columns stack and the page scrolls */
 @media (max-width: 620px) {
   .claim-screen {
     height: auto;

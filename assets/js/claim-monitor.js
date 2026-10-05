@@ -1,7 +1,6 @@
-// The Snacks Claim monitor keeps itself up to date. Every few seconds it asks
-// api/claim-monitor.php which numbers are being prepared and which are
-// ready, and redraws a column only when its numbers change. A number that
-// has just become ready flashes, so customers notice it.
+// Snacks Claim monitor: every few seconds asks api/claim-monitor.php for the
+// preparing and ready numbers, redraws a column only when it changes, and
+// flashes numbers that just became ready.
 (function () {
   var screen = document.getElementById('claim-screen');
   if (!screen || !window.fetch) {
@@ -47,8 +46,8 @@
     problem.hidden = text === '';
   }
 
-  // Keeps asking even while signed out, so the screen carries on by itself
-  // once the admin signs in again (in another tab, say)
+  // Keep asking while signed out, so it carries on once the admin signs in
+  // again
   function check() {
     if (checking) {
       return;
@@ -88,15 +87,14 @@
 
   window.setInterval(check, CHECK_EVERY_MS);
 
-  // A button to fill the whole screen, where the browser allows it. It
-  // hides itself while the page is full screen.
+  // Full-screen button, where the browser allows it; hidden while full screen
   var fullButton = document.getElementById('claim-fullscreen');
   var page = document.documentElement;
   if (fullButton && page.requestFullscreen) {
     fullButton.hidden = false;
     fullButton.addEventListener('click', function () {
       page.requestFullscreen().catch(function () {
-        // Refused (some browsers only allow it from certain places): no harm
+        // Refused by the browser: ignore
       });
     });
     document.addEventListener('fullscreenchange', function () {

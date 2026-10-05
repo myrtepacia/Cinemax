@@ -1,9 +1,6 @@
-// The payment pages while seats are held: the QR Ph code (pay.php) and the
-// card form (card.php). Counts down to the end of the seat hold, and every few
-// seconds asks api/payment-status.php whether PayMongo has the money: the
-// e-ticket opens by itself once it has. When the time is up the box is faded
-// out (PayMongo stops accepting the code, and the card form stops sending, at
-// the same moment) and the payment page takes over.
+// QR page (pay.php) and card page (card.php): counts down the seat hold and
+// checks api/payment-status.php every few seconds. Opens the ticket once
+// paid; fades the box out when time is up.
 (function () {
   var box = document.querySelector('[data-status-url][data-seconds-left]');
   if (!box) {
@@ -15,7 +12,7 @@
   var statusLine = document.getElementById('pay-status');
   var CHECK_EVERY_MS = 4000;
 
-  // Counted from what the server said, not from this device's clock
+  // From the server time, not this device's clock
   var endsAt = Date.now() + (parseInt(box.getAttribute('data-seconds-left'), 10) || 0) * 1000;
   var ended = false;
   var checking = false;
@@ -29,13 +26,13 @@
     var left = secondsLeft();
     var seconds = left % 60;
     countdown.textContent = Math.floor(left / 60) + ':' + (seconds < 10 ? '0' : '') + seconds;
-    // The last minute in red
+    // Last minute in red
     box.classList.toggle('pay-hurry', left > 0 && left <= 60);
     if (left === 0 && !ended) {
       ended = true;
       box.classList.add('pay-ended');
       statusLine.textContent = box.getAttribute('data-ended-text') || 'Time is up.';
-      // A payment made in the last seconds still counts
+      // A payment in the last seconds still counts
       check();
     }
   }
@@ -65,8 +62,8 @@
           leaving = true;
           window.location.href = data.next;
         } else if (data.status === 'refresh') {
-          // The PayMongo keys were switched (test and live): the page makes
-          // a new QR code or card form that works with them
+          // PayMongo keys changed (test/live): reload for a new QR code or
+          // card form
           leaving = true;
           window.location.reload();
         } else if (typeof data.secondsLeft === 'number') {
@@ -75,7 +72,7 @@
         }
       })
       .catch(function () {
-        // A dropped connection: just ask again next time
+        // Connection dropped: ask again next time
       })
       .then(function () {
         checking = false;
@@ -86,8 +83,7 @@
   window.setInterval(showTime, 1000);
   window.setInterval(check, CHECK_EVERY_MS);
 
-  // Coming back to the tab (after paying in the bank's app on the same
-  // phone, say): ask straight away
+  // Back on the tab (after paying in another app): check now
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'visible') {
       showTime();

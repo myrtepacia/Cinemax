@@ -1,7 +1,5 @@
-// Dates for the three calendars: the booking page, Add Movie, and Extend on
-// the Movies page. A day travels as a 'YYYY-MM-DD' key, which also compares
-// correctly as plain text. Loaded before the page's own script, which reads
-// these as window.CinemaxDates.
+// Date helpers for the booking and Add Movie calendars (window.CinemaxDates).
+// Days are YYYY-MM-DD strings, which also sort as text.
 window.CinemaxDates = (function () {
   var monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'];
@@ -11,24 +9,23 @@ window.CinemaxDates = (function () {
     return (number < 10 ? '0' : '') + number;
   }
 
-  // '2026-10-31' becomes a date the browser can work with
+  // YYYY-MM-DD to a Date
   function readDate(key) {
     var parts = key.split('-');
     return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
   }
 
-  // And back again: a date becomes '2026-10-31', the shape the server reads
+  // A Date to YYYY-MM-DD
   function dateKey(date) {
     return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
   }
 
-  // A month as one number, so two months are easy to compare
+  // A month as one number, easy to compare
   function monthNumber(date) {
     return date.getFullYear() * 12 + date.getMonth();
   }
 
-  // How a picked day reads on a date box: 'Sat, Oct 31, 2026', the same as
-  // the server writes it (format_day)
+  // Sat, Oct 31, 2026, same as the server (format_day)
   function readableDate(key) {
     var date = readDate(key);
     return dayNames[date.getDay()] + ', ' + monthNames[date.getMonth()].slice(0, 3) + ' ' +

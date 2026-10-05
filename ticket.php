@@ -1,11 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// One booking's e-ticket, with the QR code the door scanner reads.
-//
-// A customer sees only their own bookings; anyone else's reference gives the
-// same "not found" page as one that does not exist, so references cannot be
-// guessed. Admins may open any booking.
+// A booking's e-ticket with the QR code for the door. Customers see only
+// their own (others look "not found"); admins see any.
 
 require __DIR__ . '/includes/bootstrap.php';
 
@@ -29,22 +26,20 @@ if ($booking === null) {
 $status = (string) $booking['status'];
 $ownBooking = (int) $booking['user_id'] === (int) $user['id'];
 
-// Still waiting for payment: the QR Ph page (or the payment page) asks
-// PayMongo again and shows the ticket as soon as the money is in.
+// Still unpaid: back to the payment page
 if ($status === 'pending' && $ownBooking) {
     $paying = paymongo_uses_qrph() || !empty($booking['paymongo_intent_id']) ? 'pay.php' : 'payment-success.php';
     redirect($paying . '?ref=' . rawurlencode($ref));
 }
 
-// "Booking Confirmed!" is shown once, straight after paying; opened again
-// later, the same ticket is simply "Your E-Ticket".
+// "Booking Confirmed!" only once, straight after paying
 $justPaid = false;
 if (($_SESSION['just_paid'] ?? null) === $ref) {
     $justPaid = true;
     unset($_SESSION['just_paid']);
 }
 
-// Book Another goes back to the same film while it can still be booked
+// Book Another goes back to the film if it can still be booked
 $movie = find_movie((int) $booking['movie_id']);
 $bookAnother = ($movie !== null && movie_booking_window($movie) !== null)
     ? 'book.php?movie=' . rawurlencode((string) $movie['slug'])
@@ -55,8 +50,7 @@ $hasTicket = in_array($status, ['paid', 'refunded'], true);
 if ($hasTicket) {
     $snackLines = booking_snacks((int) $booking['id']);
     $snacks = snack_summary($snackLines);
-    // The order's number for the claim monitor, on a paid ticket only (a
-    // refunded one has given its number back)
+    // The snack order number, on paid tickets only
     $snackNumber = $status === 'paid' && $booking['snack_number'] !== null
         ? '#' . snack_number_label((int) $booking['snack_number'])
         : null;
@@ -68,7 +62,7 @@ if ($hasTicket) {
     ][(string) ($booking['snack_status'] ?? '')] ?? null;
 }
 
-// The reason a booking has no ticket, for the short page shown instead
+// Why there is no ticket
 $noTicketMessages = [
     'pending'   => 'Booking %s for %s is still waiting for payment. The ticket appears once PayMongo confirms it.',
     'expired'   => 'Booking %s for %s was not paid in time, so no ticket was issued and its seats went back on sale.',
@@ -114,7 +108,6 @@ render_header();
       <div class="ticket">
 
         <div class="ticket-header">
-          <!-- The brand, with the cinema the film plays in on the right -->
           <div class="ticket-brand-row">
             <p class="ticket-brand">CINEMAX</p>
             <p class="ticket-cinema" id="cinema"><?= e(cinema_label((int) $booking['cinema'])) ?></p>
@@ -156,7 +149,7 @@ render_header();
 <?php if ($snackNumber !== null): ?>
               <p class="ticket-value" id="pickup-number"><?= e($snackNumber) ?></p>
 <?php else: ?>
-              <!-- Refunded (its number was given back), or ordered before numbers were given out -->
+              <!-- Refunded, or ordered before numbers existed -->
               <p class="ticket-value ticket-value-small" id="pickup-number"><?= $status === 'refunded' ? 'Refunded' : 'None' ?></p>
 <?php endif; ?>
             </div>
@@ -166,7 +159,6 @@ render_header();
             </div>
           </div>
 <?php if ($status === 'paid' && $snackStatus !== null): ?>
-          <!-- The snack order's progress, on its own centred line -->
           <p class="snack-status <?= e($snackStatus[1]) ?>" id="snack-status"><?= e($snackStatus[0]) ?></p>
 <?php endif; ?>
 <?php endif; ?>

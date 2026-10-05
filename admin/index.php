@@ -1,22 +1,21 @@
 <?php
 declare(strict_types=1);
 
-// Staff Dashboard: what the cinema has earned, and the snack counter's queue.
-// Each snack order moves Preparing -> Ready -> Sold with one button press.
+// Staff Dashboard: earnings and the snack queue (Preparing, Ready, Sold).
 
 require __DIR__ . '/../includes/bootstrap.php';
 
 $user = require_role('admin');
 
-// Moving an order on. The step it is moving from comes with the form, so a
-// stale page or a second click cannot push an order two steps at once.
+// The form says which step the order is moving from, so a stale page cannot
+// skip a step
 if (is_post()) {
     verify_csrf();
 
     $bookingId = input_int($_POST, 'booking_id', 1);
     $from = input_string($_POST, 'from', 20);
 
-    // An order that has already moved on is simply left where it is
+    // Already moved on: leave it
     if ($bookingId !== null && in_array($from, ['preparing', 'ready'], true)) {
         advance_snack_order($bookingId, $from);
     }
@@ -25,7 +24,7 @@ if (is_post()) {
 
 $stats = dashboard_stats();
 $queue = snack_queue();
-// dashboard.js compares this with api/dashboard.php to know when to refresh
+// dashboard.js checks this to know when to refresh
 $version = dashboard_version($stats, $queue);
 
 $snacksShown = 0;
@@ -35,8 +34,7 @@ foreach ($queue as $orders) {
     }
 }
 
-// The three stages, in the order the counter works through them, each
-// counted in the colour the claim monitor shows it in
+// The three stages, in counter order
 $groups = [
     'preparing' => ['title' => 'Preparing', 'empty' => 'Nothing being prepared', 'pill' => 'pill-red'],
     'ready'     => ['title' => 'Ready', 'empty' => 'Nothing waiting at the counter', 'pill' => 'pill-green'],
@@ -94,8 +92,7 @@ render_header(['staff' => true, 'current' => 'dashboard']);
           </h3>
 
 <?php if ($stage === 'sold'): ?>
-          <!-- Search the picked-up orders as you type (dashboard.js); while it
-               shows results, the list below is hidden -->
+          <!-- Search picked-up orders as you type (dashboard.js) -->
           <div class="sold-search" id="sold-search" data-url="<?= e(url('api/snack-search.php')) ?>">
             <div class="form-field search-field">
               <input id="sold-search-input" type="search" maxlength="40"

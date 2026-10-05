@@ -1,6 +1,5 @@
-/* The booking page (book.php), and the payment pages that follow it.
-   Only these pages load this file; the top bar, footer, buttons and the
-   calendar under the date box come from cinemax.css. */
+/* Booking page (book.php) and the payment pages. Header, footer, buttons and
+   the calendar come from cinemax.css. */
 
 /* Page layout */
 
@@ -31,7 +30,7 @@
   align-items: start;
 }
 
-/* The poster, with the rating and running time tags on it */
+/* Poster with rating and running time tags */
 .booking-poster-wrap {
   position: relative;
   margin-bottom: 20px;
@@ -45,13 +44,14 @@
   border-radius: 16px;
 }
 
-/* A bigger poster than a card's, so slightly bigger tags */
+/* Bigger poster, slightly bigger tags */
 .booking-poster-wrap .tag-rated,
 .booking-poster-wrap .tag-time {
   padding: 4px 12px;
   font-size: 14px;
 }
 
+/* Same corners as the home cards, a bit further in */
 .booking-poster-wrap .tag-rated {
   top: 14px;
   right: 14px;
@@ -59,7 +59,7 @@
 
 .booking-poster-wrap .tag-time {
   bottom: 14px;
-  left: 14px;
+  right: 14px;
 }
 
 .booking-block {
@@ -110,7 +110,7 @@
   border-color: var(--red);
 }
 
-/* The showtime box before a date is picked: greyed out and not clickable */
+/* Showtime box before a date is picked: greyed out */
 .dropdown:disabled,
 .dropdown:disabled:hover {
   background-color: var(--line-soft);
@@ -130,7 +130,7 @@
   text-align: center;
 }
 
-/* The film cannot be booked today: the same box, with a title in it */
+/* Film not bookable: same box, with a title */
 .pick-first strong {
   display: block;
   color: var(--text);
@@ -161,10 +161,23 @@
   margin: 4px 0 24px 0;
 }
 
-/* Never wider than the page: on a very narrow screen the seat map scrolls
-   sideways inside itself instead */
+/* On very narrow screens the seat map scrolls sideways */
 .seat-area {
+  position: relative;
   min-width: 0;
+}
+
+/* Before a date and showtime are picked, seats and snacks are hidden but keep
+   their space, so the page and footer do not jump. The note sits on top. */
+.seats-waiting {
+  visibility: hidden;
+}
+
+.seat-area .pick-first {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
 }
 
 .seat-map {
@@ -172,12 +185,12 @@
   padding-bottom: 8px;
 }
 
-/* Faded while the taken seats for a new showing are being looked up */
+/* Faded while loading taken seats */
 .seat-map-loading {
   opacity: 0.5;
 }
 
-/* As wide as its seats, so the whole map stays centred */
+/* As wide as its seats, so the map stays centred */
 .seat-row {
   display: flex;
   align-items: center;
@@ -186,7 +199,7 @@
   margin: 0 auto 8px auto;
 }
 
-/* The row's letter, in the middle of the height of its seats */
+/* Row letter, centred on its seats */
 .row-letter {
   width: 20px;
   color: var(--muted);
@@ -201,14 +214,13 @@
   cursor: pointer;
 }
 
-/* The aisles: a wider gap before seats 4 and 8 */
+/* Aisles: a wider gap before seats 4 and 8 */
 .seat-after-aisle {
   margin-left: 12px;
 }
 
-/* The real tick box of each seat is hidden; the coloured box shows its state.
-   It is only made invisible, not removed, so the keyboard can still reach it.
-   Scoped to the seats, so no other input on the page is touched. */
+/* The real seat checkbox is invisible (still keyboard-reachable); the
+   coloured box shows its state. */
 .seat input[type="checkbox"] {
   position: absolute;
   top: 0;
@@ -358,7 +370,7 @@
   font-weight: 900;
 }
 
-/* The + and - buttons that set how many of a snack to buy */
+/* Snack + and - buttons */
 
 .snack-count {
   display: flex;
@@ -417,7 +429,7 @@
   margin-bottom: 4px;
 }
 
-/* A long list of seats or snacks wraps on the right instead of pushing out */
+/* Long seat or snack lists wrap */
 .summary-line span:last-child {
   text-align: right;
 }
@@ -446,7 +458,7 @@
   font-weight: 900;
 }
 
-/* Greyed out for staff, or locked while the booking is on its way to payment */
+/* Greyed out for staff, or locked while sending */
 .order-summary .button:disabled {
   cursor: default;
 }
@@ -455,7 +467,7 @@
   opacity: 0.7;
 }
 
-/* Under a greyed-out Confirm button: why it cannot be used */
+/* Why the Confirm button is greyed out */
 .summary-note {
   margin-top: 10px;
   color: var(--text-soft);
@@ -469,7 +481,16 @@
     grid-template-columns: 1fr;
   }
 
-  /* One column now, so the poster (and the tags on it) sits in the middle */
+  /* One column: no gap below the showtime; the note comes first */
+  .seats-waiting {
+    display: none;
+  }
+
+  .seat-area .pick-first {
+    position: static;
+  }
+
+  /* One column: poster centred */
   .booking-poster-wrap {
     max-width: 240px;
     margin-left: auto;
@@ -482,7 +503,7 @@
     grid-template-columns: 1fr;
   }
 
-  /* Slightly smaller seats and aisles, so a whole row fits on a phone */
+  /* Smaller seats so a row fits on a phone */
   .seat-row {
     gap: 3px;
   }
@@ -529,8 +550,7 @@
   text-align: center;
 }
 
-/* The payment page while seats are held: a big gap between the heading and
-   "Your seats are held until ...", and a small one between it and the booking */
+/* Held-seats page: big gap under the heading, small gap before the booking */
 .confirm-box .held-until {
   margin-top: 31px;
 }
@@ -543,27 +563,66 @@
   margin-bottom: 6px;
 }
 
-/* Paying by QR Ph (pay.php): the code on the left and the booking on the
-   right, both from the top; one above the other on a phone, the code first */
+/* QR page (pay.php) and card page (card.php): code or card form left, booking
+   right, both top-aligned. On phones it is one column, and .pay-details uses
+   display: contents so Choose another payment sits right under the code. */
 .pay-page {
   max-width: 900px;
 }
 
 .pay-layout {
-  display: grid;
-  gap: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.pay-details {
+  display: contents;
+}
+
+.pay-details > .pay-other {
+  order: 1;
+}
+
+.pay-details > .ticket {
+  order: 2;
+  margin-top: 20px;
+}
+
+.pay-details > .pay-back {
+  order: 2;
+}
+
+.pay-details > .ticket-actions {
+  order: 3;
+}
+
+.pay-details > .pay-notice {
+  order: 4;
+}
+
+.pay-details > .status-note {
+  order: 5;
 }
 
 @media (min-width: 760px) {
   .pay-layout {
+    display: grid;
     grid-template-columns: 1fr 1fr;
+    gap: 20px;
     align-items: start;
+  }
+
+  .pay-details {
+    display: block;
+  }
+
+  .pay-details > .ticket {
+    margin-top: 0;
   }
 }
 
-/* "Choose another payment" under the booking: a card that opens to one row
-   per way to pay (GCash, card), with its logo on the right. Tapping a row
-   goes to that way to pay. */
+/* Choose another payment: opens to one row per way to pay (GCash, card) with
+   its logo on the right */
 .pay-other {
   margin-top: 20px;
   padding: 0 20px;
@@ -588,7 +647,7 @@
   display: none;
 }
 
-/* A small arrow on the right, pointing up while open */
+/* Small arrow on the right, pointing up when open */
 .pay-other summary::after {
   content: "";
   flex-shrink: 0;
@@ -632,20 +691,18 @@
   width: auto;
 }
 
-/* The row pointed at or picked */
+/* Hovered or picked row */
 .pay-other-option:hover .pay-other-name,
 .pay-other-option:focus .pay-other-name {
   color: var(--red);
 }
 
-/* "That way to pay is not available", or how a GCash payment went, under
-   Cancel booking */
+/* Payment message under Cancel booking */
 .pay-notice {
   margin: 12px 0 0 0;
 }
 
-/* The code, the amount and a countdown to the end of the seat hold, in a box
-   like the e-ticket's */
+/* Code, amount and countdown, in a box like the e-ticket */
 .qr-pay {
   text-align: center;
 }
@@ -656,8 +713,8 @@
   margin-top: 2px;
 }
 
-/* PayMongo's picture is larger than this; the browser shrinks it smoothly,
-   which keeps the squares even for scanning */
+/* PayMongo's image is larger; smooth shrinking keeps squares even for
+   scanning */
 .qr-pay-code {
   width: 240px;
   height: 240px;
@@ -665,7 +722,7 @@
   transition: opacity 0.3s;
 }
 
-/* Paying on the same phone: save the code, then upload it in the app */
+/* Same phone: save the code, then upload it in the app */
 .qr-pay-save {
   margin-top: 14px;
 }
@@ -695,7 +752,7 @@
   line-height: 1.2;
 }
 
-/* The last minute */
+/* Last minute */
 .pay-hurry .pay-timer strong {
   color: var(--red);
 }
@@ -712,8 +769,7 @@
   opacity: 0.15;
 }
 
-/* Paying by card (card.php): the same box, with the card form in place of
-   the code */
+/* Card page (card.php): same box, card form instead of the code */
 .card-pay {
   text-align: center;
 }
@@ -723,13 +779,12 @@
   text-align: left;
 }
 
-/* Why the card did not go through: closer to the field above it than the
-   fields are to each other (its margin and the field's overlap: 16 - 8) */
+/* Card error: a bit closer to the field above (16 - 8) */
 .card-form .form-message-error {
   margin-top: -8px;
 }
 
-/* Expiry date and CVC side by side */
+/* Expiry and CVC side by side */
 .card-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -751,7 +806,7 @@
   pointer-events: none;
 }
 
-/* "Pay with QR code instead", under the booking */
+/* Pay with QR code instead, under the booking */
 .pay-back {
   margin-top: 20px;
   padding: 12px;

@@ -1,40 +1,33 @@
 <?php
 declare(strict_types=1);
 
-// Creating a customer account. Everyone who signs up here is a customer:
-// the role is written into the query, never read from the form.
+// Sign up. Everyone who signs up here is a customer (never read from the
+// form).
 
 require __DIR__ . '/includes/bootstrap.php';
 
 redirect_if_signed_in();
 
-// Sign-ups from one address in an hour before the form stops accepting
-// more, so nobody can script thousands of accounts.
+// Sign-ups allowed per address per hour
 const SIGNUP_MAX_PER_IP = 10;
 const SIGNUP_WINDOW_SECONDS = 3600;
 
 const SIGNUP_PASSWORD_MIN = 8;
 const SIGNUP_PASSWORD_MAX = 128;
 
-/**
- * The password exactly as typed: not trimmed, since a space can be part of
- * a password. Anything that is not text gives ''.
- */
+/** The password as typed (not trimmed), or ''. */
 function signup_password(array $source, string $key): string
 {
     $value = $source[$key] ?? '';
     return is_string($value) ? $value : '';
 }
 
-/**
- * Checks the form. Returns [clean values, errors by field name].
- */
+/** Checks the form. Returns [clean values, errors by field]. */
 function signup_validate(array $post): array
 {
     $errors = [];
 
-    // Name: letters (any language, so Niño and Peña work), spaces, and the
-    // . ' - found in names like Ma. O'Neil-Cruz. Runs of spaces become one.
+    // Names: letters in any language, spaces and . ' -
     $name = (string) preg_replace('/\s+/u', ' ', input_string($post, 'fullname', 200));
     $nameLength = mb_strlen($name);
     if ($name === '') {
@@ -52,8 +45,7 @@ function signup_validate(array $post): array
         $errors['email'] = 'Enter a valid email address, like juandelacruz@gmail.com.';
     }
 
-    // Mobile is optional. Stored as its digits (with a leading + if typed),
-    // so '0917 123 4567' and '09171234567' are the same number.
+    // Mobile is optional; stored as digits
     $mobileTyped = input_string($post, 'mobile', 30);
     $mobile = null;
     if ($mobileTyped !== '') {
@@ -97,9 +89,7 @@ function signup_email_taken(string $email): bool
     return db_value('SELECT 1 FROM users WHERE email = ?', [$email]) !== null;
 }
 
-/**
- * The extra attributes a field gets when it has an error.
- */
+/** Extra attributes for a field with an error. */
 function signup_invalid_attrs(array $errors, string $field): string
 {
     if (!isset($errors[$field])) {
@@ -108,9 +98,7 @@ function signup_invalid_attrs(array $errors, string $field): string
     return ' class="invalid" aria-invalid="true" aria-describedby="' . e($field . '-error') . '"';
 }
 
-/**
- * The error line under a field, if it has one.
- */
+/** The error line under a field. */
 function signup_field_error(array $errors, string $field): string
 {
     if (!isset($errors[$field])) {
@@ -121,7 +109,7 @@ function signup_field_error(array $errors, string $field): string
 
 $return = safe_return_path(input_string(is_post() ? $_POST : $_GET, 'return', 300));
 
-// What the visitor typed, shown again if the form comes back (never the password)
+// Shown again if the form comes back (never the password)
 $typed = ['fullname' => '', 'email' => '', 'mobile' => ''];
 $agreed = false;
 $errors = [];
@@ -138,7 +126,7 @@ if (is_post()) {
     ];
     $agreed = input_string($_POST, 'agree', 5) !== '';
 
-    // Every try counts, even refused ones, so hammering the form keeps it shut
+    // Every try counts, even refused ones
     $limited = too_many_attempts('signup', '', SIGNUP_MAX_PER_IP, SIGNUP_WINDOW_SECONDS);
     record_attempt('signup');
 
@@ -159,8 +147,8 @@ if (is_post()) {
                 );
                 $userId = (int) db()->lastInsertId();
             } catch (PDOException $e) {
-                // Two sign-ups with the same email at the same moment: the
-                // unique key lets only one through.
+                // Same email at the same moment: the unique key lets only one
+                // through
                 if (!is_duplicate_key($e)) {
                     throw $e;
                 }

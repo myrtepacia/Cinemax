@@ -1,9 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// PayMongo sends the customer here after paying. Arriving here proves
-// nothing (anyone can type this address), so PayMongo itself is asked
-// whether the booking's checkout was paid before a ticket is shown.
+// PayMongo sends customers here after paying. Arriving proves nothing, so
+// PayMongo is asked before a ticket is shown.
 
 require __DIR__ . '/includes/bootstrap.php';
 
@@ -15,8 +14,7 @@ if ($booking === null) {
     abort(404, 'We could not find that booking.');
 }
 
-// Every visit asks PayMongo, so a reload loop cannot turn into a flood of
-// calls from our server.
+// Each visit asks PayMongo, so limit reloads
 if (too_many_attempts('settle', 'user:' . $user['id'], 30, 300)) {
     abort(429);
 }
@@ -36,12 +34,11 @@ switch ($result) {
         break;
     case 'refunded':
     case 'review':
-        // My Bookings shows where it stands
         redirect('account.php');
         break;
 }
 
-// Still here: not paid yet, or PayMongo could not be asked just now
+// Not paid yet, or PayMongo could not be asked
 $stillHeld = $booking['status'] === 'pending' && strtotime((string) $booking['expires_at']) > time();
 $filmPath = booking_film_path($booking);
 
@@ -51,7 +48,6 @@ render_header(['current' => 'account']);
   <main class="ticket-page">
 
     <?php
-    // Seats still held: a big gap above "held until" and a small one below
     $holdLine = $result !== 'unknown' && $booking['status'] !== 'cancelled' && $stillHeld;
     ?>
     <div class="confirm-box<?= $holdLine ? ' confirm-box-tight' : '' ?>">
@@ -78,7 +74,7 @@ render_header(['current' => 'account']);
 
     <div class="ticket-actions">
 <?php if ($stillHeld): ?>
-      <!-- Back to PayMongo to finish paying (it checks for a payment first) -->
+      <!-- Back to paying (checks for a payment first) -->
       <form class="inline-form" method="post" action="<?= e(url('pay-now.php')) ?>">
         <?= csrf_field() ?>
         <input type="hidden" name="ref" value="<?= e($reference) ?>">

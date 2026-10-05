@@ -1,9 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// Booking one film: pick a day, a showtime, seats and snacks, then go on to
-// pay. The page only collects the choices; checkout.php checks every one of
-// them again and works out the price from the database.
+// Booking one film: date, showtime, seats and snacks. checkout.php checks
+// everything again and works out the price.
 
 require __DIR__ . '/includes/bootstrap.php';
 
@@ -16,13 +15,10 @@ $window = movie_booking_window($movie);
 $user = current_user();
 $slug = (string) $movie['slug'];
 $showtimes = movie_showtimes((int) $movie['id']);
-// A film with no showtimes set has nothing to book yet
+// No showtimes: nothing to book yet
 $bookable = $window !== null && $showtimes !== [];
 
-/**
- * The film's poster, with its rating (top right) and running time (bottom
- * left) on it, like the cards on the home page.
- */
+/** The poster with its rating and running time. */
 function book_poster(array $movie): void
 {
     ?>
@@ -34,9 +30,7 @@ function book_poster(array $movie): void
 <?php
 }
 
-// After checkout.php bounces a booking back (a seat was taken meanwhile,
-// say), the date and showtime come back in the address so they are picked
-// again. Only values that are still bookable are used.
+// Bounced back from checkout: keep the date and showtime if still bookable
 $initialDate = '';
 $initialTime = '';
 if ($bookable) {
@@ -59,7 +53,7 @@ render_header();
 
 <?php if (!$bookable): ?>
 <?php
-    // Not bookable today: coming soon, finished, or no showtimes set yet
+    // Not bookable: coming soon, ended, or no showtimes
     $opensLater = movie_listing_state($movie) === 'soon';
 ?>
     <div class="booking-layout">
@@ -127,7 +121,6 @@ render_header();
 
       <div class="booking-layout">
 
-        <!-- Movie, date and showtime -->
         <div class="booking-left">
 
           <?php book_poster($movie); ?>
@@ -166,7 +159,6 @@ render_header();
                   <span>Sat</span>
                 </div>
 
-                <!-- The script fills this in for the month being looked at -->
                 <div class="calendar-grid" id="calendar-dates"></div>
 
                 <p class="calendar-hint" id="calendar-until"><?= e($untilLine) ?></p>
@@ -175,15 +167,13 @@ render_header();
 
             </div>
 
-            <!-- Holds the date that was picked; the calendar writes it -->
             <input type="hidden" name="date" id="date" value="">
           </div>
 
           <div class="booking-block">
             <label class="field-label" for="showtime">Showtime</label>
-            <!-- Locked until a date is picked; booking.js unlocks it -->
+            <!-- booking.js unlocks it once a date is picked -->
             <select class="dropdown" id="showtime" name="time" disabled>
-              <!-- Shown in the box only, never in the list of times -->
               <option value="" selected disabled hidden>Choose a date first</option>
 <?php foreach ($showtimes as $time): ?>
               <option value="<?= e($time) ?>" data-label="<?= e(format_time($time)) ?>"><?= e(format_time($time)) ?></option>
@@ -193,21 +183,22 @@ render_header();
 
         </div>
 
-        <!-- Seats and snacks -->
         <div class="seat-area">
 
           <p class="pick-first" id="pick-first">
             Choose a date and a showtime to see the seats and the snacks
           </p>
 
-          <div id="seats-and-snacks" hidden>
+          <!-- Hidden until a date and showtime are picked, but keeps its
+               space -->
+          <div id="seats-and-snacks" class="seats-waiting">
 
             <h3>Choose Your Seats</h3>
 
             <div class="screen-curve"></div>
             <p class="screen-word">SCREEN</p>
 
-            <!-- Two aisles split each row: seats 1-3 | 4-7 | 8-10 -->
+            <!-- Two aisles: seats 1-3 | 4-7 | 8-10 -->
             <div class="seat-map" id="seat-map">
 <?php foreach (SEAT_ROWS as $row): ?>
               <div class="seat-row">
@@ -225,7 +216,6 @@ render_header();
               <div><span class="key-colour key-sold"></span> Unavailable</div>
             </div>
 
-            <!-- Snacks -->
             <div class="snacks">
 
               <h3>Pre-order Your Snacks</h3>
@@ -265,7 +255,6 @@ render_header();
 
             </div>
 
-            <!-- Total -->
             <div class="order-summary">
 
               <div class="summary-line">

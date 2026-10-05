@@ -1,9 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// Staff Add Movie page: the details of a new film and an optional poster.
-// Everything is checked here on the server; the page's script only helps
-// with the date picker and points out empty boxes before sending.
+// Staff Add Movie page. Everything is checked here; add-movie.js only helps
+// with the form.
 
 require __DIR__ . '/../includes/bootstrap.php';
 
@@ -13,32 +12,29 @@ const ADD_MOVIE_MAX_POSTER_BYTES = 5 * 1024 * 1024;
 const ADD_MOVIE_MIN_POSTER_SIDE = 50;
 const ADD_MOVIE_MAX_POSTER_SIDE = 6000;
 
-// Every new poster is saved this size (3:4), the same as the starting
-// films', so all the cards and booking pages show posters alike
+// Every poster is saved at this size (3:4)
 const ADD_MOVIE_POSTER_WIDTH = 900;
 const ADD_MOVIE_POSTER_HEIGHT = 1200;
 
-// The picture types a poster may be, by what the file really is, with the
-// ending the saved copy gets. The name the file came with is never used.
+// Posters are saved here, named after the film
+const ADD_MOVIE_POSTER_DIR = 'assets/img/posters';
+
+// Allowed picture types, by the file's real contents
 const ADD_MOVIE_POSTER_TYPES = [
     'image/jpeg' => ['type' => IMAGETYPE_JPEG, 'ext' => 'jpg'],
     'image/png'  => ['type' => IMAGETYPE_PNG, 'ext' => 'png'],
     'image/webp' => ['type' => IMAGETYPE_WEBP, 'ext' => 'webp'],
 ];
 
-/**
- * Text as one tidy line: runs of spaces, tabs and line breaks become one space.
- */
+/** Text as one tidy line. */
 function add_movie_one_line(string $text): string
 {
     return trim((string) preg_replace('/\s+/u', ' ', $text));
 }
 
 /**
- * Checks the uploaded poster without saving it. Returns
- * ['error' => null, 'file' => null] when no poster was chosen,
- * ['error' => null, 'file' => ['tmp' => ..., 'ext' => ...]] for a good one,
- * or ['error' => 'message for the form', 'file' => null].
+ * Checks the uploaded poster. Returns ['error', 'file'] (both null when none
+ * was chosen).
  */
 function add_movie_check_poster($upload): array
 {
@@ -48,7 +44,7 @@ function add_movie_check_poster($upload): array
     }
     $unreadable = ['error' => 'The poster could not be read. Choose a JPG, PNG or WebP picture.', 'file' => null];
 
-    // A field sent as poster[] arrives as lists, not one file
+    // poster[] arrives as lists, not one file
     if (!is_array($upload) || !isset($upload['error'], $upload['tmp_name']) || !is_int($upload['error']) || !is_string($upload['tmp_name'])) {
         return $unreadable;
     }
@@ -78,8 +74,7 @@ function add_movie_check_poster($upload): array
         return ['error' => 'The poster must be 5 MB or smaller.', 'file' => null];
     }
 
-    // What the file really is, from its contents, not from its name or
-    // from the type the browser claimed
+    // The file's real type, from its contents
     try {
         $mime = (new finfo(FILEINFO_MIME_TYPE))->file($tmp);
         $info = getimagesize($tmp);
@@ -90,7 +85,6 @@ function add_movie_check_poster($upload): array
         return $unreadable;
     }
 
-    // Both checks must agree on the kind of picture
     $kind = ADD_MOVIE_POSTER_TYPES[$mime];
     if ((int) ($info[2] ?? 0) !== $kind['type']) {
         return $unreadable;
@@ -106,43 +100,43 @@ function add_movie_check_poster($upload): array
     return ['error' => null, 'file' => ['tmp' => $tmp, 'ext' => $kind['ext']]];
 }
 
-/**
- * True when PHP can redraw pictures (its GD extension, switched on in
- * php.ini), so new posters are fitted to 900 x 1200.
- */
+/** True when GD is on, so posters can be resized. */
 function add_movie_can_fit_posters(): bool
 {
     return function_exists('imagecreatetruecolor');
 }
 
-/**
- * Saves a checked poster under a random name in uploads/posters and returns
- * its path from the site root, or null if it could not be saved. It is saved
- * as a 900 x 1200 JPEG (see add_movie_fit_poster). Without GD it is kept as
- * it came, and the cards still crop it to 3:4 on the page.
- */
-function add_movie_save_poster(array $file): ?string
+/** A file name from the title ('Broken-of-Love.jpg'), with '-2' if taken. */
+function add_movie_poster_name(string $title, string $ext): string
+{
+    $base = trim((string) preg_replace('/[^A-Za-z0-9]+/', '-', $title), '-');
+    $base = substr($base !== '' ? $base : 'movie', 0, 100);
+    $name = $base . '.' . $ext;
+    for ($n = 2; is_file(APP_ROOT . '/' . ADD_MOVIE_POSTER_DIR . '/' . $name); $n++) {
+        $name = $base . '-' . $n . '.' . $ext;
+    }
+    return $name;
+}
+
+/** Saves the poster as a 900 x 1200 JPEG. Returns its path, or null. */
+function add_movie_save_poster(array $file, string $title): ?string
 {
     $fit = add_movie_can_fit_posters();
-    $name = bin2hex(random_bytes(16)) . '.' . ($fit ? 'jpg' : $file['ext']);
-    $target = APP_ROOT . '/uploads/posters/' . $name;
+    $path = ADD_MOVIE_POSTER_DIR . '/' . add_movie_poster_name($title, $fit ? 'jpg' : $file['ext']);
+    $target = APP_ROOT . '/' . $path;
     try {
         $saved = $fit
             ? add_movie_fit_poster($file['tmp'], $file['ext'], $target)
             : move_uploaded_file($file['tmp'], $target);
     } catch (Throwable $e) {
         error_log('[' . date('c') . '] Poster upload could not be saved: ' . $e->getMessage());
-        add_movie_delete_poster('uploads/posters/' . $name);
+        add_movie_delete_poster($path);
         return null;
     }
-    return $saved ? 'uploads/posters/' . $name : null;
+    return $saved ? $path : null;
 }
 
-/**
- * Redraws a poster at exactly 900 x 1200: the biggest 3:4 piece from the
- * middle of the picture, so a taller picture loses a little top and bottom
- * and a wider one a little each side. Saved as a JPEG at $target.
- */
+/** Crops the middle of the picture to 3:4 and saves it at 900 x 1200. */
 function add_movie_fit_poster(string $source, string $ext, string $target): bool
 {
     switch ($ext) {
@@ -159,8 +153,7 @@ function add_movie_fit_poster(string $source, string $ext, string $target): bool
         return false;
     }
 
-    // A phone photo can be stored on its side with a note saying which way
-    // is up; turn it the right way first
+    // Turn phone photos the right way up
     if ($ext === 'jpg' && function_exists('exif_read_data')) {
         $exif = @exif_read_data($source);
         $turn = [3 => 180, 6 => 270, 8 => 90][(int) ($exif['Orientation'] ?? 1)] ?? 0;
@@ -176,17 +169,15 @@ function add_movie_fit_poster(string $source, string $ext, string $target): bool
     $width = imagesx($picture);
     $height = imagesy($picture);
     if ($width * ADD_MOVIE_POSTER_HEIGHT > $height * ADD_MOVIE_POSTER_WIDTH) {
-        // Wider than 3:4: keep the full height
         $cropHeight = $height;
         $cropWidth = min($width, (int) round($height * ADD_MOVIE_POSTER_WIDTH / ADD_MOVIE_POSTER_HEIGHT));
     } else {
-        // Taller than 3:4 (or exactly it): keep the full width
         $cropWidth = $width;
         $cropHeight = min($height, (int) round($width * ADD_MOVIE_POSTER_HEIGHT / ADD_MOVIE_POSTER_WIDTH));
     }
 
     $poster = imagecreatetruecolor(ADD_MOVIE_POSTER_WIDTH, ADD_MOVIE_POSTER_HEIGHT);
-    // A JPEG cannot be see-through, so see-through parts become white
+    // JPEGs cannot be see-through: use white
     imagefill($poster, 0, 0, imagecolorallocate($poster, 255, 255, 255));
     imagecopyresampled(
         $poster, $picture,
@@ -200,10 +191,7 @@ function add_movie_fit_poster(string $source, string $ext, string $target): bool
     return $saved;
 }
 
-/**
- * Deletes a saved poster again, quietly: this runs while another error is
- * already on its way up, and must not replace it.
- */
+/** Deletes a saved poster, quietly. */
 function add_movie_delete_poster(string $path): void
 {
     $file = APP_ROOT . '/' . $path;
@@ -216,27 +204,19 @@ function add_movie_delete_poster(string $path): void
     }
 }
 
-/**
- * ' class="invalid"' on a box whose value was refused.
- */
+/** ' class="invalid"' on a refused box. */
 function add_movie_invalid(array $errors, string $field): string
 {
     return isset($errors[$field]) ? ' class="invalid"' : '';
 }
 
-/**
- * What the date box says: 'Fri, Oct 9, 2026 – Sat, Oct 31, 2026', or what
- * is still to pick. add-movie.js writes the same words as dates are clicked.
- */
-function add_movie_dates_text(string $opensOn, string $endsOn): string
+/** What the date box says: 'Fri, Oct 9, 2026'. */
+function add_movie_date_text(string $opensOn): string
 {
-    if ($opensOn === '') {
-        return 'Choose the opening and last day';
-    }
-    return format_day($opensOn) . ' – ' . ($endsOn !== '' ? format_day($endsOn) : 'pick the last day');
+    return $opensOn === '' ? 'Choose the opening day' : format_day($opensOn);
 }
 
-// What the form shows: blank to start with, what was typed after a problem
+// Blank at first, or what was typed after a problem
 $old = [
     'title'    => '',
     'genre'    => '',
@@ -245,7 +225,6 @@ $old = [
     'rating'   => 'PG-13',
     'price'    => '',
     'opens_on' => '',
-    'ends_on'  => '',
     'cinema'   => '',
 ];
 $errors = [];
@@ -255,14 +234,12 @@ if (is_post()) {
     $contentLength = (int) ($_SERVER['CONTENT_LENGTH'] ?? 0);
 
     if (count($_POST) === 0 && count($_FILES) === 0 && $contentLength > 0) {
-        // Bigger than the server accepts at all, so PHP dropped the whole
-        // form, CSRF token included. Nothing is changed; just say why.
+        // Too big: PHP dropped the whole form, so just say why
         $errors['poster'] = 'The poster must be 5 MB or smaller.';
     } else {
         verify_csrf();
 
-        // Read a little longer than allowed, so a long title is refused
-        // rather than quietly cut short
+        // Read a little extra, so a long title is refused, not cut
         $title = add_movie_one_line(input_string($_POST, 'title', 1000));
         $genre = add_movie_one_line(input_string($_POST, 'genre', 1000));
         $hours = input_int($_POST, 'hours', 0, 9);
@@ -270,7 +247,6 @@ if (is_post()) {
         $rating = input_string($_POST, 'rating', 10);
         $price = input_int($_POST, 'price', 1, 10000);
         $opensOn = input_date($_POST, 'opens_on');
-        $endsOn = input_date($_POST, 'ends_on');
         $cinema = input_int($_POST, 'cinema', 1, CINEMA_COUNT);
 
         $old = [
@@ -281,7 +257,6 @@ if (is_post()) {
             'rating'   => in_array($rating, MOVIE_RATINGS, true) ? $rating : 'PG-13',
             'price'    => input_string($_POST, 'price', 10),
             'opens_on' => $opensOn ?? '',
-            'ends_on'  => $opensOn !== null ? ($endsOn ?? '') : '',
             'cinema'   => $cinema !== null ? (string) $cinema : '',
         ];
 
@@ -315,20 +290,13 @@ if (is_post()) {
             $errors['price'] = "Enter a ticket price from \u{20B1}1 to \u{20B1}10,000, in whole pesos.";
         }
 
-        // Every new movie is upcoming: it can be booked from its opening day
-        // (straight away when that is today) until its last day
+        // Upcoming until its opening day, then showing with no last day
         if ($opensOn === null) {
             $errors['opens_on'] = 'Choose the opening day.';
         } elseif ($opensOn < today()) {
             $errors['opens_on'] = 'The opening day cannot be a day that has already gone by.';
         }
-        if ($endsOn === null) {
-            $errors['ends_on'] = 'Choose the last day showing.';
-        } elseif ($opensOn !== null && $endsOn < $opensOn) {
-            $errors['ends_on'] = 'The last day showing cannot be before the opening day.';
-        }
 
-        // The cinema its showtimes are found in
         if ($cinema === null) {
             $errors['cinema'] = 'Choose the cinema it shows in.';
         }
@@ -343,14 +311,13 @@ if (is_post()) {
         if (count($errors) === 0) {
             $posterPath = null;
             if ($poster['file'] !== null) {
-                $posterPath = add_movie_save_poster($poster['file']);
+                $posterPath = add_movie_save_poster($poster['file'], $title);
                 if ($posterPath === null) {
                     $errors['poster'] = 'The poster could not be saved. Please try again.';
                 }
             }
 
             if (count($errors) === 0) {
-                // It gets the first free times in the cinemas, if any
                 try {
                     create_movie([
                         'title'            => $title,
@@ -360,17 +327,23 @@ if (is_post()) {
                         'price'            => $price,
                         'status'           => 'upcoming',
                         'opens_on'         => $opensOn,
-                        'ends_on'          => $endsOn,
+                        'ends_on'          => null,
                         'poster_path'      => $posterPath,
                         'cinema'           => $cinema,
                     ]);
+                    redirect('admin/movies.php');
+                } catch (ScheduleException $e) {
+                    // The cinema is full: nothing added
+                    if ($posterPath !== null) {
+                        add_movie_delete_poster($posterPath);
+                    }
+                    $errors['cinema'] = $e->getMessage();
                 } catch (Throwable $e) {
                     if ($posterPath !== null) {
                         add_movie_delete_poster($posterPath);
                     }
                     throw $e;
                 }
-                redirect('admin/movies.php');
             }
         }
     }
@@ -459,13 +432,13 @@ render_header(['staff' => true, 'current' => 'add-movie']);
             </div>
 
             <div class="form-field">
-              <label id="run-date-label" for="run-date-button">Opening and last day</label>
+              <label id="run-date-label" for="run-date-button">Opening day</label>
 
               <div class="date-field" id="run-date-field">
 
-                <button class="date-button<?= isset($errors['opens_on']) || isset($errors['ends_on']) ? ' invalid' : '' ?>" type="button" id="run-date-button"
+                <button class="date-button<?= isset($errors['opens_on']) ? ' invalid' : '' ?>" type="button" id="run-date-button"
                         aria-haspopup="true" aria-expanded="false">
-                  <span id="run-date-text"><?= e(add_movie_dates_text($old['opens_on'], $old['ends_on'])) ?></span>
+                  <span id="run-date-text"><?= e(add_movie_date_text($old['opens_on'])) ?></span>
                   <span class="date-arrow">&#9662;</span>
                 </button>
 
@@ -496,13 +469,11 @@ render_header(['staff' => true, 'current' => 'add-movie']);
               </div>
 
               <input type="hidden" id="new-opens-on" name="opens_on" value="<?= e($old['opens_on']) ?>">
-              <input type="hidden" id="new-ends-on" name="ends_on" value="<?= e($old['ends_on']) ?>">
             </div>
 
             <div class="form-field">
               <label for="new-cinema">Cinema</label>
               <select id="new-cinema" name="cinema" required<?= add_movie_invalid($errors, 'cinema') ?>>
-                <!-- Shown in the box only, never in the list -->
                 <option value="" disabled hidden<?= $old['cinema'] === '' ? ' selected' : '' ?>>Choose a cinema</option>
 <?php for ($number = 1; $number <= CINEMA_COUNT; $number++): ?>
                 <option value="<?= e((string) $number) ?>"<?= $old['cinema'] === (string) $number ? ' selected' : '' ?>><?= e(cinema_label($number)) ?></option>

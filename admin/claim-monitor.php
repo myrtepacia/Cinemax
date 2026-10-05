@@ -1,15 +1,9 @@
 <?php
 declare(strict_types=1);
 
-// Snacks Claim monitor: a screen for the snack counter that customers can
-// see, like a fast-food claim board. Two columns of reference numbers:
-//   Preparing  confirmed at the Snack Scanner
-//   Ready      Ready pressed on the Dashboard
-// Picked Up on the Dashboard takes a number off. The lists update by
-// themselves (claim-monitor.js asks api/claim-monitor.php every few seconds).
-//
-// Admin only, and on purpose not in the staff menu: it is opened by typing
-// its address, admin/claim-monitor.php, on the screen's browser.
+// Snacks Claim monitor: a customer-facing screen of order numbers being
+// prepared and ready. Updates itself (claim-monitor.js). Admin only; open it
+// by typing admin/claim-monitor.php.
 
 require __DIR__ . '/../includes/bootstrap.php';
 
@@ -44,7 +38,7 @@ render_head('Snacks Claim', ['assets/css/claim-monitor.css']);
 <?php endforeach; ?>
     </main>
 
-    <!-- Shown by claim-monitor.js when the lists cannot be updated -->
+    <!-- Shown when the lists cannot be updated -->
     <p class="claim-problem" id="claim-problem" role="status" hidden></p>
 
   </div>

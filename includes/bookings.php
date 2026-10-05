@@ -1,12 +1,9 @@
 <?php
 declare(strict_types=1);
 
-// Bookings: holding seats, taking payment, tickets, the door scanner,
-// refunds, the snack counter and the dashboard numbers.
-//
-// Prices always come from the database, never from the form, so a changed
-// price in the browser changes nothing. Seats are claimed by inserting rows
-// under a unique key, so two people can never get the same seat.
+// Bookings: seats, payment, tickets, scanners and snack orders. Prices always
+// come from the database, never the form. A unique key on seats stops two
+// people getting the same seat.
 
 if (!defined('CINEMAX_BOOTSTRAPPED')) {
     http_response_code(404);
@@ -17,19 +14,14 @@ const SEAT_ROWS = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 const SEATS_PER_ROW = 10;
 const MAX_SEATS_PER_BOOKING = 10;
 const MAX_PER_SNACK = 10;
-// Unpaid bookings one customer may have waiting at once, so nobody can
-// hold a whole cinema by starting checkouts and walking away
+// Max unpaid bookings per customer, so nobody can hold a whole cinema
 const MAX_PENDING_PER_USER = 3;
-// Characters used in reference numbers: no 0/O or 1/I to mix up at the door
+// No 0/O or 1/I, so references are easy to read
 const REFERENCE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-// A booking's PayMongo payments (Payment Intents), one per way to pay chosen
-// on pay.php: its QR Ph code, a card (card.php) and GCash (pay-other.php)
+// A booking's PayMongo payments: QR Ph, card and GCash
 const BOOKING_INTENT_COLUMNS = ['paymongo_intent_id', 'paymongo_card_intent_id', 'paymongo_wallet_intent_id'];
 
-/**
- * A problem with a booking that the customer should be told about. Its
- * message is written to be shown on the page as it is.
- */
+/** A booking problem to show the customer as is. */
 class BookingException extends RuntimeException
 {
 }
@@ -39,9 +31,7 @@ function is_valid_seat(string $code): bool
     return (bool) preg_match('/^[A-G](?:[1-9]|10)$/', $code);
 }
 
-/**
- * Seats in cinema order: A1, A2 ... A10, B1 ...
- */
+/** Seats in order: A1, A2 ... A10, B1 ... */
 function sort_seats(array $seats): array
 {
     usort($seats, static function (string $a, string $b): int {
@@ -50,22 +40,12 @@ function sort_seats(array $seats): array
     return $seats;
 }
 
-/**
- * Lets go of seats held by bookings that were never paid for in time, and
- * of seats on cancelled or refunded bookings.
- */
+/** Frees seats of bookings not paid in time, cancelled or refunded. */
 function release_expired_holds(): void
 {
-    // Holds that have just run out (10 minutes, from config). Each is first
-    // checked with PayMongo, so a customer who paid in the last few seconds
-    // keeps the seats; otherwise the booking expires and its PayMongo page is
-    // closed, so the released seats cannot be paid for any more. This runs
-    // while other customers load seat maps, so the PayMongo calls have short
-    // time limits and only a few are made per request; any left over are
-    // simply expired, and a late payment on one is still caught by
-    // settle_booking() (seats taken back if free, refunded if not).
-    // A QR Ph code is made to stop working when its hold does, and the card
-    // page stops taking cards then, so only a checkout page needs closing.
+    // Expired holds: check PayMongo first, so a last-second payment still
+    // counts. Few, quick calls, since this runs while others load seat maps;
+    // a late payment is still caught by settle_booking().
     $runOut = db_all(
         "SELECT id, reference, paymongo_checkout_id, " . implode(', ', BOOKING_INTENT_COLUMNS) . " FROM bookings
          WHERE status = 'pending' AND expires_at < NOW()
@@ -103,10 +83,7 @@ function release_expired_holds(): void
     );
 }
 
-/**
- * The seats already taken (paid, or held by someone paying right now) for
- * one showing.
- */
+/** Seats taken (paid or being paid for) for one showing. */
 function taken_seats(int $movieId, string $date, string $time): array
 {
     release_expired_holds();
@@ -124,8 +101,8 @@ function showing_has_started(string $date, string $time): bool
 }
 
 /**
- * Makes sure a film can be booked for this date and time. Throws a
- * BookingException saying what is wrong if not.
+ * Throws BookingException if the film cannot be booked for this date and
+ * time.
  */
 function validate_showing(array $movie, string $date, string $time): void
 {
@@ -145,9 +122,7 @@ function validate_showing(array $movie, string $date, string $time): void
     }
 }
 
-/**
- * A reference number no other booking has: 'CMX-' and six characters.
- */
+/** A new, unused reference: 'CMX-' and six characters. */
 function generate_reference(): string
 {
     $last = strlen(REFERENCE_ALPHABET) - 1;
@@ -163,10 +138,7 @@ function generate_reference(): string
     throw new RuntimeException('Could not find a free reference number.');
 }
 
-/**
- * Tidies a typed reference: 'cmx 8f41k2', '8F41K2' and 'CMX-8F41K2' all
- * give 'CMX-8F41K2'. Anything that cannot be a reference gives null.
- */
+/** Tidies a typed reference ('cmx 8f41k2' gives 'CMX-8F41K2'), or null. */
 function normalize_reference(string $text): ?string
 {
     $code = strtoupper((string) preg_replace('/[\s-]+/', '', $text));
@@ -180,15 +152,13 @@ function normalize_reference(string $text): ?string
 }
 
 /**
- * Holds the seats and records the booking as waiting for payment. $seats
- * are seat codes; $snackQuantities maps snack id => how many. Returns the
- * booking. Throws BookingException when anything about it is not allowed.
+ * Holds the seats and saves the booking as waiting for payment. Throws
+ * BookingException if anything is not allowed.
  */
 function create_pending_booking(array $user, array $movie, string $date, string $time, array $seats, array $snackQuantities): array
 {
     validate_showing($movie, $date, $time);
 
-    // Seats: real seat codes, no repeats, between one and ten
     $clean = [];
     foreach ($seats as $seat) {
         if (!is_string($seat) || !is_valid_seat($seat)) {
@@ -204,7 +174,6 @@ function create_pending_booking(array $user, array $movie, string $date, string 
         throw new BookingException('One booking can hold up to ' . MAX_SEATS_PER_BOOKING . ' seats.');
     }
 
-    // Snacks: only ones on sale, whole numbers from zero to the limit
     $snackLines = [];
     $wanted = [];
     foreach ($snackQuantities as $id => $quantity) {
@@ -234,7 +203,6 @@ function create_pending_booking(array $user, array $movie, string $date, string 
 
     $ticketPrice = (int) $movie['price'];
     $total = count($seats) * $ticketPrice + $snacksTotal;
-    // The cinema this show plays in (validate_showing made sure it is listed)
     $cinema = movie_schedule((int) $movie['id'])[$time];
 
     release_expired_holds();
@@ -297,9 +265,7 @@ function create_pending_booking(array $user, array $movie, string $date, string 
     return find_booking_by_id($bookingId);
 }
 
-/**
- * The lines PayMongo shows on its checkout page for a booking.
- */
+/** The lines shown on PayMongo's checkout page. */
 function booking_line_items(array $booking): array
 {
     $items = [[
@@ -317,28 +283,20 @@ function booking_line_items(array $booking): array
     return $items;
 }
 
-/**
- * Seconds until a booking's seats stop being held (0 once they have).
- */
+/** Seconds left on the seat hold (0 when over). */
 function booking_seconds_left(array $booking): int
 {
     $expires = strtotime((string) $booking['expires_at']);
     return $expires === false ? 0 : max(0, $expires - time());
 }
 
-/**
- * Keeps a booking's QR Ph code in the session for pay.php, marked with the
- * keys that made it.
- */
+/** Keeps the booking's QR code in the session, with the keys that made it. */
 function remember_qr(string $reference, string $qr): void
 {
     $_SESSION['qrph'] = [$reference => ['qr' => $qr, 'keys' => paymongo_keys_id()]];
 }
 
-/**
- * The QR Ph code kept for a booking, or null: none kept, or it was made with
- * other keys (switched between test and live since), so it cannot be paid.
- */
+/** The kept QR code, or null if none or made with other keys. */
 function remembered_qr(string $reference): ?string
 {
     $kept = $_SESSION['qrph'][$reference] ?? null;
@@ -348,29 +306,19 @@ function remembered_qr(string $reference): ?string
     return $kept['qr'];
 }
 
-/**
- * Notes which keys the payment page now on screen (pay.php, card.php) was
- * made with.
- */
+/** Notes the keys the payment page on screen was made with. */
 function remember_payment_keys(): void
 {
     $_SESSION['payment_keys'] = paymongo_keys_id();
 }
 
-/**
- * True when the keys were switched (test and live) after the payment page on
- * screen was made: its QR code or card form works with the old keys only, so
- * the page must be made again.
- */
+/** True if the keys changed (test/live) since the payment page was made. */
 function payment_keys_changed(): bool
 {
     return isset($_SESSION['payment_keys']) && $_SESSION['payment_keys'] !== paymongo_keys_id();
 }
 
-/**
- * Records which PayMongo payment (Payment Intent) belongs to a booking:
- * $column is one of BOOKING_INTENT_COLUMNS (its QR Ph code by default).
- */
+/** Saves a booking's PayMongo payment id in $column. */
 function attach_intent(int $bookingId, string $intentId, string $column = 'paymongo_intent_id'): void
 {
     if (!in_array($column, BOOKING_INTENT_COLUMNS, true)) {
@@ -382,9 +330,7 @@ function attach_intent(int $bookingId, string $intentId, string $column = 'paymo
     );
 }
 
-/**
- * True when a booking has a PayMongo payment (QR Ph, card or GCash).
- */
+/** True when a booking has a PayMongo payment. */
 function booking_has_intent(array $booking): bool
 {
     foreach (BOOKING_INTENT_COLUMNS as $column) {
@@ -395,9 +341,7 @@ function booking_has_intent(array $booking): bool
     return false;
 }
 
-/**
- * Records which PayMongo checkout session belongs to a booking.
- */
+/** Saves a booking's PayMongo checkout id. */
 function attach_checkout(int $bookingId, string $checkoutId): void
 {
     db_exec(
@@ -429,7 +373,6 @@ function find_booking_by_checkout(string $checkoutId): ?array
 
 function find_booking_by_intent(string $intentId): ?array
 {
-    // Its QR Ph, card or GCash payment
     $where = implode(' OR ', array_map(static function (string $column): string {
         return 'b.' . $column . ' = ?';
     }, BOOKING_INTENT_COLUMNS));
@@ -437,12 +380,8 @@ function find_booking_by_intent(string $intentId): ?array
 }
 
 /**
- * The paid payment on a booking's QR Ph payment or checkout page, as
- * ['id' => 'pay_...', 'amount' => pesos], or null when nothing is paid yet
- * (or the booking never reached PayMongo). A booking can have several: its
- * QR Ph code, a card payment (card.php) and a GCash payment (pay-other.php),
- * all chosen on pay.php. One made with the other keys (test or live) cannot
- * be seen with these, so it is passed over.
+ * The booking's paid payment ['id', 'amount' in pesos], or null. Payments
+ * made with the other keys (test/live) are skipped.
  */
 function booking_paid_payment(array $booking, int $timeoutSeconds = 30): ?array
 {
@@ -466,24 +405,17 @@ function booking_paid_payment(array $booking, int $timeoutSeconds = 30): ?array
             return paymongo_paid_payment(paymongo_get_checkout($checkoutId, $timeoutSeconds));
         }
     } catch (PayMongoNotFoundException $e) {
-        // The checkout page was made with the other keys
     }
     return null;
 }
 
-/**
- * A booking by reference, only if it belongs to this user. Anyone else's
- * booking comes back as null, exactly as if it did not exist.
- */
+/** A booking by reference, only if it is this user's. */
 function find_user_booking(int $userId, string $reference): ?array
 {
     return db_one(BOOKING_SELECT . ' WHERE b.reference = ? AND b.user_id = ?', [$reference, $userId]);
 }
 
-/**
- * Where "back to the movie" goes from a booking: the film's page while it
- * is still listed, else the home page.
- */
+/** Where 'back to the movie' goes: the film's page, or home if it is gone. */
 function booking_film_path(array $booking): string
 {
     return find_movie_by_slug((string) $booking['slug']) !== null
@@ -491,9 +423,7 @@ function booking_film_path(array $booking): string
         : 'index.php';
 }
 
-/**
- * The snacks on a booking: name, quantity, unit_price.
- */
+/** The snacks on a booking: name, quantity, unit_price. */
 function booking_snacks(int $bookingId): array
 {
     return db_all(
@@ -504,9 +434,7 @@ function booking_snacks(int $bookingId): array
     );
 }
 
-/**
- * 'Popcorn, Large ×2, Soda, Large' — the snacks as one line.
- */
+/** The snacks as one line. */
 function snack_summary(array $lines): string
 {
     $parts = [];
@@ -516,20 +444,15 @@ function snack_summary(array $lines): string
     return implode(', ', $parts);
 }
 
-/**
- * A snack order number as the ticket and the claim monitor show it: 1 is
- * '0001'. The ticket and the Dashboard put '#' in front.
- */
+/** A snack order number as shown: 1 is '0001'. */
 function snack_number_label(int $number): string
 {
     return str_pad((string) $number, 4, '0', STR_PAD_LEFT);
 }
 
 /**
- * The lowest snack order number not held by an order still waiting to be
- * picked up: with 1 and 3 held, it is 2. Picked-up and refunded orders give
- * their numbers back. Called by mark_booking_paid() while it holds the
- * numbers lock, so two payments never get the same one.
+ * The lowest snack order number not in use. Called inside
+ * mark_booking_paid()'s lock.
  */
 function next_snack_number(): int
 {
@@ -549,19 +472,12 @@ function next_snack_number(): int
 }
 
 /**
- * Marks a booking paid once PayMongo says it is. Safe to call twice (the
- * return page and the webhook may both do it). Returns:
- *   'paid'      it is now paid
- *   'already'   it was already paid, or already refunded
- *   'seats_lost' paid too late: the hold ran out and the seats went to
- *               someone else, so it must be refunded
- *   'mismatch'  the amount paid is not the booking's total
+ * Marks a booking paid. Safe to call twice. Returns 'paid', 'already',
+ * 'seats_lost' (paid too late, refund it) or 'mismatch' (wrong amount).
  */
 function mark_booking_paid(int $bookingId, string $paymentId, int $amountPaid): string
 {
-    // Snack order numbers are handed out one payment at a time, and the lock
-    // is only let go once the payment is saved, so two customers paying at
-    // the same moment cannot both get the same free number
+    // A lock so two payments at once cannot get the same snack number
     if ((int) db_value("SELECT GET_LOCK('cinemax_snack_numbers', 10)") !== 1) {
         error_log('[payment] snack numbers lock was busy for booking ' . $bookingId);
     }
@@ -572,9 +488,6 @@ function mark_booking_paid(int $bookingId, string $paymentId, int $amountPaid): 
     }
 }
 
-/**
- * mark_booking_paid()'s work, in one transaction.
- */
 function mark_booking_paid_now(int $bookingId, string $paymentId, int $amountPaid): string
 {
     return (string) db_transaction(function () use ($bookingId, $paymentId, $amountPaid): string {
@@ -591,8 +504,7 @@ function mark_booking_paid_now(int $bookingId, string $paymentId, int $amountPai
         }
 
         if ($booking['status'] !== 'pending') {
-            // The hold ran out (or was cancelled) before the money arrived.
-            // Take the seats back if nobody else has them.
+            // Paid after the hold ran out: take the seats back if still free
             db_exec('DELETE FROM booking_seats WHERE booking_id = ?', [$bookingId]);
             try {
                 foreach (explode(', ', (string) $booking['seat_list']) as $seat) {
@@ -609,7 +521,6 @@ function mark_booking_paid_now(int $bookingId, string $paymentId, int $amountPai
             }
         }
 
-        // An order with snacks gets its number for the counter now
         $hasSnacks = (int) $booking['snacks_total'] > 0;
         db_exec(
             "UPDATE bookings
@@ -623,9 +534,8 @@ function mark_booking_paid_now(int $bookingId, string $paymentId, int $amountPai
 }
 
 /**
- * Asks PayMongo whether a booking was paid (on its QR Ph code or checkout
- * page), and records it. Returns 'paid', 'unpaid', 'refunded' (paid too late
- * and sent back) or 'review' (the amount did not match; staff need to look).
+ * Asks PayMongo if a booking was paid and records it. Returns 'paid',
+ * 'unpaid', 'refunded' or 'review'.
  */
 function settle_booking(array $booking): string
 {
@@ -658,10 +568,7 @@ function settle_booking(array $booking): string
 }
 
 /**
- * Cancels a booking that has not been paid, frees its seats and closes its
- * PayMongo checkout so it can no longer be paid. (A QR Ph code cannot be
- * closed early: it runs out with the hold, and a payment made on it in the
- * meantime is caught by settle_booking(), like any late payment.)
+ * Cancels an unpaid booking, frees its seats and closes its checkout page.
  */
 function cancel_pending_booking(array $booking): void
 {
@@ -674,75 +581,15 @@ function cancel_pending_booking(array $booking): void
     }
 }
 
-/**
- * Sends a customer's money back through PayMongo and frees the seats. Only
- * for paid tickets that have not been used at the door. Throws
- * BookingException with the reason when it is not allowed.
- */
-function refund_booking(int $bookingId, int $staffId): array
-{
-    return db_transaction(function () use ($bookingId, $staffId): array {
-        // Locked, so two refunds clicked at once cannot both go through
-        $booking = db_one('SELECT * FROM bookings WHERE id = ? FOR UPDATE', [$bookingId]);
-        if ($booking === null) {
-            throw new BookingException('That booking does not exist.');
-        }
-        if ($booking['status'] === 'refunded') {
-            throw new BookingException('This booking was already refunded.');
-        }
-        if ($booking['status'] !== 'paid') {
-            throw new BookingException('Only paid bookings can be refunded.');
-        }
-        if ($booking['scanned_at'] !== null) {
-            throw new BookingException('This ticket was already used at the door, so it cannot be refunded.');
-        }
-        if (in_array($booking['snack_status'], ['preparing', 'ready', 'sold'], true)) {
-            throw new BookingException('The snacks on this booking were already confirmed at the snack counter, so it cannot be refunded.');
-        }
-        if (empty($booking['paymongo_payment_id'])) {
-            throw new BookingException('This booking has no PayMongo payment to refund.');
-        }
-
-        try {
-            $refundId = paymongo_refund(
-                (string) $booking['paymongo_payment_id'],
-                (int) $booking['total'],
-                'requested_by_customer',
-                'Cinemax refund ' . $booking['reference']
-            );
-        } catch (PayMongoException $e) {
-            error_log('[refund] ' . $booking['reference'] . ': ' . $e->getMessage());
-            throw new BookingException('PayMongo could not make the refund. Nothing was changed. Please try again later.');
-        }
-
-        db_exec(
-            "UPDATE bookings SET status = 'refunded', refunded_at = NOW(), refunded_by = ?,
-                    paymongo_refund_id = ?, snack_status = NULL
-             WHERE id = ?",
-            [$staffId, $refundId, $bookingId]
-        );
-        db_exec('DELETE FROM booking_seats WHERE booking_id = ?', [$bookingId]);
-        return find_booking_by_id($bookingId);
-    });
-}
-
-/**
- * What a ticket's QR code holds: the reference and a secret token only the
- * real ticket has, so a QR code cannot be made up from a reference alone.
- */
+/** A ticket's QR code: the reference plus a secret token. */
 function ticket_qr_payload(array $booking): string
 {
     return 'CINEMAX|' . $booking['reference'] . '|' . $booking['qr_token'];
 }
 
 /**
- * Checks a scanned QR code. Returns ['status' => ..., 'booking' => ...]:
- *   valid     a paid ticket for today, not used yet
- *   used      already scanned in
- *   refunded  the money was sent back; not a ticket any more
- *   wrong_day paid, but for another day
- *   invalid   not a Cinemax ticket, or not a paid one
- * 'booking' is only filled in when the code is genuine.
+ * Checks a scanned ticket. status: valid, used, refunded, wrong_day or
+ * invalid.
  */
 function check_ticket(string $payload): array
 {
@@ -767,11 +614,7 @@ function check_ticket(string $payload): array
     return ['status' => 'valid', 'booking' => $booking];
 }
 
-/**
- * The booking a QR code belongs to, or null unless the code is a genuine
- * Cinemax ticket: the right shape, a real reference, and the secret token
- * that only that ticket carries.
- */
+/** The booking for a genuine Cinemax QR code, or null. */
 function find_booking_by_qr(string $payload): ?array
 {
     if (!preg_match('/^CINEMAX\|(CMX-[' . REFERENCE_ALPHABET . ']{6})\|([a-f0-9]{32})$/', trim($payload), $m)) {
@@ -785,16 +628,8 @@ function find_booking_by_qr(string $payload): ?array
 }
 
 /**
- * Checks a ticket's QR code at the snack counter. Returns ['status' => ...,
- * 'booking' => ..., 'items' => the snack lines]:
- *   waiting     paid snacks, not yet handed to the kitchen (on any day,
- *               not only the day of the showing)
- *   in_progress already confirmed: being prepared, or ready at the counter
- *   collected   already picked up
- *   no_snacks   a good ticket with no snacks on it
- *   refunded    the money was sent back
- *   invalid     not a Cinemax ticket, or not a paid one
- * 'booking' and 'items' are only filled in when the code is genuine.
+ * Checks a ticket at the snack counter. status: waiting, in_progress,
+ * collected, no_snacks, refunded or invalid.
  */
 function check_snack_order(string $payload): array
 {
@@ -819,10 +654,7 @@ function check_snack_order(string $payload): array
 }
 
 /**
- * Sends a scanned snack order to the kitchen: 'ordered' becomes 'preparing',
- * it appears under Preparing on the dashboard, and the time it was scanned
- * is kept. Only once, for a paid booking, so two counters scanning the same
- * ticket at the same moment cannot both confirm it.
+ * Sends a snack order to the kitchen ('ordered' to 'preparing'), only once.
  */
 function confirm_snack_order(int $bookingId): bool
 {
@@ -833,10 +665,7 @@ function confirm_snack_order(int $bookingId): bool
     ) === 1;
 }
 
-/**
- * Lets a ticket in. Returns false if it was already used (or is not paid),
- * so scanning the same ticket twice at once admits it only once.
- */
+/** Lets a ticket in. False if already used or not paid. */
 function admit_ticket(int $bookingId, int $staffId): bool
 {
     return db_exec(
@@ -847,9 +676,8 @@ function admit_ticket(int $bookingId, int $staffId): bool
 }
 
 /**
- * Checks with PayMongo on a customer's recent unpaid bookings, in case they
- * paid but never came back to the site (closed the tab, lost signal). Their
- * ticket then appears as soon as they open My Bookings. At most five checks.
+ * Checks a customer's recent unpaid bookings with PayMongo (max five), in
+ * case they paid but never came back.
  */
 function settle_recent_bookings(int $userId): void
 {
@@ -875,8 +703,8 @@ function settle_recent_bookings(int $userId): void
 }
 
 /**
- * A customer's bookings, newest showing first. Unpaid ones that ran out
- * or were cancelled are left out.
+ * A customer's bookings, newest first. Expired and cancelled ones are left
+ * out.
  */
 function user_bookings(int $userId): array
 {
@@ -890,9 +718,7 @@ function user_bookings(int $userId): array
     );
 }
 
-/**
- * The dashboard's money numbers, from paid bookings only.
- */
+/** The dashboard's money numbers, from paid bookings only. */
 function dashboard_stats(): array
 {
     $row = db_one(
@@ -906,8 +732,7 @@ function dashboard_stats(): array
          FROM booking_snacks bs JOIN bookings b ON b.id = bs.booking_id
          WHERE b.status = 'paid'"
     );
-    // Refunded money is not revenue: it is left out of every figure above,
-    // and counted here so the dashboard can say how much went back.
+    // Refunds are not revenue: shown on their own
     $refunds = db_one(
         "SELECT COUNT(*) AS refund_count, COALESCE(SUM(total), 0) AS refunded_total
          FROM bookings WHERE status = 'refunded'"
@@ -923,13 +748,7 @@ function dashboard_stats(): array
     ];
 }
 
-/**
- * The snack counter's queue: ['preparing' => [...], 'ready' => [...],
- * 'sold' => [...]]. Each order has id, reference, snack_number (or null),
- * customer_name, items (one line), item_count and snacks_total. Preparing
- * and Ready go by showtime; 'sold' holds the 20 picked up last, newest
- * first, like the search above it.
- */
+/** The snack counter's queue: preparing, ready, and the last 20 sold. */
 function snack_queue(): array
 {
     $queue = ['preparing' => [], 'ready' => [], 'sold' => []];
@@ -958,13 +777,7 @@ function snack_queue(): array
     return $queue;
 }
 
-/**
- * What the Snacks Claim monitor shows: the order numbers ('0002', no '#')
- * being prepared and ready to pick up, as ['preparing' => [...], 'ready' =>
- * [...]], lowest first. Only the numbers: the screen faces the customers,
- * so no names or orders are on it. An order paid before numbers were given
- * out shows its reference instead.
- */
+/** Order numbers for the claim monitor (no names: it faces customers). */
 function claim_monitor_orders(): array
 {
     $lists = ['preparing' => [], 'ready' => []];
@@ -982,10 +795,7 @@ function claim_monitor_orders(): array
 }
 
 /**
- * A short fingerprint of everything the dashboard shows. It changes the
- * moment anything on the dashboard would: a payment, a refund, an order
- * confirmed at the snack counter or moved on. The dashboard asks for it
- * every few seconds and only reloads its figures when it has changed.
+ * A fingerprint of the dashboard's data; it reloads only when this changes.
  */
 function dashboard_version(array $stats, array $queue): string
 {
@@ -998,11 +808,7 @@ function dashboard_version(array $stats, array $queue): string
     return substr(hash('sha256', json_encode([$stats, $orders])), 0, 16);
 }
 
-/**
- * Moves a snack order one step on: preparing to ready, or ready to sold
- * (picked up, and the time kept). Only from the step it is really at, so a
- * double click or a stale page cannot skip a step.
- */
+/** Moves a snack order one step: preparing to ready, or ready to sold. */
 function advance_snack_order(int $bookingId, string $from): bool
 {
     if ($from === 'preparing') {
@@ -1015,18 +821,9 @@ function advance_snack_order(int $bookingId, string $from): bool
     return db_exec($sql, [$bookingId]) === 1;
 }
 
-/**
- * The Dashboard's search above Sold. $typed is part or all of a reference
- * number ('8F4', 'cmx-8f41k2'...). Returns ['orders' => up to 10 picked-up
- * snack orders whose reference holds it, newest first, each with
- * reference, snack_number, customer_name, items, item_count, snacks_total,
- * snack_scanned_at and snack_sold_at; 'other' => for a whole reference that
- * is not picked up: ['reference' => ..., 'stage' => ordered / preparing /
- * ready / none / refunded / unpaid], else null].
- */
+/** The Dashboard's search of picked-up snack orders by reference. */
 function search_sold_snacks(string $typed): array
 {
-    // Only the letters and digits after "CMX", so the search is a plain one
     $code = strtoupper((string) preg_replace('/[^A-Za-z0-9]/', '', $typed));
     if (strpos($code, 'CMX') === 0) {
         $code = substr($code, 3);
@@ -1052,7 +849,7 @@ function search_sold_snacks(string $typed): array
     }
     unset($order);
 
-    // A whole reference with no picked-up order: say where that booking is
+    // A full reference with no picked-up order: say where it is
     $other = null;
     if ($orders === [] && strlen($code) === 6) {
         $booking = find_booking('CMX-' . $code);

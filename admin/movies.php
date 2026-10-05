@@ -1,9 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// Staff Movies page: every film on the listings, its last day, how many
-// tickets each has sold, an Extend button that moves the last day later,
-// and a Remove button that takes a film off the website.
+// Staff Movies page: films, opening day, tickets sold, and Remove. Films have
+// no last day: one stays until removed here.
 
 require __DIR__ . '/../includes/bootstrap.php';
 
@@ -12,22 +11,13 @@ $user = require_role('admin');
 if (is_post()) {
     verify_csrf();
 
-    // The id is only a pointer: extend_movie() and remove_movie() check the
-    // film is still listed
+    // remove_movie() checks the film is still listed
     $movieId = input_int($_POST, 'movie_id', 1);
     $movie = $movieId !== null ? find_movie($movieId) : null;
     $action = input_string($_POST, 'action', 10);
 
-    if ($movie !== null && $action === 'extend') {
-        // A longer run: the same showtimes, on more days. A day that is not
-        // allowed (see extend_movie()) changes nothing.
-        $newLast = input_date($_POST, 'ends_on');
-        if ($newLast !== null) {
-            extend_movie((int) $movie['id'], $newLast);
-        }
-    } elseif ($movie !== null && $action === 'remove') {
-        // Taking a film off. Its bookings stay valid; it just cannot be
-        // booked any more.
+    if ($movie !== null && $action === 'remove') {
+        // Tickets already sold stay valid
         remove_movie((int) $movie['id']);
     }
     redirect('admin/movies.php');
@@ -35,7 +25,7 @@ if (is_post()) {
 
 $movies = active_movies();
 
-// The label in the Status column for each place a film can be in
+// Status labels
 $labels = [
     'showing' => ['class' => 'pill-green', 'text' => 'Now Showing'],
     'soon'    => ['class' => 'pill-indigo', 'text' => 'Upcoming'],
@@ -77,7 +67,7 @@ render_header(['staff' => true, 'current' => 'movies']);
             <tr>
               <th>Movie</th>
               <th class="hide-small">Status</th>
-              <th class="hide-small">Last day</th>
+              <th class="hide-small">Opening day</th>
               <th class="right hide-small">Price</th>
               <th class="right">Sold</th>
               <th></th>
@@ -85,19 +75,10 @@ render_header(['staff' => true, 'current' => 'movies']);
           </thead>
 
           <tbody>
-<?php foreach ($movies as $index => $movie): ?>
-<?php
-    $label = $labels[movie_listing_state($movie)] ?? $labels['ended'];
-    $isLast = $index === array_key_last($movies);
-    // Only a run with a last day can be extended
-    $lastDay = $movie['ends_on'] !== null ? (string) $movie['ends_on'] : null;
-    $extendFrom = $lastDay !== null ? movie_extend_from($movie) : null;
-    $limit = $lastDay !== null ? movie_extend_limit($movie) : null;
-    $canExtend = $lastDay !== null && ($limit === null || $limit['last'] >= $extendFrom);
-    $panelId = 'extend-' . (int) $movie['id'];
-?>
+<?php foreach ($movies as $movie): ?>
+<?php $label = $labels[movie_listing_state($movie)] ?? $labels['ended']; ?>
 
-            <tr class="movie-row<?= $isLast ? ' last-movie' : '' ?>">
+            <tr class="movie-row">
               <td>
                 <span class="cell-with-poster">
                   <img class="table-poster" src="<?= e(poster_url($movie)) ?>"
@@ -111,15 +92,13 @@ render_header(['staff' => true, 'current' => 'movies']);
               </td>
 
               <td class="hide-small"><span class="pill <?= e($label['class']) ?>"><?= e($label['text']) ?></span></td>
-              <td class="hide-small last-day-cell"><?= e($lastDay !== null ? format_date_short($lastDay) : 'No last day') ?></td>
+              <!-- Starting films have no opening day: they were showing from
+                   the start -->
+              <td class="hide-small opening-day-cell"><?= e($movie['opens_on'] !== null ? format_date_short((string) $movie['opens_on']) : '—') ?></td>
               <td class="right hide-small"><?= e(peso((int) $movie['price'])) ?></td>
               <td class="right sold-cell"><?= e(number_format(movie_tickets_sold((int) $movie['id']))) ?></td>
               <td class="right">
                 <span class="row-actions">
-<?php if ($lastDay !== null): ?>
-                  <button class="button button-outline button-small extend-toggle" type="button"
-                          aria-controls="<?= e($panelId) ?>" aria-expanded="false">Extend</button>
-<?php endif; ?>
                   <form method="post" action="<?= e(url('admin/movies.php')) ?>" class="inline-form remove-form"
                         data-title="<?= e($movie['title']) ?>">
                     <?= csrf_field() ?>
@@ -131,43 +110,6 @@ render_header(['staff' => true, 'current' => 'movies']);
                 </span>
               </td>
             </tr>
-<?php if ($lastDay !== null): ?>
-
-            <!-- Extend: opened by the row's Extend button (admin-movies.js) -->
-            <tr class="extend-row" id="<?= e($panelId) ?>" hidden>
-              <td colspan="6">
-                <form method="post" action="<?= e(url('admin/movies.php')) ?>" class="extend-form">
-                  <?= csrf_field() ?>
-
-                  <input type="hidden" name="action" value="extend">
-                  <input type="hidden" name="movie_id" value="<?= e($movie['id']) ?>">
-                  <input type="hidden" name="ends_on" value="" class="extend-value">
-
-                  <p class="extend-now">
-                    Last day now: <strong><?= e(format_day($lastDay)) ?></strong>
-                  </p>
-<?php if ($canExtend): ?>
-                  <div class="extend-controls">
-                    <!-- The calendar opens under this box; days outside
-                         data-min..data-max cannot be picked -->
-                    <div class="date-field extend-date-field"
-                         data-min="<?= e((string) $extendFrom) ?>" data-max="<?= e($limit['last'] ?? '') ?>">
-                      <button class="date-button extend-date-button" type="button" aria-haspopup="true" aria-expanded="false">
-                        <span class="extend-date-text">Choose the new last day</span>
-                        <span class="date-arrow">&#9662;</span>
-                      </button>
-                    </div>
-                    <button class="button button-red extend-save" type="submit" disabled>Save</button>
-                    <button class="button button-outline button-small extend-cancel" type="button">Cancel</button>
-                  </div>
-<?php endif; ?>
-<?php if ($limit !== null): ?>
-                  <p class="extend-note"><?= e(movie_extend_limit_text($movie, $limit)) ?></p>
-<?php endif; ?>
-                </form>
-              </td>
-            </tr>
-<?php endif; ?>
 <?php endforeach; ?>
 
           </tbody>
@@ -179,4 +121,4 @@ render_header(['staff' => true, 'current' => 'movies']);
     </main>
 
   </div>
-<?php render_footer(['js' => ['assets/js/dates.js', 'assets/js/admin-movies.js']]);
+<?php render_footer(['js' => ['assets/js/admin-movies.js']]);

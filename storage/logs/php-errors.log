@@ -1,0 +1,7 @@
+[05-Oct-2026 15:09:00 Asia/Manila] [refund] CMX-C8XZWA: PayMongo refused the request (HTTP 400): livemode_mismatched: Payment with id pay_HAeVuBjB7c2rnyiizLqYCWTe passed should also be in testmode.
+[05-Oct-2026 15:09:03 Asia/Manila] [refund] CMX-C8XZWA: PayMongo refused the request (HTTP 400): livemode_mismatched: Payment with id pay_HAeVuBjB7c2rnyiizLqYCWTe passed should also be in testmode.
+[05-Oct-2026 15:48:34 Asia/Manila] [2026-10-05T15:48:34+08:00] TypeError: booking_seconds_left(): Argument #1 ($booking) must be of type array, null given, called in C:\xampp\htdocs\cinemax\api\payment-status.php on line 66 in C:\xampp\htdocs\cinemax\includes\bookings.php:323
+#0 C:\xampp\htdocs\cinemax\api\payment-status.php(66): booking_seconds_left()
+#1 {main}
+[05-Oct-2026 21:49:27 Asia/Manila] [hold] could not check CMX-M2L46Z: Could not reach PayMongo: Resolving timed out after 5002 milliseconds
+[05-Oct-2026 21:50:32 Asia/Manila] [payment-status] CMX-PZCRRP: Could not reach PayMongo: Resolving timed out after 10009 milliseconds

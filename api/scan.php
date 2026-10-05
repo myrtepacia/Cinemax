@@ -1,25 +1,16 @@
 <?php
 declare(strict_types=1);
 
-// The door scanner's questions, asked by assets/js/scanner.js:
-//
-//   POST {"action": "check", "code": "<what the QR code says>"}
-//     Is this a good ticket? Changes nothing.
-//   POST {"action": "admit", "code": "..."}
-//     Let it in. Only a ticket that checks out as valid right now is
-//     admitted, and admit_ticket() only lets a ticket in once, so two
-//     scanners reading the same ticket at once cannot both admit it.
-//
-// Staff only, CSRF-checked, and rate-limited per address. The reply never
-// carries the QR secret or any internal id, only what the door needs to see.
+// Door scanner (scanner.js). POST {"action": "check", "code": ...} looks at a
+// ticket; {"action": "admit", ...} lets a valid ticket in, once only. Staff
+// only, CSRF-checked, rate-limited. Never returns the QR secret or ids.
 
 require __DIR__ . '/../includes/bootstrap.php';
 
 [$user, $action, $code] = read_scan_request('scan', ['check', 'admit']);
 
 /**
- * The reply for one ticket: its status and, for a genuine ticket, the few
- * details staff check against the customer. Never the QR token or ids.
+ * A ticket's status and the details staff check. Never the QR token or ids.
  */
 function scan_reply(string $status, ?array $booking): array
 {
@@ -42,8 +33,7 @@ function scan_reply(string $status, ?array $booking): array
 $result = check_ticket($code);
 
 if ($action === 'check' || $result['status'] !== 'valid') {
-    // A check, or an admit for a ticket that is not good (any more):
-    // say what it is and change nothing
+    // Just a check, or the ticket is not valid: say what it is
     json_response(scan_reply($result['status'], $result['booking']));
 }
 
@@ -52,8 +42,7 @@ if (admit_ticket($bookingId, (int) $user['id'])) {
     json_response(scan_reply('admitted', find_booking_by_id($bookingId)));
 }
 
-// Someone else let it in a moment ago (or it changed under us): say what
-// it is now
+// Someone else just let it in: say what it is now
 $again = check_ticket($code);
 if ($again['status'] === 'valid') {
     json_response(['ok' => false, 'error' => 'This ticket could not be let in. Scan it again.'], 409);

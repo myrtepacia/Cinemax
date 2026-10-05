@@ -1,23 +1,18 @@
 <?php
 declare(strict_types=1);
 
-// PayMongo's servers call this when a booking is paid, so a customer who
-// closes the tab before coming back to the site still gets their ticket.
-// Register it in PayMongo for two events: checkout_session.payment.paid
-// (PayMongo's checkout page) and payment.paid (a QR Ph code from pay.php, a
-// card from card.php, or GCash from pay-other.php).
-//
-// Only calls signed with the webhook secret are accepted, each event is
-// handled once however often it is delivered, and even a genuine event is
-// not taken at its word: settle_booking() asks PayMongo about the payment
-// directly before marking anything paid.
+// PayMongo calls this when a booking is paid, so a customer who closed the
+// tab still gets their ticket. Register the events
+// checkout_session.payment.paid and payment.paid. Only signed calls are
+// accepted, each event is handled once, and the payment is always checked
+// with PayMongo directly.
 
-// A server-to-server call: no browser, so no session or cookies
+// Server-to-server: no session
 define('CINEMAX_NO_SESSION', true);
 
 require __DIR__ . '/includes/bootstrap.php';
 
-// PayMongo's events are a few kilobytes; anything near this is not one
+// Real events are a few kilobytes
 const WEBHOOK_MAX_BYTES = 1048576;
 
 ignore_user_abort(true);
@@ -48,21 +43,19 @@ if (!is_string($eventId) || !preg_match('/^[A-Za-z0-9_]{1,64}$/', $eventId)
     json_response(['ok' => false], 400);
 }
 
-// Written down first, so a second delivery of the same event stops here
+// Saved first, so a repeat delivery stops here
 try {
     db_exec('INSERT INTO webhook_events (event_id, event_type) VALUES (?, ?)', [$eventId, $eventType]);
 } catch (PDOException $e) {
     if (is_duplicate_key($e)) {
         json_response(['ok' => true, 'duplicate' => true]);
     }
-    // Nothing was recorded, so PayMongo's retry will be handled normally
+    // Nothing saved, so PayMongo's retry is handled normally
     error_log(sprintf('[webhook] could not record %s: %s', $eventId, $e->getMessage()));
     json_response(['ok' => false], 500);
 }
 
-/**
- * Forgets an event, so PayMongo's next try at delivering it is handled.
- */
+/** Forgets an event, so PayMongo's retry is handled. */
 function webhook_forget(string $eventId): void
 {
     try {
@@ -73,8 +66,6 @@ function webhook_forget(string $eventId): void
 }
 
 try {
-    // A checkout page was paid, or a payment came in (a QR Ph code scanned, a
-    // card or GCash: the payment names its Payment Intent)
     $resource = $event['data']['attributes']['data'] ?? [];
     $booking = null;
     if ($eventType === 'checkout_session.payment.paid') {
@@ -92,15 +83,14 @@ try {
     }
 
     if ($booking === null) {
-        // Not one of ours (another site on the same PayMongo account)
+        // Not ours (another site on the same PayMongo account)
         json_response(['ok' => true, 'ignored' => true]);
     }
 
     $result = settle_booking($booking);
     if ($result === 'unpaid') {
-        // PayMongo says paid in the event but not yet on the checkout or
-        // Payment Intent itself.
-        // Answer with an error so PayMongo sends it again a little later.
+        // Not paid yet on PayMongo's side: answer with an error so it retries
+        // later
         webhook_forget($eventId);
         json_response(['ok' => false], 503);
     }

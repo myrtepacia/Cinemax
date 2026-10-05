@@ -1,19 +1,14 @@
 <?php
 declare(strict_types=1);
 
-// Creates the Cinemax database, its own limited MySQL user, the tables and
-// the starting data (films, snacks, the admin and scanner accounts).
-//
-// Run it from a terminal, with XAMPP's MySQL started:
+// Makes the database, its limited MySQL user, the tables and starting data.
+// Terminal only, with XAMPP's MySQL running:
 //
 //   C:\xampp\php\php.exe C:\xampp\htdocs\cinemax\database\setup.php
 //
-// Options:
-//   --fresh              drop an existing cinemax database first (deletes all bookings!)
-//   --root-user=NAME     MySQL admin account to set things up with (default: root)
-//   --root-pass=SECRET   its password (default: none, as XAMPP ships)
-//
-// It never runs from a browser.
+//   --fresh              drop the old database first (deletes all bookings!)
+//   --root-user=NAME     MySQL admin account (default: root)
+//   --root-pass=SECRET   its password (default: none)
 
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
@@ -65,8 +60,8 @@ if ($exists) {
 echo "Creating the '$dbName' database...\n";
 $pdo->exec("CREATE DATABASE `$dbName` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 
-// The site's own account: it can read and change rows in this one database
-// and nothing else. It cannot drop tables, make users or see other databases.
+// The site's own account: reads and changes rows in this database only. It
+// cannot drop tables, make users or see other databases.
 echo "Creating the '$appUser' database user...\n";
 foreach (['localhost', '127.0.0.1'] as $host) {
     $account = $pdo->quote($appUser) . '@' . $pdo->quote($host);
@@ -81,7 +76,7 @@ $pdo->exec("USE `$dbName`");
 foreach (['schema.sql', 'seed.sql'] as $file) {
     echo "Loading $file...\n";
     $sql = (string) file_get_contents(__DIR__ . '/' . $file);
-    // Drop comment lines, then run one statement at a time
+    // Skip comment lines, then run one statement at a time
     $sql = (string) preg_replace('/^\s*--.*$/m', '', $sql);
     foreach (preg_split('/;\s*(\r?\n|$)/', $sql) as $statement) {
         if (trim($statement) !== '') {

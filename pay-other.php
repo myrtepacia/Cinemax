@@ -1,16 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// "Choose another payment" on pay.php: instead of scanning the QR Ph code,
-// the customer pays another way listed in the config. A card goes to
-// Cinemax's own card page (card.php). GCash (or another e-wallet) goes
-// straight to the wallet's own page to authorize the payment, with no
-// PayMongo checkout page in between; the wallet then sends the customer back
-// to pay.php (wallet=gcash), which says how it went. The QR Ph code keeps
-// working until the hold ends.
-//
-// PayMongo is asked first whether the booking was paid after all, so nobody
-// is sent to pay twice.
+// "Choose another payment" on pay.php: card goes to card.php, GCash to the
+// wallet's own page. Checks first that the booking is not already paid.
 
 require __DIR__ . '/includes/bootstrap.php';
 
@@ -31,18 +23,16 @@ if (!array_key_exists($method, $offered)) {
     redirect($payPath);
 }
 
-// With live keys, PayMongo refuses a way to pay it has not turned on
+// With live keys, PayMongo refuses ways it has not turned on
 if (paymongo_is_live() && !in_array($method, paymongo_enabled_methods(), true)) {
     redirect($payPath . '&other=failed');
 }
 
-// A card is paid on Cinemax's own card page
 if ($method === 'card') {
     redirect('card.php?ref=' . rawurlencode($reference));
 }
 
-// Each press asks PayMongo for a new wallet page, like booking does, so it
-// shares that limit
+// Shares the booking limit, since each press asks PayMongo
 if (too_many_attempts('checkout', 'user:' . $user['id'], 20, 3600, 60)) {
     redirect($payPath);
 }
@@ -51,7 +41,7 @@ record_attempt('checkout', 'user:' . $user['id']);
 $returnPath = $payPath . '&wallet=' . rawurlencode($method);
 
 try {
-    // Paid after all (or refunded meanwhile): no second payment
+    // Already paid: no second payment
     $result = settle_booking($booking);
     if ($result === 'paid') {
         $_SESSION['just_paid'] = $reference;
@@ -61,23 +51,20 @@ try {
         redirect('payment-success.php?ref=' . rawurlencode($reference));
     }
 
-    // Only a booking still holding its seats can be paid for (pay.php says
-    // where it stands otherwise)
+    // Only a booking still held can be paid
     $booking = find_booking_by_id((int) $booking['id']);
     if ($booking === null || $booking['status'] !== 'pending' || booking_seconds_left($booking) <= 0) {
         redirect($payPath);
     }
 
-    // The booking's e-wallet payment: made the first time, for every wallet
-    // offered, then used again for each try. One made with the other keys
-    // (switched between test and live since) is made again.
+    // One wallet payment per booking, reused for every try; made again if it
+    // belongs to the other keys
     $intentId = (string) ($booking['paymongo_wallet_intent_id'] ?? '');
     $intent = null;
     if ($intentId !== '') {
         try {
             $intent = paymongo_get_intent($intentId);
         } catch (PayMongoNotFoundException $e) {
-            // Made with the other keys
         }
     }
     if ($intent === null) {
@@ -87,7 +74,7 @@ try {
         $clientKey = $made['client_key'];
     } else {
         if (($intent['attributes']['status'] ?? '') === 'processing') {
-            // Paid in the wallet, and PayMongo is still confirming it
+            // Paid; PayMongo is still confirming
             redirect($returnPath);
         }
         $clientKey = (string) ($intent['attributes']['client_key'] ?? '');
@@ -99,8 +86,7 @@ try {
         'mobile' => (string) ($user['mobile'] ?? ''),
     ], $returnPath));
 } catch (RuntimeException $e) {
-    // PayMongoException mostly (PayMongo refused, or could not be reached),
-    // or a page address that is not PayMongo's own. The QR Ph code still works.
+    // PayMongo refused or could not be reached; the QR code still works
     error_log('[pay-other] ' . $reference . ' (' . $method . '): ' . $e->getMessage());
     redirect($payPath . '&other=failed');
 }

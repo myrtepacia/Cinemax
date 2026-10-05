@@ -1,11 +1,9 @@
 <?php
 declare(strict_types=1);
 
-// The Snacks Claim monitor's lists, asked for every few seconds by
-// assets/js/claim-monitor.js: the reference numbers being prepared and the
-// ones ready to pick up.
-//
-// Admin only. It only reads, and it returns no names, snacks or amounts.
+// Lists for the Snacks Claim monitor (claim-monitor.js): orders being
+// prepared and orders ready to pick up. Admin only, read-only, no names or
+// amounts.
 
 require __DIR__ . '/../includes/bootstrap.php';
 

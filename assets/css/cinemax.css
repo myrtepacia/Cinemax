@@ -1,8 +1,7 @@
 /* 1. FOUNDATIONS -----------------------------------------------------------*/
 
-/* Every colour on the site. Red is the brand; green, amber and indigo only
-   say what state something is in (ready, waiting, upcoming); the rest is
-   grey. The other style sheets use these too. */
+/* Site colours. Red is the brand; green, amber and indigo show state (ready,
+   waiting, upcoming); the rest is grey. */
 :root {
   --white: #ffffff;
   --page: #f9fafb;        /* the page behind the boxes, quiet fills */
@@ -58,8 +57,8 @@ img {
 
 /* 2. BUTTONS AND LABELS ----------------------------------------------------*/
 
-/* Every button has a 1px border (see-through on a red one), so a red and an
-   outlined button side by side are the same height. */
+/* Every button has a 1px border (clear on red), so red and outlined buttons
+   match in height. */
 .button {
   display: inline-block;
   padding: 10px 16px;
@@ -102,7 +101,7 @@ img {
   width: 100%;
 }
 
-/* For a row in a list or table: Ready, Picked Up, Extend, Remove */
+/* Small buttons in rows: Ready, Picked Up, Remove */
 .button-small {
   padding: 6px 12px;
   border-radius: 10px;
@@ -114,10 +113,8 @@ button.button:disabled {
   cursor: not-allowed;
 }
 
-/* A small rounded label saying what state something is in. A colour means
-   the same on every page: green good to go or ready, amber waiting or
-   already used, red refunded (or snacks still being prepared, as on the
-   claim monitor), indigo upcoming, grey finished. */
+/* Status pill. Green ready, amber waiting or used, red refunded or preparing,
+   indigo upcoming, grey finished. */
 .pill {
   display: inline-block;
   padding: 2px 10px;
@@ -183,8 +180,7 @@ button.button:disabled {
   text-decoration: none;
 }
 
-/* logo.png has clear space around the film strip, so the negative margin
-   lines the strip itself up with the edge of the page. */
+/* Negative margin lines the logo's film strip up with the page edge. */
 .logo-mark {
   width: 49px;
   height: 44px;
@@ -219,8 +215,7 @@ button.button:disabled {
   gap: 8px;
 }
 
-/* Sign Out has to be a form (signing out is a POST with a CSRF token), but
-   the form itself takes no room: its button sits in the bar like a link. */
+/* Sign Out is a form (POST with CSRF) but looks like a link. */
 .inline-form {
   display: contents;
 }
@@ -276,23 +271,21 @@ button.button:disabled {
 
 /* 4. MOBILE DRAWER ---------------------------------------------------------*/
 
-/* The bar collapses behind a hamburger below 760px. No script: the toggle is
-   a <label> tied to a hidden checkbox that sits just before .bar-nav, so
-   ".menu-checkbox:checked ~ .bar-nav" opens the panel. */
+/* Below 760px the bar folds into a hamburger. No script: a <label> toggles a
+   hidden checkbox, and .menu-checkbox:checked ~ .bar-nav opens the panel. */
 
 .menu-checkbox {
   display: none;
 }
 
-/* display: contents makes .bar-nav itself vanish from the layout, so the nav
-   and the buttons inside it sit in the bar's own flex row. Below 760px it
-   becomes a real box again and turns into the drawer. */
+/* display: contents lets the nav sit in the bar's row; below 760px it becomes
+   the drawer. */
 .bar-nav {
   display: contents;
 }
 
-/* The staff pages have their links in the sidebar on a wide screen, so their
-   copy of the links in the bar only shows up inside the drawer. */
+/* Staff links are in the sidebar on wide screens, so the bar copy only shows
+   in the drawer. */
 .menu-staff {
   display: none;
 }
@@ -342,7 +335,7 @@ button.button:disabled {
   transform: translateY(6px);
 }
 
-/* Open: the middle bar goes transparent and the outer two cross into an X. */
+/* Open: the middle bar fades and the outer two form an X. */
 .menu-checkbox:checked ~ .menu-toggle span {
   background-color: transparent;
 }
@@ -366,8 +359,7 @@ button.button:disabled {
     display: inline-flex;
   }
 
-  /* .top-bar is position: sticky, so it is already a positioning parent and
-     the drawer drops directly beneath it. */
+  /* The drawer drops right under the sticky .top-bar. */
   .bar-nav {
     position: absolute;
     top: 100%;
@@ -396,7 +388,7 @@ button.button:disabled {
     display: flex;
   }
 
-  /* The words sit in the middle, in line with the buttons below them */
+  /* Text centred, in line with the buttons */
   .bar-nav .menu a {
     padding: 12px 14px;
     font-size: 15px;
@@ -477,9 +469,6 @@ button.button:disabled {
   font-size: 14px;
   font-weight: 700;
 }
-.film-count-soon {
-  color: var(--indigo);
-}
 
 .section-note {
   color: var(--text-soft);
@@ -502,8 +491,7 @@ button.button:disabled {
   overflow: hidden;
 }
 
-/* Every poster shows in the same 3:4 shape. A picture of another shape is
-   cropped to fit: overflow: hidden stops a taller one stretching its card. */
+/* All posters are 3:4; other shapes are cropped. */
 .movie-poster {
   position: relative;
   aspect-ratio: 3 / 4;
@@ -517,11 +505,10 @@ button.button:disabled {
   object-fit: cover;
 }
 
-/* On the poster: the rating top right, the running time bottom left (both
-   in the same dark pill), Showing / Soon bottom right in green / indigo */
+/* Rating top right, running time bottom right, in dark pills (booking poster
+   too) */
 .tag-rated,
-.tag-time,
-.tag-status {
+.tag-time {
   position: absolute;
   padding: 2px 10px;
   border-radius: 999px;
@@ -537,29 +524,14 @@ button.button:disabled {
 }
 
 .tag-time {
-  left: 10px;
-  bottom: 12px;
-}
-
-.tag-status {
   right: 10px;
   bottom: 12px;
 }
 
-.tag-showing {
-  background-color: var(--green);
-}
-
-.tag-soon {
-  background-color: var(--indigo);
-}
-
-/* Small phones: two narrow cards a row, so smaller tags that keep the time
-   and Showing / Soon apart */
+/* Small phones: two cards a row, smaller tags */
 @media (max-width: 400px) {
   .movie-poster .tag-rated,
-  .movie-poster .tag-time,
-  .movie-poster .tag-status {
+  .movie-poster .tag-time {
     padding: 2px 6px;
     font-size: 10px;
   }
@@ -570,11 +542,6 @@ button.button:disabled {
   }
 
   .movie-poster .tag-time {
-    bottom: 8px;
-    left: 6px;
-  }
-
-  .movie-poster .tag-status {
     bottom: 8px;
     right: 6px;
   }
@@ -593,8 +560,7 @@ button.button:disabled {
   margin-bottom: 12px;
 }
 
-/* Once the top bar folds into the burger menu (760px, section 4), the titles
-   sit in the middle of their cards */
+/* With the burger menu (760px), titles are centred */
 @media (max-width: 760px) {
   .movie-title {
     text-align: center;
@@ -619,7 +585,7 @@ button.button:disabled {
 
 /* 7. BOOKING PAGE ----------------------------------------------------------*/
 
-/* The booking page's styles live in booking.css, which only book.php loads. */
+/* Booking page styles are in booking.css. */
 
 /* 8. FORMS -----------------------------------------------------------------*/
 
@@ -680,6 +646,45 @@ button.button:disabled {
 .form-field select:focus {
   outline: none;
   border-color: var(--red);
+}
+
+/* Password box with the show/hide eye (password.js). The browser's own eye is
+   hidden so there are not two. */
+.password-box {
+  position: relative;
+  display: block;
+}
+
+.form-field .password-box input {
+  padding-right: 48px;
+}
+
+.password-box input::-ms-reveal,
+.password-box input::-ms-clear {
+  display: none;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--text-soft);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.password-toggle:hover,
+.password-toggle:focus-visible {
+  color: var(--text);
 }
 
 .agree-line {
@@ -780,7 +785,7 @@ button.button:disabled {
   font-size: 20px;
 }
 
-/* CINEMAX, with the cinema the film plays in on the right */
+/* CINEMAX, with the cinema on the right */
 .ticket-brand-row {
   display: flex;
   align-items: baseline;
@@ -821,7 +826,7 @@ button.button:disabled {
   margin-bottom: 20px;
 }
 
-/* One detail across the whole width, spaced like a pair */
+/* One detail across the full width */
 .ticket-row {
   margin-bottom: 20px;
 }
@@ -959,10 +964,8 @@ button.button:disabled {
   margin-bottom: 20px;
 }
 
-/* The staff pages keep their links in a sidebar down the left. The page title
-   and any stat cards sit in their own row above, so the sidebar starts level
-   with the main box. Below 760px there is no room beside the content, so the
-   links move into the hamburger menu in the top bar instead (section 4). */
+/* Staff pages: links in a left sidebar, title and stat cards in a row above.
+   Below 760px the links move into the hamburger menu. */
 
 .admin-layout {
   display: grid;
@@ -987,18 +990,17 @@ button.button:disabled {
   margin-bottom: 6px;
 }
 
-/* Stat cards straight under the heading (no intro line between) keep the
-   same gap the intro line would have left */
+/* Stat cards right under the heading keep the same gap */
 .admin-head h1 + .stat-row {
   margin-top: 20px;
 }
 
-/* The grid gap already spaces the head from the box below it */
+/* The grid gap spaces the head from the box */
 .admin-head > :last-child {
   margin-bottom: 0;
 }
 
-/* Inside the layout the page no longer centres itself: the grid does that. */
+/* Inside the layout, the grid does the centring */
 .admin-layout .admin-page {
   grid-area: main;
   max-width: none;
@@ -1007,7 +1009,7 @@ button.button:disabled {
   padding: 0;
 }
 
-/* Sticks just under the top bar, which is 64px tall. */
+/* Sticks under the 64px top bar */
 .admin-sidebar {
   grid-area: side;
   position: sticky;
@@ -1068,8 +1070,8 @@ button.button:disabled {
   }
 }
 
-/* Straight after a scanner account signs in on a phone: Ticket Scanner or
-   Snack Scanner. Wider screens never show it and open the Ticket Scanner. */
+/* After a scanner account signs in on a phone: Ticket or Snack Scanner. Wide
+   screens go straight to the Ticket Scanner. */
 .scanner-choice {
   display: none;
 }
@@ -1134,7 +1136,7 @@ button.button:disabled {
   background-color: var(--red);
 }
 
-/* The arrow is two sides of a turned square, so it sits dead centre */
+/* The arrow is two sides of a turned square, so it centres */
 .choice-arrow::before {
   content: "";
   width: 9px;
@@ -1145,7 +1147,7 @@ button.button:disabled {
   transform: rotate(45deg);
 }
 
-/* A panel title with a button on its right, on every screen size */
+/* Panel title with a button on its right */
 .panel-head {
   display: flex;
   align-items: center;
@@ -1217,14 +1219,13 @@ button.button:disabled {
   font-size: 12px;
 }
 
-/* Total Revenue: a white card like the others, its words in red */
+/* Total Revenue: white card, red words */
 .stat-money .stat-name,
 .stat-money .stat-figure {
   color: var(--red);
 }
 
-/* On a phone a tall card per number wastes the screen, so each card becomes
-   one line: the words on the left, the number on the right, both centred. */
+/* Phones: each stat card becomes one line, words left and number right. */
 @media (max-width: 620px) {
   .stat-row {
     gap: 12px;
@@ -1281,8 +1282,7 @@ button.button:disabled {
   font-size: 14px;
 }
 
-/* Every order is the same three columns, so the prices and the buttons line
-   up down the whole queue, even across the three groups. */
+/* Every order has the same three columns, so prices and buttons line up. */
 .order-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 90px 110px;
@@ -1297,16 +1297,15 @@ button.button:disabled {
   grid-area: left;
 }
 
-/* Ready, Picked Up and Sold keep their own size, centred in their column so
-   they sit on one line down the queue, like the prices beside them. */
+/* Ready, Picked Up and Sold keep their size, centred in their column. */
 .order-row .button,
 .order-row .sold-tag {
   grid-area: action;
   justify-self: center;
 }
 
-/* On a phone the button stays at the right edge with its price centred
-   above it, and the order details are centred beside the pair. */
+/* Phones: button at the right with its price above, details centred beside
+   them. */
 @media (max-width: 620px) {
   .order-row {
     grid-template-columns: minmax(0, 1fr) auto;
@@ -1316,9 +1315,8 @@ button.button:disabled {
     column-gap: 12px;
   }
 
-  /* Each price gets the same small box at the right edge, about as wide as
-     a Ready or Sold button, so every price sits on one line down the queue
-     and the wider Picked Up button does not pull its price out of line. */
+  /* Each price gets the same small box at the right, about a button wide, so
+     prices line up. */
   .order-row .order-price {
     align-self: end;
     justify-self: end;
@@ -1351,7 +1349,7 @@ button.button:disabled {
   white-space: nowrap;
 }
 
-/* The Sold label is as tall as the buttons above it, so it lines up */
+/* Sold label as tall as the buttons, so it lines up */
 .sold-tag {
   padding: 7px 14px;
   font-size: 13px;
@@ -1390,8 +1388,7 @@ button.button:disabled {
   text-align: right;
 }
 
-/* .movie-table th sets text-align: left, which would otherwise beat .right
-   and leave PRICE and SOLD out of line with the numbers under them. */
+/* Override th text-align: left so PRICE and SOLD line up with their numbers. */
 .movie-table th.right {
   text-align: right;
 }
@@ -1434,8 +1431,7 @@ button.button:disabled {
   font-weight: 600;
 }
 
-/* A length is two numbers, not a line of text, so nothing can be typed in a
-   shape the website cannot read back. */
+/* Length is two number boxes, so it is always readable. */
 
 .length-pair {
   display: flex;
@@ -1462,8 +1458,7 @@ button.button:disabled {
   pointer-events: none;
 }
 
-/* The run date is picked from a calendar for the same reason: what the staff
-   choose is a real date, which is what a booking page needs. */
+/* The opening day comes from a calendar, so it is always a real date. */
 
 .date-field {
   position: relative;
@@ -1582,7 +1577,7 @@ button.button:disabled {
   border-color: var(--red);
 }
 
-/* A run cannot start or end on a day that has already gone by */
+/* Past days cannot be picked */
 .calendar-date:disabled {
   background-color: var(--white);
   border-color: transparent;
@@ -1595,14 +1590,6 @@ button.button:disabled {
   border-color: var(--indigo-light);
 }
 
-/* Add Movie: the days between the opening and last day */
-.calendar-date-in-range,
-.calendar-date-in-range:enabled {
-  background-color: var(--red-light);
-  border-color: var(--red-light);
-  color: var(--red-dark);
-}
-
 .calendar-date-picked,
 .calendar-date-picked:enabled,
 .calendar-date-picked:hover {
@@ -1611,7 +1598,7 @@ button.button:disabled {
   color: var(--white);
 }
 
-/* Add Movie: which of the two days to pick next */
+/* Note under a calendar */
 .calendar-hint {
   margin-top: 10px;
   padding-top: 10px;
@@ -1635,8 +1622,8 @@ button.button:disabled {
     padding: 20px 18px;
   }
 
-  /* On a phone the table becomes a list laid out like the snack orders: the
-     movie on the left, the tickets sold over the Remove button on the right. */
+  /* Phones: the table becomes a list like the snack orders, movie left, sold
+     count over Remove right. */
   .movie-table,
   .movie-table tbody {
     display: block;
@@ -1646,14 +1633,13 @@ button.button:disabled {
     display: none;
   }
 
-  /* The film on the left; Extend and Remove side by side, each in its own
-     column, with the number sold over Remove */
+  /* Film left; sold count over Remove right */
   .movie-table tr {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
-      "movie . sold"
-      "movie extend remove";
+      "movie sold"
+      "movie remove";
     align-items: center;
     gap: 6px 8px;
     padding: 12px 0;
@@ -1673,7 +1659,7 @@ button.button:disabled {
     grid-area: movie;
   }
 
-  /* Centred over the Remove button */
+  /* Centred over Remove */
   .movie-table .sold-cell {
     grid-area: sold;
     align-self: end;
@@ -1682,7 +1668,7 @@ button.button:disabled {
     white-space: nowrap;
   }
 
-  /* The column heading is hidden, so the number says what it counts */
+  /* The heading is hidden, so the number says what it counts */
   .movie-table .sold-cell::after {
     content: " sold";
     color: var(--text-soft);
@@ -1690,15 +1676,10 @@ button.button:disabled {
     font-weight: 600;
   }
 
-  /* The buttons' cell and its wrapper step aside, so each button is placed
-     in the row's grid itself (the Remove form already does: .inline-form) */
+  /* Let each button sit in the row grid itself (like .inline-form) */
   .movie-table .movie-row td:last-child,
   .movie-table .row-actions {
     display: contents;
-  }
-
-  .movie-table .extend-toggle {
-    grid-area: extend;
   }
 
   .movie-table .remove-form .button {
@@ -1727,7 +1708,7 @@ button.button:disabled {
   margin-bottom: 16px;
 }
 
-/* With nothing to say (the camera is off), the line takes no room */
+/* Takes no room when empty (camera off) */
 .camera-message:empty {
   display: none;
 }
@@ -1760,7 +1741,7 @@ button.button:disabled {
   margin-top: 2px;
 }
 
-/* The Snack Scanner's order: one line per snack, under a thin rule */
+/* Snack Scanner order: one line per snack */
 .scan-items {
   margin: 10px 0 0 0;
   padding: 10px 0 0 0;
@@ -1781,35 +1762,15 @@ button.button:disabled {
   margin-bottom: 12px;
 }
 
-/* 15. TICKET LOOKUP --------------------------------------------------------*/
+/* 15. SEARCH BOX -----------------------------------------------------------*/
 
-/* Find a ticket sits at the top of the Ticket Scanner's box, above the
-   camera. The box centres everything for the camera, so this part is set
-   back to the left, and a line separates it from the camera below. */
-.ticket-lookup {
-  margin: 0 0 22px 0;
-  padding: 0 0 22px 0;
-  border-bottom: 1px solid var(--line);
-  text-align: left;
-}
-
-.ticket-lookup h2 {
-  font-size: 18px;
-  margin-bottom: 4px;
-}
-
-.search-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-}
-
+/* Search above the Dashboard's picked-up orders */
 .search-field {
   flex: 1;
   margin-bottom: 0;
 }
 
-/* A darker outline than other boxes, like the Dashboard's search */
+/* Darker outline than other boxes */
 .search-field input {
   border-color: var(--text-soft);
   text-transform: uppercase;
@@ -1819,107 +1780,6 @@ button.button:disabled {
 .search-field input::placeholder {
   text-transform: none;
   letter-spacing: 0;
-}
-
-/* The same height as the box beside it */
-.search-row .button {
-  padding: 11px 22px;
-}
-
-#search-message {
-  margin: 16px 0 0 0;
-}
-
-.ticket-result {
-  margin-top: 20px;
-  padding: 20px;
-  background-color: var(--page);
-  border: 1px solid var(--line-soft);
-  border-radius: 16px;
-}
-
-.ticket-result-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.ticket-result-code {
-  color: var(--red);
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 1px;
-}
-
-.ticket-result-movie {
-  font-size: 20px;
-  margin-top: 2px;
-}
-
-.ticket-result-head .pill {
-  flex-shrink: 0;
-  padding: 4px 12px;
-}
-
-.ticket-facts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 14px 24px;
-  margin: 18px 0 0 0;
-}
-
-.ticket-facts dt {
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.ticket-facts dd {
-  margin: 2px 0 0 0;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.refund-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px 16px;
-  margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px solid var(--line);
-}
-
-.refund-note {
-  flex: 1;
-  min-width: 200px;
-  color: var(--text-soft);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.refund-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-@media (max-width: 620px) {
-  .ticket-result {
-    padding: 16px;
-  }
-
-  .refund-row .button,
-  .refund-buttons {
-    width: 100%;
-  }
-
-  .refund-buttons .button {
-    flex: 1;
-  }
 }
 
 /* 16. MESSAGES AND EMPTY STATES --------------------------------------------*/
@@ -1932,8 +1792,8 @@ button.button:disabled {
   margin-bottom: 14px;
 }
 
-/* An error: red words (the red of the reference number), with no coloured
-   box behind them. .field-error below matches. */
+/* Error: red text (same red as the reference number), no background. .field-
+   error matches. */
 .form-message-error {
   padding: 0;
   color: var(--red);

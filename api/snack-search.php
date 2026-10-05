@@ -1,12 +1,9 @@
 <?php
 declare(strict_types=1);
 
-// The Dashboard's search above Sold, asked by assets/js/dashboard.js as the
-// admin types: GET ?q=<part or all of a reference number>. Answers with the
-// picked-up snack orders whose reference holds it, with when each was
-// scanned at the snack counter and when it was picked up.
-//
-// Admin only. It only reads.
+// Dashboard search above Sold (dashboard.js): ?q=part of a reference. Lists
+// picked-up snack orders with when they were scanned and picked up. Admin
+// only, read-only.
 
 require __DIR__ . '/../includes/bootstrap.php';
 
@@ -27,7 +24,7 @@ $orders = array_map(static function (array $order): array {
     ];
 }, $found['orders']);
 
-// A whole reference that was found but is not picked up: where it is instead
+// Found but not picked up: say where it is
 $note = '';
 if ($found['other'] !== null) {
     $reference = $found['other']['reference'];

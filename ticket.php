@@ -32,7 +32,7 @@ $ownBooking = (int) $booking['user_id'] === (int) $user['id'];
 // Still waiting for payment: the QR Ph page (or the payment page) asks
 // PayMongo again and shows the ticket as soon as the money is in.
 if ($status === 'pending' && $ownBooking) {
-    $paying = paymongo_qrph_only() || !empty($booking['paymongo_intent_id']) ? 'pay.php' : 'payment-success.php';
+    $paying = paymongo_uses_qrph() || !empty($booking['paymongo_intent_id']) ? 'pay.php' : 'payment-success.php';
     redirect($paying . '?ref=' . rawurlencode($ref));
 }
 

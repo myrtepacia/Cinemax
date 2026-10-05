@@ -22,6 +22,9 @@ const MAX_PER_SNACK = 10;
 const MAX_PENDING_PER_USER = 3;
 // Characters used in reference numbers: no 0/O or 1/I to mix up at the door
 const REFERENCE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+// A booking's PayMongo payments (Payment Intents), one per way to pay chosen
+// on pay.php: its QR Ph code, a card (card.php) and GCash (pay-other.php)
+const BOOKING_INTENT_COLUMNS = ['paymongo_intent_id', 'paymongo_card_intent_id', 'paymongo_wallet_intent_id'];
 
 /**
  * A problem with a booking that the customer should be told about. Its
@@ -61,10 +64,10 @@ function release_expired_holds(): void
     // time limits and only a few are made per request; any left over are
     // simply expired, and a late payment on one is still caught by
     // settle_booking() (seats taken back if free, refunded if not).
-    // A QR Ph code is made to stop working when its hold does, so only a
-    // checkout page needs closing.
+    // A QR Ph code is made to stop working when its hold does, and the card
+    // page stops taking cards then, so only a checkout page needs closing.
     $runOut = db_all(
-        "SELECT id, reference, paymongo_checkout_id, paymongo_intent_id FROM bookings
+        "SELECT id, reference, paymongo_checkout_id, " . implode(', ', BOOKING_INTENT_COLUMNS) . " FROM bookings
          WHERE status = 'pending' AND expires_at < NOW()
          ORDER BY expires_at LIMIT 20"
     );
@@ -72,7 +75,7 @@ function release_expired_holds(): void
     foreach ($runOut as $hold) {
         $bookingId = (int) $hold['id'];
         $checkoutId = (string) ($hold['paymongo_checkout_id'] ?? '');
-        $askPayMongo = ($checkoutId !== '' || !empty($hold['paymongo_intent_id'])) && $remoteCalls < 3;
+        $askPayMongo = ($checkoutId !== '' || booking_has_intent($hold)) && $remoteCalls < 3;
 
         if ($askPayMongo) {
             $remoteCalls++;
@@ -324,14 +327,72 @@ function booking_seconds_left(array $booking): int
 }
 
 /**
- * Records which PayMongo QR Ph payment (Payment Intent) belongs to a booking.
+ * Keeps a booking's QR Ph code in the session for pay.php, marked with the
+ * keys that made it.
  */
-function attach_intent(int $bookingId, string $intentId): void
+function remember_qr(string $reference, string $qr): void
 {
+    $_SESSION['qrph'] = [$reference => ['qr' => $qr, 'keys' => paymongo_keys_id()]];
+}
+
+/**
+ * The QR Ph code kept for a booking, or null: none kept, or it was made with
+ * other keys (switched between test and live since), so it cannot be paid.
+ */
+function remembered_qr(string $reference): ?string
+{
+    $kept = $_SESSION['qrph'][$reference] ?? null;
+    if (!is_array($kept) || ($kept['keys'] ?? '') !== paymongo_keys_id() || !is_string($kept['qr'] ?? null)) {
+        return null;
+    }
+    return $kept['qr'];
+}
+
+/**
+ * Notes which keys the payment page now on screen (pay.php, card.php) was
+ * made with.
+ */
+function remember_payment_keys(): void
+{
+    $_SESSION['payment_keys'] = paymongo_keys_id();
+}
+
+/**
+ * True when the keys were switched (test and live) after the payment page on
+ * screen was made: its QR code or card form works with the old keys only, so
+ * the page must be made again.
+ */
+function payment_keys_changed(): bool
+{
+    return isset($_SESSION['payment_keys']) && $_SESSION['payment_keys'] !== paymongo_keys_id();
+}
+
+/**
+ * Records which PayMongo payment (Payment Intent) belongs to a booking:
+ * $column is one of BOOKING_INTENT_COLUMNS (its QR Ph code by default).
+ */
+function attach_intent(int $bookingId, string $intentId, string $column = 'paymongo_intent_id'): void
+{
+    if (!in_array($column, BOOKING_INTENT_COLUMNS, true)) {
+        throw new InvalidArgumentException('Not a payment column: ' . $column);
+    }
     db_exec(
-        "UPDATE bookings SET paymongo_intent_id = ? WHERE id = ? AND status = 'pending'",
+        "UPDATE bookings SET $column = ? WHERE id = ? AND status = 'pending'",
         [$intentId, $bookingId]
     );
+}
+
+/**
+ * True when a booking has a PayMongo payment (QR Ph, card or GCash).
+ */
+function booking_has_intent(array $booking): bool
+{
+    foreach (BOOKING_INTENT_COLUMNS as $column) {
+        if (!empty($booking[$column])) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -368,23 +429,44 @@ function find_booking_by_checkout(string $checkoutId): ?array
 
 function find_booking_by_intent(string $intentId): ?array
 {
-    return db_one(BOOKING_SELECT . ' WHERE b.paymongo_intent_id = ?', [$intentId]);
+    // Its QR Ph, card or GCash payment
+    $where = implode(' OR ', array_map(static function (string $column): string {
+        return 'b.' . $column . ' = ?';
+    }, BOOKING_INTENT_COLUMNS));
+    return db_one(BOOKING_SELECT . ' WHERE ' . $where, array_fill(0, count(BOOKING_INTENT_COLUMNS), $intentId));
 }
 
 /**
  * The paid payment on a booking's QR Ph payment or checkout page, as
  * ['id' => 'pay_...', 'amount' => pesos], or null when nothing is paid yet
- * (or the booking never reached PayMongo).
+ * (or the booking never reached PayMongo). A booking can have several: its
+ * QR Ph code, a card payment (card.php) and a GCash payment (pay-other.php),
+ * all chosen on pay.php. One made with the other keys (test or live) cannot
+ * be seen with these, so it is passed over.
  */
 function booking_paid_payment(array $booking, int $timeoutSeconds = 30): ?array
 {
-    $intentId = (string) ($booking['paymongo_intent_id'] ?? '');
-    if ($intentId !== '') {
-        return paymongo_paid_payment(paymongo_get_intent($intentId, $timeoutSeconds));
-    }
-    $checkoutId = (string) ($booking['paymongo_checkout_id'] ?? '');
-    if ($checkoutId !== '') {
-        return paymongo_paid_payment(paymongo_get_checkout($checkoutId, $timeoutSeconds));
+    try {
+        foreach (BOOKING_INTENT_COLUMNS as $column) {
+            $intentId = (string) ($booking[$column] ?? '');
+            if ($intentId === '') {
+                continue;
+            }
+            try {
+                $payment = paymongo_paid_payment(paymongo_get_intent($intentId, $timeoutSeconds));
+            } catch (PayMongoNotFoundException $e) {
+                continue;
+            }
+            if ($payment !== null) {
+                return $payment;
+            }
+        }
+        $checkoutId = (string) ($booking['paymongo_checkout_id'] ?? '');
+        if ($checkoutId !== '') {
+            return paymongo_paid_payment(paymongo_get_checkout($checkoutId, $timeoutSeconds));
+        }
+    } catch (PayMongoNotFoundException $e) {
+        // The checkout page was made with the other keys
     }
     return null;
 }
@@ -774,7 +856,7 @@ function settle_recent_bookings(int $userId): void
     $waiting = db_all(
         "SELECT id FROM bookings
          WHERE user_id = ? AND status IN ('pending', 'expired')
-           AND (paymongo_checkout_id IS NOT NULL OR paymongo_intent_id IS NOT NULL)
+           AND (paymongo_checkout_id IS NOT NULL OR " . implode(' IS NOT NULL OR ', BOOKING_INTENT_COLUMNS) . " IS NOT NULL)
            AND created_at > NOW() - INTERVAL 1 DAY
          ORDER BY id DESC LIMIT 5",
         [$userId]

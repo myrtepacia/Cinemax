@@ -132,16 +132,16 @@ $customer = [
     'mobile' => (string) ($user['mobile'] ?? ''),
 ];
 
-// QR Ph only: the code is made here, valid exactly as long as the seats are
-// held, and shown on Cinemax's own page with a countdown
-if (paymongo_qrph_only()) {
+// Paying by QR Ph: the code is made here, valid exactly as long as the seats
+// are held, and shown on Cinemax's own page with a countdown
+if (paymongo_uses_qrph()) {
     try {
         $qr = paymongo_create_qrph($booking, $customer, booking_seconds_left($booking));
     } catch (Throwable $e) {
         checkout_give_up($booking, $e, $backPath);
     }
     attach_intent((int) $booking['id'], $qr['id']);
-    $_SESSION['qrph'] = [$booking['reference'] => $qr['qr']];
+    remember_qr((string) $booking['reference'], $qr['qr']);
     redirect('pay.php?ref=' . rawurlencode((string) $booking['reference']));
 }
 

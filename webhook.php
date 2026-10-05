@@ -4,7 +4,8 @@ declare(strict_types=1);
 // PayMongo's servers call this when a booking is paid, so a customer who
 // closes the tab before coming back to the site still gets their ticket.
 // Register it in PayMongo for two events: checkout_session.payment.paid
-// (PayMongo's checkout page) and payment.paid (a QR Ph code from pay.php).
+// (PayMongo's checkout page) and payment.paid (a QR Ph code from pay.php, a
+// card from card.php, or GCash from pay-other.php).
 //
 // Only calls signed with the webhook secret are accepted, each event is
 // handled once however often it is delivered, and even a genuine event is
@@ -72,8 +73,8 @@ function webhook_forget(string $eventId): void
 }
 
 try {
-    // A checkout page was paid, or a payment came in (a QR Ph code scanned:
-    // the payment names its Payment Intent)
+    // A checkout page was paid, or a payment came in (a QR Ph code scanned, a
+    // card or GCash: the payment names its Payment Intent)
     $resource = $event['data']['attributes']['data'] ?? [];
     $booking = null;
     if ($eventType === 'checkout_session.payment.paid') {

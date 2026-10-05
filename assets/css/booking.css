@@ -561,13 +561,96 @@
   }
 }
 
+/* "Choose another payment" under the booking: a card that opens to one row
+   per way to pay (GCash, card), with its logo on the right. Tapping a row
+   goes to that way to pay. */
+.pay-other {
+  margin-top: 20px;
+  padding: 0 20px;
+  background-color: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.pay-other summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 0;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.pay-other summary::-webkit-details-marker {
+  display: none;
+}
+
+/* A small arrow on the right, pointing up while open */
+.pay-other summary::after {
+  content: "";
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.2s;
+}
+
+.pay-other[open] summary::after {
+  transform: translateY(2px) rotate(-135deg);
+}
+
+.pay-other-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 0;
+  border: 0;
+  border-top: 2px solid var(--line);
+  background: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pay-other-name {
+  flex: 1;
+}
+
+.pay-other-logo {
+  flex-shrink: 0;
+  height: 24px;
+  width: auto;
+}
+
+/* The row pointed at or picked */
+.pay-other-option:hover .pay-other-name,
+.pay-other-option:focus .pay-other-name {
+  color: var(--red);
+}
+
+/* "That way to pay is not available", or how a GCash payment went, under
+   Cancel booking */
+.pay-notice {
+  margin: 12px 0 0 0;
+}
+
 /* The code, the amount and a countdown to the end of the seat hold, in a box
    like the e-ticket's */
 .qr-pay {
   text-align: center;
 }
 
-.qr-pay-amount {
+.pay-amount {
   font-size: 28px;
   font-weight: 900;
   margin-top: 2px;
@@ -593,17 +676,17 @@
   font-size: 12px;
 }
 
-.qr-pay-ended .qr-pay-save {
+.pay-ended .qr-pay-save {
   display: none;
 }
 
-.qr-pay-timer {
+.pay-timer {
   color: var(--text-soft);
   font-size: 14px;
   font-weight: 600;
 }
 
-.qr-pay-timer strong {
+.pay-timer strong {
   display: block;
   color: var(--text);
   font-size: 32px;
@@ -613,11 +696,11 @@
 }
 
 /* The last minute */
-.qr-pay-hurry .qr-pay-timer strong {
+.pay-hurry .pay-timer strong {
   color: var(--red);
 }
 
-.qr-pay-status {
+.pay-status {
   margin-top: 10px;
   color: var(--text-soft);
   font-size: 13px;
@@ -625,6 +708,51 @@
 }
 
 /* Time is up: the code no longer works */
-.qr-pay-ended .qr-pay-code {
+.pay-ended .qr-pay-code {
   opacity: 0.15;
+}
+
+/* Paying by card (card.php): the same box, with the card form in place of
+   the code */
+.card-pay {
+  text-align: center;
+}
+
+.card-form {
+  margin: 16px 0 20px 0;
+  text-align: left;
+}
+
+/* Why the card did not go through: closer to the field above it than the
+   fields are to each other (its margin and the field's overlap: 16 - 8) */
+.card-form .form-message-error {
+  margin-top: -8px;
+}
+
+/* Expiry date and CVC side by side */
+.card-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.card-form .button {
+  padding: 12px;
+}
+
+.card-form .button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Time is up: the form no longer sends */
+.pay-ended .card-form {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* "Pay with QR code instead", under the booking */
+.pay-back {
+  margin-top: 20px;
+  padding: 12px;
 }

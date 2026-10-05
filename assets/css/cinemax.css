@@ -1932,9 +1932,11 @@ button.button:disabled {
   margin-bottom: 14px;
 }
 
+/* An error: red words (the red of the reference number), with no coloured
+   box behind them. .field-error below matches. */
 .form-message-error {
-  background-color: var(--red-light);
-  color: var(--red-dark);
+  padding: 0;
+  color: var(--red);
 }
 
 .form-message-notice {
@@ -1944,7 +1946,7 @@ button.button:disabled {
 
 .field-error {
   display: block;
-  color: var(--red-dark);
+  color: var(--red);
   font-size: 13px;
   font-weight: 600;
   margin-top: 4px;

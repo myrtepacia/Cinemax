@@ -26,14 +26,14 @@ return [
 
     'paymongo' => [
         // Test keys: no real money moves. Swap for live keys to go live.
-        'secret_key' => 'sk_live_d9NZn7B17miVGpjwnrJfjVRL',
-        'public_key' => 'pk_live_zgXobEUNCpFgSgaDB1DBNbup',
+        'secret_key' => 'sk_test_KwcB8do5Z1Lbd5NLvsXBFKbY',
+        'public_key' => 'pk_test_G53BQpjfiSnQebhPrHNgXV5b',
         // Filled in after registering webhook.php with PayMongo (whsk_...).
         // Left empty, webhook.php refuses every request, and payments are
         // confirmed when the customer returns from PayMongo instead.
         'webhook_secret' => '',
         // The ways customers may pay on PayMongo's checkout page
-        'payment_methods' => ['qrph'],
+        'payment_methods' => ['qrph', 'gcash', 'card'],
     ],
 
     // How long seats are held while a customer is paying, in minutes

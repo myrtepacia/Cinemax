@@ -9,6 +9,9 @@ declare(strict_types=1);
 //   {"ok": true, "status": "paid", "next": <the e-ticket>}
 //   {"ok": true, "status": "ended", "next": <payment-success.php>}  the hold
 //        is over, or the booking changed some other way
+//   {"ok": true, "status": "refresh"}  the PayMongo keys were switched (test
+//        and live) since the page was made: its QR code or card form only
+//        works with the old keys, so the page is made again
 //
 // The customer's own bookings only; anyone else's is "not found".
 
@@ -37,6 +40,10 @@ if (too_many_attempts('pay-check', 'user:' . $user['id'], PAY_CHECKS_PER_MINUTE,
     json_response(['ok' => false, 'error' => 'Checking too often. Please wait a moment.'], 429);
 }
 record_attempt('pay-check', 'user:' . $user['id']);
+
+if (payment_keys_changed()) {
+    json_response(['ok' => true, 'status' => 'refresh']);
+}
 
 $wasPaid = $booking['status'] === 'paid';
 try {

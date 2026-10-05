@@ -1,0 +1,18 @@
+# Secrets: the database password and PayMongo keys (config.example.php is
+# the template that goes to GitHub instead)
+/config/config.php
+
+# Error logs, saved PayMongo answers, and posters uploaded through Add Movie
+# (the empty .keep files keep the folders)
+/storage/logs/*
+!/storage/logs/.keep
+/storage/cache/
+/uploads/posters/*
+!/uploads/posters/.keep
+
+# Editor and system files
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store

@@ -31,12 +31,15 @@ function send_security_headers(): void
     header('Cross-Origin-Opener-Policy: same-origin');
     header('Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=()');
     header('Cache-Control: no-store, max-age=0');
+    // The card page (card.php) alone may send to PayMongo's API: card.js
+    // hands the card details straight to PayMongo from the browser
+    $connect = defined('CINEMAX_CARD_FORM') ? "'self' https://api.paymongo.com" : "'self'";
     header("Content-Security-Policy: default-src 'self'; "
         . "script-src 'self'; "
         . "style-src 'self' https://fonts.googleapis.com; "
         . "font-src 'self' https://fonts.gstatic.com; "
         . "img-src 'self' data: blob:; "
-        . "connect-src 'self'; "
+        . "connect-src " . $connect . "; "
         . "media-src 'self' blob:; "
         . "object-src 'none'; "
         . "base-uri 'self'; "

@@ -1,0 +1,20 @@
+# Cinemax web server rules
+
+# No folder listings, no server version on error pages
+Options -Indexes -Includes -ExecCGI
+ServerSignature Off
+
+# Source, notes, logs and dotfiles are never served, wherever they sit
+<FilesMatch "(^\.|\.(?i:sql|md|log|bak|old|orig|swp|ini|lock|sh|bat|ps1|dist)$|^(?i:composer|package(-lock)?)\.json$)">
+    Require all denied
+</FilesMatch>
+
+# The same safety headers the PHP pages send, for the plain files
+<IfModule mod_headers.c>
+    <FilesMatch "\.(?i:css|js|png|jpe?g|webp|gif|svg|ico|txt|woff2?|html)$">
+        Header always set X-Content-Type-Options "nosniff"
+        Header always set X-Frame-Options "DENY"
+        Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    </FilesMatch>
+    Header always unset X-Powered-By
+</IfModule>

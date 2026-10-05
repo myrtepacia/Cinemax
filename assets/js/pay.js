@@ -1,17 +1,18 @@
-// The QR Ph payment page (pay.php). Counts down to the end of the seat hold,
-// and every few seconds asks api/payment-status.php whether PayMongo has the
-// money: the e-ticket opens by itself once it has. When the time is up the
-// code is faded out (PayMongo stops accepting it at the same moment) and the
-// payment page takes over.
+// The payment pages while seats are held: the QR Ph code (pay.php) and the
+// card form (card.php). Counts down to the end of the seat hold, and every few
+// seconds asks api/payment-status.php whether PayMongo has the money: the
+// e-ticket opens by itself once it has. When the time is up the box is faded
+// out (PayMongo stops accepting the code, and the card form stops sending, at
+// the same moment) and the payment page takes over.
 (function () {
-  var box = document.getElementById('qr-pay');
+  var box = document.querySelector('[data-status-url][data-seconds-left]');
   if (!box) {
     return;
   }
 
   var statusUrl = box.getAttribute('data-status-url') || '';
-  var countdown = document.getElementById('qr-countdown');
-  var statusLine = document.getElementById('qr-status');
+  var countdown = document.getElementById('pay-countdown');
+  var statusLine = document.getElementById('pay-status');
   var CHECK_EVERY_MS = 4000;
 
   // Counted from what the server said, not from this device's clock
@@ -29,11 +30,11 @@
     var seconds = left % 60;
     countdown.textContent = Math.floor(left / 60) + ':' + (seconds < 10 ? '0' : '') + seconds;
     // The last minute in red
-    box.classList.toggle('qr-pay-hurry', left > 0 && left <= 60);
+    box.classList.toggle('pay-hurry', left > 0 && left <= 60);
     if (left === 0 && !ended) {
       ended = true;
-      box.classList.add('qr-pay-ended');
-      statusLine.textContent = 'Time is up: this code no longer works.';
+      box.classList.add('pay-ended');
+      statusLine.textContent = box.getAttribute('data-ended-text') || 'Time is up.';
       // A payment made in the last seconds still counts
       check();
     }
@@ -63,6 +64,11 @@
         } else if (data.status === 'ended' && data.next) {
           leaving = true;
           window.location.href = data.next;
+        } else if (data.status === 'refresh') {
+          // The PayMongo keys were switched (test and live): the page makes
+          // a new QR code or card form that works with them
+          leaving = true;
+          window.location.reload();
         } else if (typeof data.secondsLeft === 'number') {
           // Keep the countdown in step with the server
           endsAt = Date.now() + data.secondsLeft * 1000;

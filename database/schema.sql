@@ -114,6 +114,8 @@ CREATE TABLE bookings (
   snack_sold_at        DATETIME NULL,           -- picked up
   paymongo_checkout_id VARCHAR(64) NULL,       -- PayMongo's checkout page (cs_...)
   paymongo_intent_id   VARCHAR(64) NULL,       -- or a QR Ph payment shown on pay.php (pi_...)
+  paymongo_card_intent_id VARCHAR(64) NULL,    -- or a card payment made on card.php (pi_...)
+  paymongo_wallet_intent_id VARCHAR(64) NULL,  -- or a GCash (e-wallet) payment from pay-other.php (pi_...)
   paymongo_payment_id  VARCHAR(64) NULL,
   paymongo_refund_id   VARCHAR(64) NULL,
   expires_at           DATETIME NOT NULL,
@@ -127,6 +129,8 @@ CREATE TABLE bookings (
   UNIQUE KEY uq_bookings_reference (reference),
   UNIQUE KEY uq_bookings_checkout (paymongo_checkout_id),
   UNIQUE KEY uq_bookings_intent (paymongo_intent_id),
+  UNIQUE KEY uq_bookings_card_intent (paymongo_card_intent_id),
+  UNIQUE KEY uq_bookings_wallet_intent (paymongo_wallet_intent_id),
   KEY idx_bookings_user (user_id, created_at),
   KEY idx_bookings_status (status, expires_at),
   KEY idx_bookings_snacks (status, snack_status),

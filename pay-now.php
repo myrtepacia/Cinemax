@@ -49,7 +49,7 @@ try {
     }
 
     // Paying by QR Ph: back to the booking's code and its countdown
-    if (paymongo_qrph_only() || !empty($booking['paymongo_intent_id'])) {
+    if (paymongo_uses_qrph() || !empty($booking['paymongo_intent_id'])) {
         redirect('pay.php?ref=' . rawurlencode($reference));
     }
 

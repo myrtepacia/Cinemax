@@ -80,20 +80,11 @@ render_header(['current' => 'account']);
         <input type="hidden" name="ref" value="<?= e($reference) ?>">
         <button class="button button-red" type="submit">Pay now</button>
       </form>
-      <form class="inline-form" method="post" action="<?= e(url('payment-cancel.php')) ?>">
-        <?= csrf_field() ?>
-        <input type="hidden" name="ref" value="<?= e($reference) ?>">
-        <button class="button button-outline" type="submit">Cancel booking</button>
-      </form>
 <?php else: ?>
       <a class="button button-red" href="<?= e(url('account.php')) ?>">My Bookings</a>
       <a class="button button-outline" href="<?= e(url($filmPath)) ?>">Back to the movie</a>
 <?php endif; ?>
     </div>
-
-<?php if ($stillHeld): ?>
-    <p class="status-note">Changed your mind? Cancelling frees the seats straight away.</p>
-<?php endif; ?>
 
   </main>
 <?php

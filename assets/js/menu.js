@@ -53,28 +53,44 @@
     }, { passive: true });
     window.addEventListener('resize', highlight);
     highlight();
-  }
 
-  // Remove the old service worker and its stored files, for this site only
-  // (found from this script's address)
-  var script = document.currentScript;
-  if ('serviceWorker' in navigator && script && script.src) {
-    var base = new URL('../../', script.src).href;
-    navigator.serviceWorker.getRegistrations().then(function (registrations) {
-      registrations.forEach(function (registration) {
-        if (registration.scope === base) {
-          registration.unregister();
-        }
+    // Scroll to a part, just under the header, without putting #now-showing
+    // in the address
+    var goTo = function (section, smooth) {
+      var top = section.getBoundingClientRect().top + window.scrollY - (bar ? bar.offsetHeight : 0);
+      window.scrollTo({ top: Math.max(0, top), behavior: smooth ? 'smooth' : 'auto' });
+    };
+    var calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    parts.forEach(function (part) {
+      part.link.addEventListener('click', function (event) {
+        event.preventDefault();
+        goTo(part.section, !calm);
       });
-    }).catch(function () {});
-    if (window.caches) {
-      caches.keys().then(function (keys) {
-        keys.forEach(function (key) {
-          if (key.indexOf('cinemax-') === 0) {
-            caches.delete(key);
-          }
-        });
-      }).catch(function () {});
+    });
+
+    // Came from another page's Now Showing or Upcoming Shows link (or the
+    // address was typed with #): go to that part, then show the plain address
+    var askedPart = function () {
+      return parts.filter(function (part) {
+        return '#' + part.section.id === window.location.hash;
+      })[0];
+    };
+    var goToAsked = function () {
+      var asked = askedPart();
+      if (asked) {
+        goTo(asked.section, false);
+        highlight();
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+      return asked;
+    };
+    var arrived = goToAsked();
+    if (arrived) {
+      window.addEventListener('load', function () {
+        goTo(arrived.section, false);
+        highlight();
+      });
     }
+    window.addEventListener('hashchange', goToAsked);
   }
 })();

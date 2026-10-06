@@ -18,7 +18,7 @@ const MAX_PER_SNACK = 10;
 const MAX_PENDING_PER_USER = 3;
 // No 0/O or 1/I, so references are easy to read
 const REFERENCE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-// A booking's PayMongo payments: QR Ph, card and GCash
+// A booking's PayMongo payments: QR Ph, card and Maya (older ones: GCash)
 const BOOKING_INTENT_COLUMNS = ['paymongo_intent_id', 'paymongo_card_intent_id', 'paymongo_wallet_intent_id'];
 
 /** A booking problem to show the customer as is. */
@@ -385,26 +385,26 @@ function find_booking_by_intent(string $intentId): ?array
  */
 function booking_paid_payment(array $booking, int $timeoutSeconds = 30): ?array
 {
-    try {
-        foreach (BOOKING_INTENT_COLUMNS as $column) {
-            $intentId = (string) ($booking[$column] ?? '');
-            if ($intentId === '') {
-                continue;
-            }
-            try {
-                $payment = paymongo_paid_payment(paymongo_get_intent($intentId, $timeoutSeconds));
-            } catch (PayMongoNotFoundException $e) {
-                continue;
-            }
-            if ($payment !== null) {
-                return $payment;
-            }
+    foreach (BOOKING_INTENT_COLUMNS as $column) {
+        $intentId = (string) ($booking[$column] ?? '');
+        if ($intentId === '') {
+            continue;
         }
-        $checkoutId = (string) ($booking['paymongo_checkout_id'] ?? '');
-        if ($checkoutId !== '') {
+        try {
+            $payment = paymongo_paid_payment(paymongo_get_intent($intentId, $timeoutSeconds));
+        } catch (PayMongoNotFoundException $e) {
+            continue;
+        }
+        if ($payment !== null) {
+            return $payment;
+        }
+    }
+    $checkoutId = (string) ($booking['paymongo_checkout_id'] ?? '');
+    if ($checkoutId !== '') {
+        try {
             return paymongo_paid_payment(paymongo_get_checkout($checkoutId, $timeoutSeconds));
+        } catch (PayMongoNotFoundException $e) {
         }
-    } catch (PayMongoNotFoundException $e) {
     }
     return null;
 }

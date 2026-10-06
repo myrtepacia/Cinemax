@@ -23,7 +23,7 @@ function book_poster(array $movie): void
 {
     ?>
 <div class="booking-poster-wrap">
-          <img class="booking-poster" src="<?= e(poster_url($movie)) ?>" alt="<?= e($movie['title'] . ' poster') ?>">
+          <img class="booking-poster skeleton" src="<?= e(poster_url($movie)) ?>" alt="<?= e($movie['title'] . ' poster') ?>">
           <span class="tag-rated"><?= e($movie['rating']) ?></span>
           <span class="tag-time"><?= e(duration_tag((int) $movie['duration_minutes'])) ?></span>
         </div>
@@ -275,7 +275,7 @@ render_header();
               <p class="form-message form-message-error" id="booking-error" role="alert" hidden></p>
 
 <?php if ($user === null): ?>
-              <a class="button button-red" href="<?= e(url('signin.php?return=' . rawurlencode('book.php?movie=' . $slug))) ?>">Sign in to book</a>
+              <a class="button button-red" href="<?= e(url('signin.php?return=' . rawurlencode($slug))) ?>">Sign in to book</a>
 <?php elseif (is_staff($user)): ?>
               <button class="button button-grey" type="button" disabled>Confirm Booking</button>
               <p class="summary-note">Staff accounts cannot book tickets. Sign in with a customer account to book.</p>

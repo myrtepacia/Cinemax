@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="90" height="36" viewBox="0 0 90 36">
+  <title>Maya</title>
+  <g fill="none" stroke="#52b36c" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- m -->
+    <path d="M4 24V14.5a5 5 0 0 1 10 0V24"/>
+    <path d="M14 14.5a5 5 0 0 1 10 0V24"/>
+    <!-- a -->
+    <circle cx="36.5" cy="16.5" r="6.9"/>
+    <path d="M43.4 10V24"/>
+    <!-- y -->
+    <path d="M50.5 10v6.5a6.6 6.6 0 0 0 13.2 0V10"/>
+    <path d="M63.7 16.5v9a6.5 6.5 0 0 1-6.5 6.5h-2.7"/>
+    <!-- a -->
+    <circle cx="76.5" cy="16.5" r="6.9"/>
+    <path d="M83.4 10V24"/>
+  </g>
+</svg>

@@ -1,8 +1,9 @@
 <?php
 declare(strict_types=1);
 
-// "Choose another payment" on pay.php: card goes to card.php, GCash to the
-// wallet's own page. Checks first that the booking is not already paid.
+// "Choose another payment" on pay.php and card.php: the QR code goes back to
+// pay.php, card to card.php, Maya to Maya's own page. Checks first that the
+// booking is not already paid.
 
 require __DIR__ . '/includes/bootstrap.php';
 
@@ -17,8 +18,11 @@ if ($booking === null) {
 }
 $payPath = 'pay.php?ref=' . rawurlencode($reference);
 
-$offered = paymongo_other_methods();
 $method = input_string($_POST, 'method', 20);
+if ($method === 'qrph') {
+    redirect($payPath);
+}
+$offered = paymongo_other_methods();
 if (!array_key_exists($method, $offered)) {
     redirect($payPath);
 }
@@ -57,7 +61,7 @@ try {
         redirect($payPath);
     }
 
-    // One wallet payment per booking, reused for every try; made again if it
+    // One Maya payment per booking, reused for every try; made again if it
     // belongs to the other keys
     $intentId = (string) ($booking['paymongo_wallet_intent_id'] ?? '');
     $intent = null;
@@ -68,7 +72,7 @@ try {
         }
     }
     if ($intent === null) {
-        $made = paymongo_create_intent($booking, array_values(array_intersect(PAYMONGO_WALLETS, array_keys($offered))));
+        $made = paymongo_create_intent($booking, PAYMONGO_WALLETS);
         attach_intent((int) $booking['id'], $made['id'], 'paymongo_wallet_intent_id');
         $intentId = $made['id'];
         $clientKey = $made['client_key'];

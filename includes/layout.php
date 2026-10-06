@@ -25,7 +25,7 @@ function render_head(string $title, array $css = []): void
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= e(asset('assets/css/cinemax.css')) ?>">
 <?php foreach ($css as $sheet): ?>
   <link rel="stylesheet" href="<?= e(asset($sheet)) ?>">
@@ -174,11 +174,55 @@ function render_booking_summary(array $booking, string $amountLabel): void
 <?php
 }
 
+/**
+ * "Choose another payment": one row per other way to pay ($methods: method =>
+ * name), each sent to pay-other.php, with its symbol (or logo) and a
+ * selection circle.
+ */
+function render_other_payments(string $reference, array $methods): void
+{
+    if ($methods === []) {
+        return;
+    }
+    // Line symbols in grey
+    $symbols = [
+        'qrph'    => '<rect x="3.5" y="3.5" width="6" height="6" rx="1"/><rect x="14.5" y="3.5" width="6" height="6" rx="1"/>'
+            . '<rect x="3.5" y="14.5" width="6" height="6" rx="1"/><path d="M14.5 14.5h2.5v2.5"/><path d="M20.5 14.5v.01"/>'
+            . '<path d="M14.5 20.5h.01"/><path d="M18 18h2.5v2.5H18z"/>',
+        'card'    => '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/>',
+    ];
+    // Ways to pay shown with their own logo instead
+    $logos = ['paymaya' => 'assets/img/pay-maya.svg'];
+    ?>
+        <details class="pay-other">
+          <summary>Choose another payment</summary>
+          <form method="post" action="<?= e(url('pay-other.php')) ?>">
+            <?= csrf_field() ?>
+            <input type="hidden" name="ref" value="<?= e($reference) ?>">
+<?php foreach ($methods as $method => $name): ?>
+            <button class="pay-other-option" type="submit" name="method" value="<?= e($method) ?>">
+              <span class="pay-other-name">Pay with <?= e($name) ?></span>
+              <span class="pay-other-mark">
+<?php if (isset($logos[$method])): ?>
+                <img class="pay-other-logo" src="<?= e(asset($logos[$method])) ?>" alt="" width="45" height="18">
+<?php elseif (isset($symbols[$method])): ?>
+                <svg class="pay-other-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><?= $symbols[$method] ?></svg>
+<?php endif; ?>
+              </span>
+              <span class="pay-other-dot" aria-hidden="true"></span>
+            </button>
+<?php endforeach; ?>
+          </form>
+        </details>
+<?php
+}
+
 /** The footer and the page's scripts. Option 'js': scripts under assets/. */
 function render_footer(array $options = []): void
 {
     // password.js adds the show / hide button to every password box
-    $scripts = array_merge(['assets/js/menu.js', 'assets/js/password.js'], $options['js'] ?? []);
+    // skeleton.js takes the loading shimmer off each picture once it is in
+    $scripts = array_merge(['assets/js/menu.js', 'assets/js/password.js', 'assets/js/skeleton.js'], $options['js'] ?? []);
     ?>
   <footer class="site-footer">
     <div class="footer-inner">
@@ -187,7 +231,7 @@ function render_footer(array $options = []): void
         Your next movie experience starts here. <br>
         Book your seats, enjoy your snacks, and let the show begin.
       </p>
-      <p class="footer-copyright">&copy; <?= e(date('Y')) ?> Cinemax. All rights reserved. <a href="<?= e(url('terms.php')) ?>">Terms of Service</a></p>
+      <p class="footer-copyright">&copy; <?= e(date('Y')) ?> Cinemax. All rights reserved.</p>
     </div>
   </footer>
 

@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// Snack counter scanner: reads a ticket, shows the order (api/snack-
-// scan.php), and Confirm order sends it to Preparing.
+// Snack counter scanner: reads a ticket, shows the order
+// (api/snack-scan.php), and Confirm order sends it to Preparing.
 
 require __DIR__ . '/../includes/bootstrap.php';
 

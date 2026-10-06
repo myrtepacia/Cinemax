@@ -81,7 +81,7 @@ render_header(['staff' => true, 'current' => 'movies']);
             <tr class="movie-row">
               <td>
                 <span class="cell-with-poster">
-                  <img class="table-poster" src="<?= e(poster_url($movie)) ?>"
+                  <img class="table-poster skeleton" src="<?= e(poster_url($movie)) ?>"
                        alt="<?= e($movie['title'] . ' poster') ?>"
                        width="40" height="54" loading="lazy" decoding="async">
                   <span>

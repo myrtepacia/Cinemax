@@ -74,6 +74,10 @@ remember_payment_keys();
 
 $amount = peso((int) $booking['total']);
 
+// Choose another payment: the QR code, then Maya (the card is this page)
+$otherMethods = (paymongo_uses_qrph() || !empty($booking['paymongo_intent_id']) ? ['qrph' => 'QR code'] : [])
+    + array_diff_key(paymongo_other_methods(), ['card' => true]);
+
 render_head('Pay by card', ['assets/css/booking.css']);
 render_header(['current' => 'account']);
 ?>
@@ -146,15 +150,7 @@ render_header(['current' => 'account']);
       <div class="pay-details">
         <?php render_booking_summary($booking, 'Amount Due'); ?>
 
-        <a class="button button-outline button-wide pay-back" href="<?= e(url($payPath)) ?>">Pay with QR code instead</a>
-
-        <div class="ticket-actions">
-          <form class="inline-form" method="post" action="<?= e(url('payment-cancel.php')) ?>">
-            <?= csrf_field() ?>
-            <input type="hidden" name="ref" value="<?= e($reference) ?>">
-            <button class="button button-outline" type="submit">Cancel booking</button>
-          </form>
-        </div>
+        <?php render_other_payments($reference, $otherMethods); ?>
 
         <p class="status-note">Your seats are held until <?= e(format_time(date('H:i:s', time() + $secondsLeft))) ?>. After that the booking can no longer be paid and the seats go back on sale.</p>
       </div>

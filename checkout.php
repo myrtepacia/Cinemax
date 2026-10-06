@@ -19,7 +19,7 @@ $bookPath = 'book.php?movie=' . rawurlencode((string) $movie['slug']);
 // Signed out: sign in, then back to the film
 $signedIn = current_user();
 if ($signedIn === null) {
-    redirect('signin.php?return=' . rawurlencode($bookPath));
+    redirect('signin.php?return=' . rawurlencode(clean_path($bookPath)));
 }
 // Staff cannot book: back to the film
 if ($signedIn['role'] !== 'customer') {

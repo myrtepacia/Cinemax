@@ -185,9 +185,19 @@
   padding-bottom: 8px;
 }
 
-/* Faded while loading taken seats */
-.seat-map-loading {
-  opacity: 0.5;
+/* Loading the taken seats: the seats show as a skeleton (grey shimmer) */
+.seat-map-loading .seat-box {
+  background-color: var(--line);
+  background-image: linear-gradient(90deg, var(--line) 0%, var(--line-soft) 50%, var(--line) 100%);
+  background-size: 200% 100%;
+  color: transparent;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seat-map-loading .seat-box {
+    animation: none;
+  }
 }
 
 /* As wide as its seats, so the map stays centred */
@@ -564,8 +574,8 @@
 }
 
 /* QR page (pay.php) and card page (card.php): code or card form left, booking
-   right, both top-aligned. On phones it is one column, and .pay-details uses
-   display: contents so Choose another payment sits right under the code. */
+   right, both top-aligned. On phones it is one column: the code, the booking,
+   then Choose another payment. */
 .pay-page {
   max-width: 900px;
 }
@@ -579,20 +589,12 @@
   display: contents;
 }
 
-.pay-details > .pay-other {
-  order: 1;
-}
-
 .pay-details > .ticket {
-  order: 2;
+  order: 1;
   margin-top: 20px;
 }
 
-.pay-details > .pay-back {
-  order: 2;
-}
-
-.pay-details > .ticket-actions {
+.pay-details > .pay-other {
   order: 3;
 }
 
@@ -621,8 +623,8 @@
   }
 }
 
-/* Choose another payment: opens to one row per way to pay (GCash, card) with
-   its logo on the right */
+/* Choose another payment: opens to one row per way to pay (card, Maya) with
+   its symbol and a selection circle on the right */
 .pay-other {
   margin-top: 20px;
   padding: 0 20px;
@@ -685,19 +687,54 @@
   flex: 1;
 }
 
-.pay-other-logo {
+/* A fixed spot for the symbol or logo, centred, so they line up down the
+   list */
+.pay-other-mark {
+  display: flex;
   flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
   height: 24px;
-  width: auto;
 }
 
-/* Hovered or picked row */
+/* The way to pay's symbol (QR code, card), always grey */
+.pay-other-symbol {
+  width: 24px;
+  height: 24px;
+  color: var(--text-soft);
+}
+
+/* The selection circle at the end of each row */
+.pay-other-dot {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--muted);
+  border-radius: 50%;
+}
+
+/* Hovered or picked row: red words and a filled circle */
+/* Maya's own logo, in its green */
+.pay-other-logo {
+  width: auto;
+  height: 18px;
+}
+
 .pay-other-option:hover .pay-other-name,
 .pay-other-option:focus .pay-other-name {
   color: var(--red);
 }
 
-/* Payment message under Cancel booking */
+.pay-other-option:hover .pay-other-dot,
+.pay-other-option:focus .pay-other-dot {
+  border-color: var(--red);
+  background-color: var(--red);
+  box-shadow: inset 0 0 0 3px var(--white);
+}
+
+/* Payment message under Choose another payment */
 .pay-notice {
   margin: 12px 0 0 0;
 }
@@ -806,8 +843,3 @@
   pointer-events: none;
 }
 
-/* Pay with QR code instead, under the booking */
-.pay-back {
-  margin-top: 20px;
-  padding: 12px;
-}

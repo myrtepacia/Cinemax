@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 // Snacks Claim monitor: a customer-facing screen of order numbers being
 // prepared and ready. Updates itself (claim-monitor.js). Admin only; open it
-// by typing admin/claim-monitor.php.
+// by typing /admin/claim-monitor.
 
 require __DIR__ . '/../includes/bootstrap.php';
 

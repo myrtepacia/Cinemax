@@ -134,7 +134,7 @@
 
   // ---- Server ----
 
-  // Site folder, from the API address (.../api/scan.php)
+  // Site folder, from the API address (.../api/scan)
   function siteBase() {
     return new URL('../', new URL(apiUrl, window.location.href));
   }
@@ -310,7 +310,7 @@
         ? window.location.pathname.slice(base.pathname.length)
         : '';
       window.setTimeout(function () {
-        window.location.href = new URL('signin.php' + (here !== '' ? '?return=' + encodeURIComponent(here) : ''), base).href;
+        window.location.href = new URL('signin' + (here !== '' ? '?return=' + encodeURIComponent(here) : ''), base).href;
       }, 1500);
       return;
     }

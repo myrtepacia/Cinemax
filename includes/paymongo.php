@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 // PayMongo (https://developers.paymongo.com). QR Ph is shown on pay.php,
 // cards are paid on card.php (card details go straight to PayMongo), and
-// GCash opens the wallet's page. A payment is only trusted after asking
+// Maya opens Maya's own page. A payment is only trusted after asking
 // PayMongo directly; webhook.php hears it too. PayMongo counts in centavos:
 // 220 pesos is 22000.
 
@@ -111,7 +111,7 @@ function paymongo_create_checkout(array $booking, array $lineItems, array $custo
         'description'          => 'Cinemax booking ' . $reference . '. Your seats are held for '
             . max(5, min(60, (int) config('booking_hold_minutes', 10))) . ' minutes: pay before then to keep them.',
         'line_items'           => $items,
-        'payment_method_types' => array_values((array) config('paymongo.payment_methods', ['card', 'gcash'])),
+        'payment_method_types' => array_values((array) config('paymongo.payment_methods', ['card'])),
         'reference_number'     => $reference,
         'send_email_receipt'   => false,
         'show_description'     => true,
@@ -182,12 +182,12 @@ function paymongo_enabled_methods(): array
 }
 
 // The e-wallets, paid on the wallet's own page
-const PAYMONGO_WALLETS = ['gcash', 'paymaya', 'grab_pay'];
+const PAYMONGO_WALLETS = ['paymaya'];
 
 /** The other ways to pay under the QR code (method => name), card first. */
 function paymongo_other_methods(): array
 {
-    $names = ['card' => 'Card', 'gcash' => 'GCash', 'paymaya' => 'Maya', 'grab_pay' => 'GrabPay'];
+    $names = ['card' => 'Card', 'paymaya' => 'Maya'];
     $listed = (array) config('paymongo.payment_methods', []);
     $other = [];
     foreach ($names as $method => $name) {
@@ -234,8 +234,8 @@ function paymongo_create_qrph(array $booking, array $customer, int $expirySecond
 }
 
 /**
- * Starts an e-wallet payment. Returns the wallet's page to send the customer
- * to.
+ * Starts an e-wallet payment (Maya). Returns the wallet's page to send the
+ * customer to.
  */
 function paymongo_start_wallet(string $intentId, string $clientKey, string $wallet, array $customer, string $returnPath): string
 {

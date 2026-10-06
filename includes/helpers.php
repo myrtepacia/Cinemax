@@ -33,10 +33,40 @@ function app_path(): string
     return rtrim($path, '/');
 }
 
-/** A link inside the site: url('admin/movies.php'). */
+/**
+ * A page path as visitors see it: no '.php', a film's page is just its name
+ * and a booking's pages end in its reference. 'book.php?movie=hush' becomes
+ * 'hush', 'pay.php?ref=CMX-ABC234' 'pay/CMX-ABC234', 'terms.php' 'terms',
+ * 'index.php' '' and 'admin/index.php' 'admin/'. The .htaccess finds the
+ * .php file again.
+ */
+function clean_path(string $path): string
+{
+    if (preg_match('~^book(?:\.php)?\?movie=([a-z0-9-]+)(?:&(.*))?$~', $path, $m)) {
+        return $m[1] . (isset($m[2]) && $m[2] !== '' ? '?' . $m[2] : '');
+    }
+    if (preg_match('~^(pay|card|ticket|payment-success|payment-cancel)(?:\.php)?\?ref=([A-Za-z0-9-]+)(?:&(.*))?$~', $path, $m)) {
+        return $m[1] . '/' . $m[2] . (isset($m[3]) && $m[3] !== '' ? '?' . $m[3] : '');
+    }
+
+    $query = '';
+    $mark = strpos($path, '?');
+    if ($mark !== false) {
+        $query = substr($path, $mark);
+        $path = substr($path, 0, $mark);
+    }
+    if (preg_match('~(^|/)index\.php$~', $path)) {
+        $path = substr($path, 0, -strlen('index.php'));
+    } elseif (substr($path, -4) === '.php') {
+        $path = substr($path, 0, -4);
+    }
+    return $path . $query;
+}
+
+/** A link inside the site: url('admin/movies.php') gives '/admin/movies'. */
 function url(string $path = ''): string
 {
-    return app_path() . '/' . ltrim($path, '/');
+    return app_path() . '/' . ltrim(clean_path($path), '/');
 }
 
 /**
@@ -47,9 +77,9 @@ function absolute_url(string $path = ''): string
     // Use the address the visitor used (a phone on 192.168.x.x comes back
     // there, not to localhost); the config's when there is no visitor
     if (PHP_SAPI !== 'cli' && !empty($_SERVER['HTTP_HOST']) && function_exists('request_origin')) {
-        return request_origin() . app_path() . '/' . ltrim($path, '/');
+        return request_origin() . url($path);
     }
-    return rtrim((string) config('app_url'), '/') . '/' . ltrim($path, '/');
+    return rtrim((string) config('app_url'), '/') . '/' . ltrim(clean_path($path), '/');
 }
 
 /** A file link with its modified time, so browsers load changed files. */
@@ -73,7 +103,7 @@ function redirect(string $path, int $status = 303): void
     exit;
 }
 
-/** Redirects to PayMongo's checkout page only. */
+/** Redirects to PayMongo's own pages only (checkout, Maya). */
 function redirect_external(string $address): void
 {
     $host = (string) parse_url($address, PHP_URL_HOST);
@@ -91,13 +121,14 @@ function safe_return_path($path): ?string
     if (!is_string($path) || $path === '' || strlen($path) > 300) {
         return null;
     }
-    if (!preg_match('~^[a-z0-9][a-z0-9/_-]*\.php(\?[A-Za-z0-9_=&%.-]*)?$~', $path)) {
+    // 'hush', 'pay/CMX-ABC234', 'admin/' or the older 'book.php?movie=x'
+    if (!preg_match('~^[a-z0-9][A-Za-z0-9/_-]*(\.php)?(\?[A-Za-z0-9_=&%.-]*)?$~', $path)) {
         return null;
     }
     if (strpos($path, '..') !== false || strpos($path, '//') !== false) {
         return null;
     }
-    return $path;
+    return clean_path($path);
 }
 
 /** The page being viewed with its query string, as a sign-in return path. */
@@ -242,12 +273,6 @@ function format_day(string $date): string
     return (new DateTimeImmutable($date))->format('D, M j, Y');
 }
 
-/** 'Sunday, October 25, 2026'. */
-function format_date_long(string $date): string
-{
-    return (new DateTimeImmutable($date))->format('l, F j, Y');
-}
-
 /** A database date and time as people read it. */
 function format_datetime(string $datetime): string
 {
@@ -294,6 +319,7 @@ function render_error_page(int $status, string $message, ?string $title = null):
     echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
         . '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
         . '<title>' . e($title) . '</title>'
+        . '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">'
         . ($css !== '' ? '<link rel="stylesheet" href="' . e($css) . '">' : '')
         . '</head><body><main class="terms-page"><h1>' . e($title) . '</h1>'
         . '<p class="terms-intro">' . e($message) . '</p>'

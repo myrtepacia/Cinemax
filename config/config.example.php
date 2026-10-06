@@ -15,8 +15,9 @@ return [
         'host' => '127.0.0.1',
         'port' => 3306,
         'name' => 'cinemax',
-        // The cinemax database user made by database/setup.php with this
-        // password (not root). Use 16 or more random characters.
+        // A database user that can only use this database (not root). On
+        // cPanel: the database and user made in MySQL Databases. Use a long
+        // random password (16 or more characters).
         'user' => 'cinemax_app',
         'pass' => 'change-me-to-a-long-random-password',
     ],
@@ -31,11 +32,12 @@ return [
         // PayMongo. Empty: webhook.php refuses every call and payments are
         // confirmed when the customer comes back.
         'webhook_secret' => '',
-        // qrph shows the QR code on the pay page; gcash and card appear under
-        // Choose another payment. With live keys, a way PayMongo has not
+        // qrph shows the QR code on the pay page; card and paymaya (Maya)
+        // appear under Choose another payment. With live keys, a way PayMongo has not
         // turned on yet asks the customer to scan the QR code instead.
-        'payment_methods' => ['qrph', 'gcash', 'card'],
+        'payment_methods' => ['qrph', 'card', 'paymaya'],
     ],
+
 
     // Minutes seats are held while paying
     'booking_hold_minutes' => 10,

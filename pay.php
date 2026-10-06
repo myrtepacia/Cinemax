@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 // Pay by QR Ph. The code works for exactly as long as the seats are held.
-// pay.js checks the payment and opens the ticket when paid. GCash and card
+// pay.js checks the payment and opens the ticket when paid. Card and Maya
 // are under "Choose another payment".
 
 require __DIR__ . '/includes/bootstrap.php';
@@ -22,13 +22,13 @@ if ($booking['status'] !== 'pending' || $secondsLeft <= 0 || ($intentId === '' &
     redirect($elsewhere);
 }
 
-// A message under Cancel booking, or null
+// A message under Choose another payment, or null
 $notice = null;
 if (input_string($_GET, 'other', 10) === 'failed') {
     $notice = ['error', 'That way to pay is not available right now. Please scan the QR code instead.'];
 }
 
-// Back from GCash: paid, still confirming, or not done
+// Back from Maya: paid, still confirming, or not done
 $wallet = input_string($_GET, 'wallet', 20);
 $walletIntent = (string) ($booking['paymongo_wallet_intent_id'] ?? '');
 if (in_array($wallet, PAYMONGO_WALLETS, true) && $walletIntent !== '') {
@@ -87,8 +87,6 @@ if ($qr === null) {
 // pay.js reloads the page if the keys change
 remember_payment_keys();
 
-$otherMethods = paymongo_other_methods();
-$methodLogos = ['gcash' => 'assets/img/pay-gcash.svg', 'card' => 'assets/img/pay-card.svg'];
 
 render_head('Scan to pay', ['assets/css/booking.css']);
 render_header(['current' => 'account']);
@@ -124,31 +122,7 @@ render_header(['current' => 'account']);
       <div class="pay-details">
         <?php render_booking_summary($booking, 'Amount Due'); ?>
 
-<?php if ($otherMethods !== []): ?>
-        <details class="pay-other">
-          <summary>Choose another payment</summary>
-          <form method="post" action="<?= e(url('pay-other.php')) ?>">
-            <?= csrf_field() ?>
-            <input type="hidden" name="ref" value="<?= e($reference) ?>">
-<?php foreach ($otherMethods as $method => $name): ?>
-            <button class="pay-other-option" type="submit" name="method" value="<?= e($method) ?>">
-              <span class="pay-other-name">Pay with <?= e($name) ?></span>
-<?php if (isset($methodLogos[$method])): ?>
-              <img class="pay-other-logo" src="<?= e(asset($methodLogos[$method])) ?>" alt="">
-<?php endif; ?>
-            </button>
-<?php endforeach; ?>
-          </form>
-        </details>
-<?php endif; ?>
-
-        <div class="ticket-actions">
-          <form class="inline-form" method="post" action="<?= e(url('payment-cancel.php')) ?>">
-            <?= csrf_field() ?>
-            <input type="hidden" name="ref" value="<?= e($reference) ?>">
-            <button class="button button-outline" type="submit">Cancel booking</button>
-          </form>
-        </div>
+        <?php render_other_payments($reference, paymongo_other_methods()); ?>
 
 <?php if ($notice !== null): ?>
         <p class="form-message form-message-<?= e($notice[0]) ?> pay-notice" role="<?= $notice[0] === 'error' ? 'alert' : 'status' ?>"><?= e($notice[1]) ?></p>

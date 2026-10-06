@@ -75,7 +75,7 @@ function signup_validate(array $post): array
     }
 
     if (input_string($post, 'agree', 5) === '') {
-        $errors['agree'] = 'Please agree to the Terms of Service.';
+        $errors['agree'] = 'Please agree to the Terms and Conditions.';
     }
 
     return [
@@ -233,7 +233,7 @@ render_header();
 
         <label class="agree-line">
           <input type="checkbox" id="agree" name="agree" value="1" required<?= $agreed ? ' checked' : '' ?><?= isset($errors['agree']) ? ' aria-invalid="true" aria-describedby="agree-error"' : '' ?>>
-          <span>I agree to the <a href="<?= e(url('terms.php')) ?>" target="_blank" rel="noopener">Terms of Service</a>.<?= signup_field_error($errors, 'agree') ?></span>
+          <span>I agree to the <a href="<?= e(url('terms.php')) ?>" target="_blank" rel="noopener">Terms and Conditions</a>.<?= signup_field_error($errors, 'agree') ?></span>
         </label>
 
         <button class="button button-red" type="submit" id="submit">Create Account</button>

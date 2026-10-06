@@ -31,7 +31,7 @@ body {
   margin: 0;
   background-color: var(--page);
   color: var(--text);
-  font-family: 'Outfit', Arial, sans-serif;
+  font-family: 'Inter', Arial, sans-serif;
   font-size: 16px;
   line-height: 1.6;
 }
@@ -919,20 +919,6 @@ button.button:disabled {
   margin-bottom: 14px;
 }
 
-.terms-kind {
-  display: block;
-  color: var(--red);
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-
-.terms-kind-snack {
-  color: var(--indigo);
-}
-
 .terms-block h2 {
   font-size: 18px;
   margin-bottom: 10px;
@@ -942,6 +928,18 @@ button.button:disabled {
   color: var(--text-soft);
   font-size: 14px;
   margin-bottom: 10px;
+}
+
+/* The clauses of a section */
+.terms-block ul {
+  margin: 0 0 10px 0;
+  padding-left: 18px;
+  color: var(--text-soft);
+  font-size: 14px;
+}
+
+.terms-block li {
+  margin-bottom: 8px;
 }
 
 /* 11. STAFF PAGES ----------------------------------------------------------*/
@@ -1836,4 +1834,28 @@ button.button:disabled {
 
 .hidden {
   display: none !important;
+}
+
+/* Skeleton: a grey shimmer where a picture or part is still loading
+   (skeleton.js removes it from a picture once it is in) */
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+.skeleton {
+  background-color: var(--line);
+  background-image: linear-gradient(90deg, var(--line) 0%, var(--line-soft) 50%, var(--line) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
 }

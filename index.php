@@ -47,7 +47,7 @@ render_header(['home' => true, 'current' => 'now-showing']);
 
         <div class="movie-card">
           <div class="movie-poster">
-            <img src="<?= e(poster_url($movie)) ?>" alt="<?= e($movie['title'] . ' poster') ?>"
+            <img class="skeleton" src="<?= e(poster_url($movie)) ?>" alt="<?= e($movie['title'] . ' poster') ?>"
                  width="900" height="1200" decoding="async" <?= $eager ? 'fetchpriority="high"' : 'loading="lazy"' ?>>
             <span class="tag-rated"><?= e($movie['rating']) ?></span>
             <span class="tag-time"><?= e(duration_tag((int) $movie['duration_minutes'])) ?></span>
@@ -84,7 +84,7 @@ render_header(['home' => true, 'current' => 'now-showing']);
 
         <div class="movie-card">
           <div class="movie-poster">
-            <img src="<?= e(poster_url($movie)) ?>" alt="<?= e($movie['title'] . ' poster') ?>"
+            <img class="skeleton" src="<?= e(poster_url($movie)) ?>" alt="<?= e($movie['title'] . ' poster') ?>"
                  width="900" height="1200" decoding="async" <?= $eager ? 'fetchpriority="high"' : 'loading="lazy"' ?>>
             <span class="tag-rated"><?= e($movie['rating']) ?></span>
             <span class="tag-time"><?= e(duration_tag((int) $movie['duration_minutes'])) ?></span>

@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// PayMongo sends customers here when they back out. GET shows "Waiting for
-// payment"; POST cancels the booking and frees its seats.
+// PayMongo sends customers here when they back out: "Waiting for payment"
+// while the seats are still held, "Payment cancelled" after.
 
 require __DIR__ . '/includes/bootstrap.php';
 
@@ -49,25 +49,6 @@ function payment_cancel_booking(array $user, array $source): array
         abort(404, 'We could not find that booking.');
     }
     return $booking;
-}
-
-if (is_post()) {
-    verify_csrf();
-    $user = require_login();
-    $booking = payment_cancel_booking($user, $_POST);
-
-    // A paid ticket is never cancelled here
-    if ($booking['status'] === 'paid') {
-        redirect('ticket.php?ref=' . rawurlencode((string) $booking['reference']));
-    }
-
-    // Already closed: nothing to cancel
-    if (in_array($booking['status'], ['pending', 'expired'], true)) {
-        // Paid meanwhile? Then go to the ticket
-        payment_cancel_settle($user, $booking);
-        cancel_pending_booking($booking);
-    }
-    redirect(booking_film_path($booking));
 }
 
 $user = require_login();

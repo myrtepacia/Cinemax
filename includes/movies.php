@@ -157,7 +157,9 @@ function unique_movie_slug(string $title): string
     $base = substr($base !== '' ? $base : 'movie', 0, 100);
     $slug = $base;
     $n = 2;
-    while (db_value('SELECT 1 FROM movies WHERE slug = ?', [$slug]) !== null) {
+    // A film's page is /its-slug, so it may not take a page's name (/terms)
+    while (db_value('SELECT 1 FROM movies WHERE slug = ?', [$slug]) !== null
+        || is_file(APP_ROOT . '/' . $slug . '.php') || is_dir(APP_ROOT . '/' . $slug)) {
         $slug = $base . '-' . $n++;
     }
     return $slug;

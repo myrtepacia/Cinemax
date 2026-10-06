@@ -66,7 +66,7 @@ render_header(['current' => 'account']);
 <?php $label = account_status_label($booking); ?>
 
         <a class="booking-row booking-link" href="<?= e(url('ticket.php?ref=' . rawurlencode((string) $booking['reference']))) ?>">
-          <img class="table-poster" src="<?= e(poster_url($booking)) ?>" alt="<?= e($booking['title'] . ' poster') ?>"
+          <img class="table-poster skeleton" src="<?= e(poster_url($booking)) ?>" alt="<?= e($booking['title'] . ' poster') ?>"
                width="40" height="54" loading="lazy" decoding="async">
           <div class="booking-text">
             <p class="order-items"><?= e($booking['title']) ?></p>

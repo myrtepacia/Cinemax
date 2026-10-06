@@ -196,7 +196,7 @@
         return askPayMongo('payment_intents/' + intentId + '/attach', {
           payment_method: method.id,
           client_key: clientKey,
-          return_url: returnUrl + '&bank=1'
+          return_url: returnUrl + (returnUrl.indexOf('?') === -1 ? '?' : '&') + 'bank=1'
         });
       })
       .then(function (intent) {

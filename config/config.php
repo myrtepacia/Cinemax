@@ -13,9 +13,8 @@ return [
         'pass' => '3ab3c4b2fb81091acf7fb937615b68cf7e2151ee2bd50f46',
     ],
 
-    'paymongo' => [
-        'secret_key' => 'sk_test_KwcB8do5Z1Lbd5NLvsXBFKbY',
-        'public_key' => 'pk_test_G53BQpjfiSnQebhPrHNgXV5b',
+        'secret_key' => 'sk_test_...',
+        'public_key' => 'pk_test_...',
         'webhook_secret' => '',
         'payment_methods' => ['qrph', 'card', 'paymaya'],
     ],

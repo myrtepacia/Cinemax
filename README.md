@@ -1,126 +1,117 @@
-# Cinemax — Cinema Ticket & Concessions Booking System
-
-Cinemax is a web-based cinema ticketing and concessions management application built with PHP, MySQL, JavaScript, and PayMongo. The platform handles the entire cinema workflow—from interactive seat selection and online payment processing to QR-coded e-ticket generation, entrance gate verification, and live concession claim monitoring.
-
----
-
-## Table of Contents
-
-- [Features](#features)
-  - [Customer Features](#customer-features)
-  - [Administrative & Staff Portals](#administrative--staff-portals)
-  - [Payment & Security](#payment--security)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Database Setup](#database-setup)
-- [Installation & Configuration](#installation--configuration)
-- [API Endpoints](#api-endpoints)
-- [Verification & Scanner Workflow](#verification--scanner-workflow)
-- [License](#license)
+<div align="center">
+  <img src="assets/img/logo.png" alt="Cinemax Logo" width="220" />
+  <h1>Cinemax</h1>
+  <p><strong>Automated Cinema Ticketing, Real-Time Seat Reservation & Concession Fulfillment System</strong></p>
+</div>
 
 ---
 
-## Features
+Cinemax is an end-to-end web platform engineered for movie theaters to manage film screenings, online seat reservations, concession sales, and admission operations. Powered by PHP, MySQL, Vanilla JavaScript, and PayMongo, the system coordinates customer booking flows with gatekeeper QR verification and live concession tracking.
 
-### Customer Features
-- **Movie Catalog & Schedules:** Browse currently showing movies, upcoming features, and scheduled screening times.
-- **Live Seat Reservation:** Choose available seats interactively via a seat map interface backed by real-time seat availability polling.
-- **Concession Stand Add-Ons:** Select food and beverage items alongside movie tickets during checkout.
-- **Digital QR Tickets:** View and download e-tickets featuring dynamic QR codes generated via `qrcode.js`.
-- **User Accounts:** Register, sign in, update user credentials, and review past order history.
+---
 
-### Administrative & Staff Portals
-- **Analytics Dashboard:** Monitor total ticket sales, revenue metrics, and admission volume.
-- **Movie Management:** Add, edit, archive, and schedule screenings and posters.
-- **Gate QR Scanner:** In-browser camera scanning powered by `jsQR.js` to validate entrance tickets at cinema gates.
-- **Concession Scanner:** Scan customer snack QR codes to verify and log item redemptions at food counters.
-- **Live Claim Monitor:** Real-time dashboard to monitor concession claims and orders.
+## System Capabilities
 
-### Payment & Security
-- **PayMongo Gateway:** Processes credit/debit card and digital wallet transactions (GCash, Maya) via the PayMongo API.
-- **Webhook Handlers:** Asynchronous transaction status processing via secure webhook listeners.
-- **Secure Access Control:** Password hashing, prepared statements using PDO, CSRF protection, and directory shielding via `.htaccess`.
+### Customer Portal
+* **Interactive Seat Selection:** Dynamic, visual seat picker that polls availability in real time to prevent double bookings.
+* **Concession Ordering:** Add snacks and beverages directly to your movie ticket order during checkout.
+* **Automated E-Ticket Delivery:** Generates digital pass cards and e-tickets featuring scannable QR code payloads.
+* **Self-Service Accounts:** Registration, profile preferences, and searchable past booking history.
+
+### Administration & Gate Verification
+* **In-Browser Ticket Scanner:** Camera-driven QR code verification module powered by `jsQR.js` for entrance staff.
+* **Concession Claim Scanner:** Dedicated QR scanner for concession stands to mark food vouchers as redeemed.
+* **Live Claim Monitor:** Real-time visual display queue monitoring pending and fulfilled snack orders.
+* **Showtime & Theater Management:** Tools to add movies, set screening schedules, and upload theatrical posters.
+* **Performance Dashboard:** Visual metrics tracking daily admissions, revenue, and order volume.
+
+### Payment Processing & Infrastructure Security
+* **PayMongo Gateway:** Direct integration supporting Credit/Debit Cards, GCash, and Maya.
+* **Asynchronous Webhook Engine:** Background webhook listeners that verify transaction payloads and update database records automatically.
+* **Defensive Architecture:** Server-side input sanitization, PDO prepared statements, CSRF tokens, and directory-level `.htaccess` protection rules.
 
 ---
 
 ## Tech Stack
 
-- **Backend:** PHP (Modular architecture)
-- **Database:** MySQL / MariaDB via PDO
-- **Frontend:** HTML5, CSS3, Vanilla JavaScript
-- **Payment Processing:** PayMongo REST API & Webhooks[cite: 1]
-- **QR Utilities:** `qrcode.js` (Generation) & `jsQR.js` (Camera-based parsing)[cite: 1]
-- **Web Server:** Apache with `mod_rewrite` enabled[cite: 1]
+| Layer | Technology | Details |
+|---|---|---|
+| **Backend** | PHP 7.4+ / 8.x | Modular service architecture |
+| **Database** | MySQL / MariaDB via `PDO` | Relational data schema |
+| **Frontend** | HTML5, CSS3, JavaScript | Custom responsive UI |
+| **Payment Gateway** | PayMongo REST API & Webhooks | Automated checkout processing |
+| **QR Code Engine** | `qrcode.js` & `jsQR.js` | Dynamic ticket rendering and camera decoding |
+| **Web Server** | Apache (`mod_rewrite`)[cite: 1] | URL rewriting and directory access control[cite: 1] |
 
 ---
 
-## Project Structure
+## Repository Structure
 
 ```plaintext
 cinemax/
-├── .htaccess                     # Global URL rewrites and root security[cite: 1]
-├── index.php                     # Homepage and featured movies listing[cite: 1]
-├── book.php                      # Showtime and seat booking page[cite: 1]
-├── checkout.php                  # Order overview and snack selections[cite: 1]
-├── pay.php                       # Payment processor router[cite: 1]
-├── pay-now.php                   # Direct payment dispatcher[cite: 1]
-├── pay-other.php                 # Secondary payment methods[cite: 1]
-├── payment-success.php           # Post-payment confirmation page[cite: 1]
+├── .htaccess                     # Global URL rewrites and server hardening[cite: 1]
+├── index.php                     # Customer homepage and movie showcase[cite: 1]
+├── book.php                      # Showtime and seat booking interface[cite: 1]
+├── checkout.php                  # Order overview and snack selection[cite: 1]
+├── pay.php                       # Payment gateway dispatcher[cite: 1]
+├── pay-now.php                   # Direct checkout routing[cite: 1]
+├── pay-other.php                 # Secondary payment processor[cite: 1]
+├── payment-success.php           # Post-transaction confirmation view[cite: 1]
 ├── payment-cancel.php            # Cancelled transaction fallback[cite: 1]
-├── ticket.php                    # E-ticket viewer with QR code[cite: 1]
-├── card.php                      # Digital ticket pass card view[cite: 1]
+├── ticket.php                    # Scannable digital e-ticket display[cite: 1]
+├── card.php                      # Digital pass card component[cite: 1]
 ├── account.php                   # User profile and order history[cite: 1]
-├── signin.php                    # User authentication login[cite: 1]
-├── signup.php                    # New user registration[cite: 1]
-├── signout.php                   # User session logout[cite: 1]
-├── terms.php                     # Service terms and policies[cite: 1]
+├── signin.php                    # Customer login page[cite: 1]
+├── signup.php                    # User registration portal[cite: 1]
+├── signout.php                   # Session termination[cite: 1]
+├── terms.php                     # Terms of service and guidelines[cite: 1]
 ├── webhook.php                   # PayMongo asynchronous webhook listener[cite: 1]
 │
-├── admin/                        # Administrative and staff modules[cite: 1]
+├── admin/                        # Operations & Staff Control Center[cite: 1]
 │   ├── index.php                 # Analytics and operations dashboard[cite: 1]
-│   ├── movies.php                # Movie list and status controller[cite: 1]
-│   ├── add-movie.php             # New movie addition form[cite: 1]
-│   ├── scanner.php               # Camera-based gate QR ticket scanner[cite: 1]
-│   ├── snack-scanner.php         # Concession counter QR scanner[cite: 1]
-│   └── claim-monitor.php         # Live snack order queue monitor[cite: 1]
+│   ├── movies.php                # Movie catalog inventory[cite: 1]
+│   ├── add-movie.php             # New screening and movie creation[cite: 1]
+│   ├── scanner.php               # Camera-based admission QR ticket scanner[cite: 1]
+│   ├── snack-scanner.php         # Concession booth voucher scanner[cite: 1]
+│   └── claim-monitor.php         # Live queue display for food fulfillment[cite: 1]
 │
-├── api/                          # Asynchronous JSON API endpoints[cite: 1]
-│   ├── dashboard.php             # Analytics metrics endpoint[cite: 1]
-│   ├── seats.php                 # Showtime seat availability handler[cite: 1]
+├── api/                          # Internal Asynchronous Endpoints[cite: 1]
+│   ├── dashboard.php             # Administrative metrics data feed[cite: 1]
+│   ├── seats.php                 # Live seat map and availability state[cite: 1]
 │   ├── scan.php                  # Gate ticket scan validation endpoint[cite: 1]
-│   ├── snack-scan.php            # Concession QR validation endpoint[cite: 1]
-│   ├── snack-search.php          # Snack catalog search endpoint[cite: 1]
-│   ├── claim-monitor.php         # Concession claim polling endpoint[cite: 1]
-│   └── payment-status.php        # Transaction verification endpoint[cite: 1]
+│   ├── snack-scan.php            # Concession QR redemption endpoint[cite: 1]
+│   ├── snack-search.php          # Concession menu item search[cite: 1]
+│   ├── claim-monitor.php         # Real-time concession polling feed[cite: 1]
+│   └── payment-status.php        # Transaction verification polling[cite: 1]
 │
-├── config/                       # Configuration files[cite: 1]
-│   ├── .htaccess                 # Protects configuration files[cite: 1]
-│   ├── config.example.php        # Template configuration file[cite: 1]
-│   └── config.php                # Environment secrets and credentials[cite: 1]
+├── config/                       # System Configuration Files[cite: 1]
+│   ├── .htaccess                 # Direct web access shield[cite: 1]
+│   ├── config.example.php        # Configuration template[cite: 1]
+│   └── config.php                # Database credentials & PayMongo API secrets[cite: 1]
 │
-├── database/                     # Database schemas and migrations[cite: 1]
-│   ├── .htaccess                 # Prevents direct database directory access[cite: 1]
-│   └── cinemax.sql               # Full SQL database dump and sample data[cite: 1]
+├── database/                     # Database Migrations[cite: 1]
+│   ├── .htaccess                 # SQL direct download protection[cite: 1]
+│   └── cinemax.sql               # Database schema and seed dataset[cite: 1]
 │
-├── includes/                     # Backend helper libraries and core logic[cite: 1]
-│   ├── .htaccess                 # Direct script execution prevention[cite: 1]
-│   ├── auth.php                  # Authentication and session guards[cite: 1]
-│   ├── bookings.php              # Ticket reservation queries and models[cite: 1]
-│   ├── bootstrap.php             # Global autoloader and initialization[cite: 1]
-│   ├── db.php                    # PDO database connection handler[cite: 1]
-│   ├── helpers.php               # Response formatting and helper utilities[cite: 1]
-│   ├── layout.php                # Global page header and footer templates[cite: 1]
-│   ├── movies.php                # Movie retrieval and scheduling logic[cite: 1]
-│   ├── paymongo.php              # PayMongo API client wrapper[cite: 1]
-│   └── security.php              # CSRF, XSS, and sanitization guards[cite: 1]
+├── includes/                     # Reusable Core Services & Helpers[cite: 1]
+│   ├── .htaccess                 # PHP source file isolation[cite: 1]
+│   ├── auth.php                  # Session controls and authentication checks[cite: 1]
+│   ├── bookings.php              # Reservation logic and transaction models[cite: 1]
+│   ├── bootstrap.php             # Global autoloader and runtime initializers[cite: 1]
+│   ├── db.php                    # PDO database connection factory[cite: 1]
+│   ├── helpers.php               # Formatting, sanitization, and output helpers[cite: 1]
+│   ├── layout.php                # Template wrappers (header, navbar, footer)[cite: 1]
+│   ├── movies.php                # Movie catalog query controllers[cite: 1]
+│   ├── paymongo.php              # PayMongo API integration wrapper[cite: 1]
+│   └── security.php              # CSRF, XSS, and authorization guards[cite: 1]
 │
-├── storage/                      # Runtime cache and log files[cite: 1]
-│   ├── .htaccess                 # Direct file access shield[cite: 1]
-│   ├── cache/                    # Temporary application cache files[cite: 1]
-│   └── logs/                     # Application error and payment webhook logs[cite: 1]
+├── storage/                      # Runtime Logs & Transient Cache[cite: 1]
+│   ├── .htaccess                 # Private logs directory shield[cite: 1]
+│   ├── cache/                    # Application cache storage[cite: 1]
+│   └── logs/                     # System logs and webhook audit trail[cite: 1]
 │
-└── assets/                       # Static front-end assets[cite: 1]
-    ├── css/                      # Stylesheets for client and admin views[cite: 1]
-    ├── js/                       # Client-side scripts and event handlers[cite: 1]
-    ├── img/                      # App logos, payment icons, and movie posters[cite: 1]
-    └── vendor/                   # Third-party libraries (`jsQR.js`, `qrcode.js`)[cite: 1]
+└── assets/                       # Static Assets & Front-End Dependencies[cite: 1]
+    ├── css/                      # Application stylesheets[cite: 1]
+    ├── js/                       # Front-end business logic and AJAX handlers[cite: 1]
+    ├── img/                      # Logos, UI badges, and movie posters[cite: 1]
+    └── vendor/                   # Embedded libraries (`jsQR.js`, `qrcode.js`)[cite: 1]

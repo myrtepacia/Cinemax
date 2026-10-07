@@ -1,17 +1,10 @@
 <?php
 declare(strict_types=1);
 
-// Door scanner (scanner.js). POST {"action": "check", "code": ...} looks at a
-// ticket; {"action": "admit", ...} lets a valid ticket in, once only. Staff
-// only, CSRF-checked, rate-limited. Never returns the QR secret or ids.
-
 require __DIR__ . '/../includes/bootstrap.php';
 
 [$user, $action, $code] = read_scan_request('scan', ['check', 'admit']);
 
-/**
- * A ticket's status and the details staff check. Never the QR token or ids.
- */
 function scan_reply(string $status, ?array $booking): array
 {
     $reply = ['ok' => true, 'status' => $status];
@@ -33,7 +26,6 @@ function scan_reply(string $status, ?array $booking): array
 $result = check_ticket($code);
 
 if ($action === 'check' || $result['status'] !== 'valid') {
-    // Just a check, or the ticket is not valid: say what it is
     json_response(scan_reply($result['status'], $result['booking']));
 }
 
@@ -42,7 +34,6 @@ if (admit_ticket($bookingId, (int) $user['id'])) {
     json_response(scan_reply('admitted', find_booking_by_id($bookingId)));
 }
 
-// Someone else just let it in: say what it is now
 $again = check_ticket($code);
 if ($again['status'] === 'valid') {
     json_response(['ok' => false, 'error' => 'This ticket could not be let in. Scan it again.'], 409);

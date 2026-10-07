@@ -1,10 +1,6 @@
 <?php
 declare(strict_types=1);
 
-// Dashboard search above Sold (dashboard.js): ?q=part of a reference. Lists
-// picked-up snack orders with when they were scanned and picked up. Admin
-// only, read-only.
-
 require __DIR__ . '/../includes/bootstrap.php';
 
 require_admin_get();
@@ -24,7 +20,6 @@ $orders = array_map(static function (array $order): array {
     ];
 }, $found['orders']);
 
-// Found but not picked up: say where it is
 $note = '';
 if ($found['other'] !== null) {
     $reference = $found['other']['reference'];

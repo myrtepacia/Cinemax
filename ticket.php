@@ -1,9 +1,6 @@
 <?php
 declare(strict_types=1);
 
-// A booking's e-ticket with the QR code for the door. Customers see only
-// their own (others look "not found"); admins see any.
-
 require __DIR__ . '/includes/bootstrap.php';
 
 $user = require_login();
@@ -26,20 +23,17 @@ if ($booking === null) {
 $status = (string) $booking['status'];
 $ownBooking = (int) $booking['user_id'] === (int) $user['id'];
 
-// Still unpaid: back to the payment page
 if ($status === 'pending' && $ownBooking) {
     $paying = paymongo_uses_qrph() || !empty($booking['paymongo_intent_id']) ? 'pay.php' : 'payment-success.php';
     redirect($paying . '?ref=' . rawurlencode($ref));
 }
 
-// "Booking Confirmed!" only once, straight after paying
 $justPaid = false;
 if (($_SESSION['just_paid'] ?? null) === $ref) {
     $justPaid = true;
     unset($_SESSION['just_paid']);
 }
 
-// Book Another goes back to the film if it can still be booked
 $movie = find_movie((int) $booking['movie_id']);
 $bookAnother = ($movie !== null && movie_booking_window($movie) !== null)
     ? 'book.php?movie=' . rawurlencode((string) $movie['slug'])
@@ -50,7 +44,6 @@ $hasTicket = in_array($status, ['paid', 'refunded'], true);
 if ($hasTicket) {
     $snackLines = booking_snacks((int) $booking['id']);
     $snacks = snack_summary($snackLines);
-    // The snack order number, on paid tickets only
     $snackNumber = $status === 'paid' && $booking['snack_number'] !== null
         ? '#' . snack_number_label((int) $booking['snack_number'])
         : null;
@@ -62,7 +55,6 @@ if ($hasTicket) {
     ][(string) ($booking['snack_status'] ?? '')] ?? null;
 }
 
-// Why there is no ticket
 $noTicketMessages = [
     'pending'   => 'Booking %s for %s is still waiting for payment. The ticket appears once PayMongo confirms it.',
     'expired'   => 'Booking %s for %s was not paid in time, so no ticket was issued and its seats went back on sale.',
@@ -149,7 +141,6 @@ render_header();
 <?php if ($snackNumber !== null): ?>
               <p class="ticket-value" id="pickup-number"><?= e($snackNumber) ?></p>
 <?php else: ?>
-              <!-- Refunded, or ordered before numbers existed -->
               <p class="ticket-value ticket-value-small" id="pickup-number"><?= $status === 'refunded' ? 'Refunded' : 'None' ?></p>
 <?php endif; ?>
             </div>

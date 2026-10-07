@@ -1,7 +1,3 @@
-/* Snacks Claim monitor (admin/claim-monitor.php): read from across the room,
-   so text is large and scales with the screen. */
-
-/* Full screen height */
 .claim-screen {
   display: flex;
   flex-direction: column;
@@ -10,7 +6,6 @@
   color: var(--text);
 }
 
-/* Title bar: CINEMAX left, title centred */
 .claim-head {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -40,7 +35,6 @@
   text-align: center;
 }
 
-/* Small outlined button on the right */
 .claim-fullscreen {
   justify-self: end;
 }
@@ -49,7 +43,6 @@
   display: none;
 }
 
-/* Preparing and Ready columns, split by a line */
 .claim-board {
   display: grid;
   flex: 1;
@@ -69,7 +62,6 @@
   border-left: 2px solid var(--line);
 }
 
-/* Column titles */
 .claim-column h2 {
   margin-bottom: clamp(12px, 2vw, 32px);
   font-size: clamp(18px, 2.4vw, 40px);
@@ -87,7 +79,6 @@
   color: var(--green);
 }
 
-/* Order numbers run down the screen and wrap into new columns when full */
 .claim-list {
   display: flex;
   flex: 1;
@@ -116,7 +107,6 @@
   color: var(--green);
 }
 
-/* A number that just became ready blinks */
 .claim-ready li.claim-new {
   animation: claim-arrive 1s ease-in-out 4;
 }
@@ -133,7 +123,6 @@
   }
 }
 
-/* Lists cannot update (signed out, offline) */
 .claim-problem {
   position: fixed;
   bottom: 16px;
@@ -152,7 +141,6 @@
   display: none;
 }
 
-/* Narrow screens: columns stack and the page scrolls */
 @media (max-width: 620px) {
   .claim-screen {
     height: auto;

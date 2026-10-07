@@ -1,9 +1,3 @@
-/* Staff pages: Dashboard, Movies and Add Movie. Shared styles are in
-   cinemax.css. */
-
-/* 1. SNACK ORDERS ----------------------------------------------------------*/
-
-/* Search above Sold (box is .search-field in cinemax.css) */
 .sold-search {
   margin: 10px 0 4px 0;
 }
@@ -14,16 +8,12 @@
   font-size: 14px;
 }
 
-/* When a found order was scanned and picked up */
 .order-time {
   margin-top: 2px;
   color: var(--text-soft);
   font-size: 12px;
 }
 
-/* 2. MOVIES TABLE ----------------------------------------------------------*/
-
-/* Remove button on each row */
 .row-actions {
   display: inline-flex;
   align-items: center;
@@ -38,9 +28,6 @@
   border-bottom: none;
 }
 
-/* 3. ADD MOVIE FORM --------------------------------------------------------*/
-
-/* The server's list of fixes inside the red message */
 .form-error-list {
   margin: 6px 0 0 0;
   padding-left: 20px;

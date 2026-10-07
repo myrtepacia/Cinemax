@@ -1,9 +1,6 @@
 <?php
 declare(strict_types=1);
 
-// The database connection and query helpers. Every query is a prepared
-// statement, so nothing typed is read as SQL.
-
 if (!defined('CINEMAX_BOOTSTRAPPED')) {
     http_response_code(404);
     exit;
@@ -31,14 +28,12 @@ function db(): PDO
         PDO::MYSQL_ATTR_MULTI_STATEMENTS => false,
     ]);
 
-    // Philippine time, and strict mode so bad data is refused
     $pdo->exec("SET time_zone = '+08:00'");
     $pdo->exec("SET SESSION sql_mode = 'STRICT_ALL_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'");
 
     return $pdo;
 }
 
-/** Runs a query with its values bound. */
 function db_query(string $sql, array $params = []): PDOStatement
 {
     $statement = db()->prepare($sql);
@@ -58,35 +53,28 @@ function db_query(string $sql, array $params = []): PDOStatement
     return $statement;
 }
 
-/** The first row, or null. */
 function db_one(string $sql, array $params = []): ?array
 {
     $row = db_query($sql, $params)->fetch();
     return $row === false ? null : $row;
 }
 
-/** Every row. */
 function db_all(string $sql, array $params = []): array
 {
     return db_query($sql, $params)->fetchAll();
 }
 
-/** The first column of the first row, or null. */
 function db_value(string $sql, array $params = [])
 {
     $value = db_query($sql, $params)->fetchColumn();
     return $value === false ? null : $value;
 }
 
-/** Runs an INSERT, UPDATE or DELETE; returns the rows changed. */
 function db_exec(string $sql, array $params = []): int
 {
     return db_query($sql, $params)->rowCount();
 }
 
-/**
- * Runs $work in a transaction: all or nothing. Returns what $work returns.
- */
 function db_transaction(callable $work)
 {
     $pdo = db();
@@ -103,7 +91,6 @@ function db_transaction(callable $work)
     }
 }
 
-/** True for a duplicate unique key, e.g. two bookings for the same seat. */
 function is_duplicate_key(Throwable $e): bool
 {
     return $e instanceof PDOException

@@ -1,8 +1,3 @@
-/* Booking page (book.php) and the payment pages. Header, footer, buttons and
-   the calendar come from cinemax.css. */
-
-/* Page layout */
-
 .booking {
   max-width: 1024px;
   width: 92%;
@@ -30,7 +25,6 @@
   align-items: start;
 }
 
-/* Poster with rating and running time tags */
 .booking-poster-wrap {
   position: relative;
   margin-bottom: 20px;
@@ -44,14 +38,12 @@
   border-radius: 16px;
 }
 
-/* Bigger poster, slightly bigger tags */
 .booking-poster-wrap .tag-rated,
 .booking-poster-wrap .tag-time {
   padding: 4px 12px;
   font-size: 14px;
 }
 
-/* Same corners as the home cards, a bit further in */
 .booking-poster-wrap .tag-rated {
   top: 14px;
   right: 14px;
@@ -86,8 +78,6 @@
   margin-bottom: 8px;
 }
 
-/* Date and showtime dropdowns */
-
 .dropdown {
   width: 100%;
   padding: 11px 14px;
@@ -110,7 +100,6 @@
   border-color: var(--red);
 }
 
-/* Showtime box before a date is picked: greyed out */
 .dropdown:disabled,
 .dropdown:disabled:hover {
   background-color: var(--line-soft);
@@ -130,15 +119,12 @@
   text-align: center;
 }
 
-/* Film not bookable: same box, with a title */
 .pick-first strong {
   display: block;
   color: var(--text);
   font-size: 16px;
   margin-bottom: 4px;
 }
-
-/* The seat map */
 
 .seat-area h3 {
   font-size: 18px;
@@ -161,14 +147,11 @@
   margin: 4px 0 24px 0;
 }
 
-/* On very narrow screens the seat map scrolls sideways */
 .seat-area {
   position: relative;
   min-width: 0;
 }
 
-/* Before a date and showtime are picked, seats and snacks are hidden but keep
-   their space, so the page and footer do not jump. The note sits on top. */
 .seats-waiting {
   visibility: hidden;
 }
@@ -185,7 +168,6 @@
   padding-bottom: 8px;
 }
 
-/* Loading the taken seats: the seats show as a skeleton (grey shimmer) */
 .seat-map-loading .seat-box {
   background-color: var(--line);
   background-image: linear-gradient(90deg, var(--line) 0%, var(--line-soft) 50%, var(--line) 100%);
@@ -200,7 +182,6 @@
   }
 }
 
-/* As wide as its seats, so the map stays centred */
 .seat-row {
   display: flex;
   align-items: center;
@@ -209,7 +190,6 @@
   margin: 0 auto 8px auto;
 }
 
-/* Row letter, centred on its seats */
 .row-letter {
   width: 20px;
   color: var(--muted);
@@ -224,13 +204,10 @@
   cursor: pointer;
 }
 
-/* Aisles: a wider gap before seats 4 and 8 */
 .seat-after-aisle {
   margin-left: 12px;
 }
 
-/* The real seat checkbox is invisible (still keyboard-reachable); the
-   coloured box shows its state. */
 .seat input[type="checkbox"] {
   position: absolute;
   top: 0;
@@ -305,8 +282,6 @@
   background-color: var(--line);
 }
 
-/* The snacks */
-
 .snacks {
   margin-top: 28px;
   padding-top: 24px;
@@ -380,8 +355,6 @@
   font-weight: 900;
 }
 
-/* Snack + and - buttons */
-
 .snack-count {
   display: flex;
   align-items: center;
@@ -421,8 +394,6 @@
   text-align: center;
 }
 
-/* The total at the bottom */
-
 .order-summary {
   margin-top: 24px;
   padding: 20px;
@@ -439,7 +410,6 @@
   margin-bottom: 4px;
 }
 
-/* Long seat or snack lists wrap */
 .summary-line span:last-child {
   text-align: right;
 }
@@ -468,7 +438,6 @@
   font-weight: 900;
 }
 
-/* Greyed out for staff, or locked while sending */
 .order-summary .button:disabled {
   cursor: default;
 }
@@ -477,7 +446,6 @@
   opacity: 0.7;
 }
 
-/* Why the Confirm button is greyed out */
 .summary-note {
   margin-top: 10px;
   color: var(--text-soft);
@@ -491,7 +459,6 @@
     grid-template-columns: 1fr;
   }
 
-  /* One column: no gap below the showtime; the note comes first */
   .seats-waiting {
     display: none;
   }
@@ -500,7 +467,6 @@
     position: static;
   }
 
-  /* One column: poster centred */
   .booking-poster-wrap {
     max-width: 240px;
     margin-left: auto;
@@ -513,7 +479,6 @@
     grid-template-columns: 1fr;
   }
 
-  /* Smaller seats so a row fits on a phone */
   .seat-row {
     gap: 3px;
   }
@@ -531,8 +496,6 @@
     margin-left: 8px;
   }
 }
-
-/* Payment pages (payment-success.php, payment-cancel.php) */
 
 .status-mark {
   display: flex;
@@ -560,7 +523,6 @@
   text-align: center;
 }
 
-/* Held-seats page: big gap under the heading, small gap before the booking */
 .confirm-box .held-until {
   margin-top: 31px;
 }
@@ -573,9 +535,6 @@
   margin-bottom: 6px;
 }
 
-/* QR page (pay.php) and card page (card.php): code or card form left, booking
-   right, both top-aligned. On phones it is one column: the code, the booking,
-   then Choose another payment. */
 .pay-page {
   max-width: 900px;
 }
@@ -623,8 +582,6 @@
   }
 }
 
-/* Choose another payment: opens to one row per way to pay (card, Maya) with
-   its symbol and a selection circle on the right */
 .pay-other {
   margin-top: 20px;
   padding: 0 20px;
@@ -649,7 +606,6 @@
   display: none;
 }
 
-/* Small arrow on the right, pointing up when open */
 .pay-other summary::after {
   content: "";
   flex-shrink: 0;
@@ -687,8 +643,6 @@
   flex: 1;
 }
 
-/* A fixed spot for the symbol or logo, centred, so they line up down the
-   list */
 .pay-other-mark {
   display: flex;
   flex-shrink: 0;
@@ -698,14 +652,12 @@
   height: 24px;
 }
 
-/* The way to pay's symbol (QR code, card), always grey */
 .pay-other-symbol {
   width: 24px;
   height: 24px;
   color: var(--text-soft);
 }
 
-/* The selection circle at the end of each row */
 .pay-other-dot {
   flex-shrink: 0;
   box-sizing: border-box;
@@ -715,8 +667,6 @@
   border-radius: 50%;
 }
 
-/* Hovered or picked row: red words and a filled circle */
-/* Maya's own logo, in its green */
 .pay-other-logo {
   width: auto;
   height: 18px;
@@ -734,12 +684,10 @@
   box-shadow: inset 0 0 0 3px var(--white);
 }
 
-/* Payment message under Choose another payment */
 .pay-notice {
   margin: 12px 0 0 0;
 }
 
-/* Code, amount and countdown, in a box like the e-ticket */
 .qr-pay {
   text-align: center;
 }
@@ -750,16 +698,12 @@
   margin-top: 2px;
 }
 
-/* PayMongo's image is larger; smooth shrinking keeps squares even for
-   scanning */
 .qr-pay-code {
   width: 240px;
   height: 240px;
   margin: 14px auto;
   transition: opacity 0.3s;
 }
-
-/* Same phone: save the code, then upload it in the app */
 .qr-pay-save {
   margin-top: 14px;
 }
@@ -789,7 +733,6 @@
   line-height: 1.2;
 }
 
-/* Last minute */
 .pay-hurry .pay-timer strong {
   color: var(--red);
 }
@@ -801,12 +744,10 @@
   font-weight: 600;
 }
 
-/* Time is up: the code no longer works */
 .pay-ended .qr-pay-code {
   opacity: 0.15;
 }
 
-/* Card page (card.php): same box, card form instead of the code */
 .card-pay {
   text-align: center;
 }
@@ -816,12 +757,10 @@
   text-align: left;
 }
 
-/* Card error: a bit closer to the field above (16 - 8) */
 .card-form .form-message-error {
   margin-top: -8px;
 }
 
-/* Expiry and CVC side by side */
 .card-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -837,9 +776,7 @@
   cursor: default;
 }
 
-/* Time is up: the form no longer sends */
 .pay-ended .card-form {
   opacity: 0.4;
   pointer-events: none;
 }
-

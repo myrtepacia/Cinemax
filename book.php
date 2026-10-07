@@ -1,9 +1,6 @@
 <?php
 declare(strict_types=1);
 
-// Booking one film: date, showtime, seats and snacks. checkout.php checks
-// everything again and works out the price.
-
 require __DIR__ . '/includes/bootstrap.php';
 
 $movie = find_movie_by_slug(input_string($_GET, 'movie', 120));
@@ -15,10 +12,8 @@ $window = movie_booking_window($movie);
 $user = current_user();
 $slug = (string) $movie['slug'];
 $showtimes = movie_showtimes((int) $movie['id']);
-// No showtimes: nothing to book yet
 $bookable = $window !== null && $showtimes !== [];
 
-/** The poster with its rating and running time. */
 function book_poster(array $movie): void
 {
     ?>
@@ -30,7 +25,6 @@ function book_poster(array $movie): void
 <?php
 }
 
-// Bounced back from checkout: keep the date and showtime if still bookable
 $initialDate = '';
 $initialTime = '';
 if ($bookable) {
@@ -53,7 +47,6 @@ render_header();
 
 <?php if (!$bookable): ?>
 <?php
-    // Not bookable: coming soon, ended, or no showtimes
     $opensLater = movie_listing_state($movie) === 'soon';
 ?>
     <div class="booking-layout">
@@ -172,7 +165,6 @@ render_header();
 
           <div class="booking-block">
             <label class="field-label" for="showtime">Showtime</label>
-            <!-- booking.js unlocks it once a date is picked -->
             <select class="dropdown" id="showtime" name="time" disabled>
               <option value="" selected disabled hidden>Choose a date first</option>
 <?php foreach ($showtimes as $time): ?>
@@ -189,8 +181,6 @@ render_header();
             Choose a date and a showtime to see the seats and the snacks
           </p>
 
-          <!-- Hidden until a date and showtime are picked, but keeps its
-               space -->
           <div id="seats-and-snacks" class="seats-waiting">
 
             <h3>Choose Your Seats</h3>
@@ -198,7 +188,6 @@ render_header();
             <div class="screen-curve"></div>
             <p class="screen-word">SCREEN</p>
 
-            <!-- Two aisles: seats 1-3 | 4-7 | 8-10 -->
             <div class="seat-map" id="seat-map">
 <?php foreach (SEAT_ROWS as $row): ?>
               <div class="seat-row">

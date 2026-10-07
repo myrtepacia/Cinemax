@@ -1,15 +1,10 @@
 <?php
 declare(strict_types=1);
 
-// Ticket Scanner: the camera reads a ticket, scanner.js checks it with
-// api/scan.php, and staff let the customer in.
-
 require __DIR__ . '/../includes/bootstrap.php';
 
 require_role('admin', 'scanner');
 
-// Right after signing in, a scanner account on a phone first picks which
-// scanner to open
 $chooseFirst = !empty($_SESSION['choose_scanner']);
 unset($_SESSION['choose_scanner']);
 

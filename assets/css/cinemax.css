@@ -1,25 +1,21 @@
-/* 1. FOUNDATIONS -----------------------------------------------------------*/
-
-/* Site colours. Red is the brand; green, amber and indigo show state (ready,
-   waiting, upcoming); the rest is grey. */
 :root {
   --white: #ffffff;
-  --page: #f9fafb;        /* the page behind the boxes, quiet fills */
-  --line-soft: #f3f4f6;   /* lines inside a box, grey labels */
-  --line: #e5e7eb;        /* box outlines */
-  --muted: #99a1af;       /* small headings, hints, switched-off text */
-  --text-soft: #6a7282;   /* notes and second lines */
-  --text: #101828;        /* everything else */
+  --page: #f9fafb;
+  --line-soft: #f3f4f6;
+  --line: #e5e7eb;
+  --muted: #99a1af;
+  --text-soft: #6a7282;
+  --text: #101828;
 
   --red: #fb2c36;
-  --red-dark: #c10007;    /* a red button pointed at, error words */
-  --red-light: #ffe2e2;   /* behind red words, something picked */
+  --red-dark: #c10007;
+  --red-light: #ffe2e2;
 
-  --green: #008236;       /* showing, ready, a good ticket */
+  --green: #008236;
   --green-light: #dcfce7;
-  --amber: #a65f00;       /* waiting: unpaid, already used, a warning */
+  --amber: #a65f00;
   --amber-light: #fef9c2;
-  --indigo: #4f39f6;      /* upcoming films, seats, the e-ticket */
+  --indigo: #4f39f6;
   --indigo-light: #e0e7ff;
 }
 
@@ -55,10 +51,6 @@ img {
   max-width: 100%;
 }
 
-/* 2. BUTTONS AND LABELS ----------------------------------------------------*/
-
-/* Every button has a 1px border (clear on red), so red and outlined buttons
-   match in height. */
 .button {
   display: inline-block;
   padding: 10px 16px;
@@ -101,7 +93,6 @@ img {
   width: 100%;
 }
 
-/* Small buttons in rows: Ready, Picked Up, Remove */
 .button-small {
   padding: 6px 12px;
   border-radius: 10px;
@@ -113,8 +104,6 @@ button.button:disabled {
   cursor: not-allowed;
 }
 
-/* Status pill. Green ready, amber waiting or used, red refunded or preparing,
-   indigo upcoming, grey finished. */
 .pill {
   display: inline-block;
   padding: 2px 10px;
@@ -149,8 +138,6 @@ button.button:disabled {
   color: var(--text-soft);
 }
 
-/* 3. TOP BAR ---------------------------------------------------------------*/
-
 .top-bar {
   position: sticky;
   top: 0;
@@ -180,7 +167,6 @@ button.button:disabled {
   text-decoration: none;
 }
 
-/* Negative margin lines the logo's film strip up with the page edge. */
 .logo-mark {
   width: 49px;
   height: 44px;
@@ -215,7 +201,6 @@ button.button:disabled {
   gap: 8px;
 }
 
-/* Sign Out is a form (POST with CSRF) but looks like a link. */
 .inline-form {
   display: contents;
 }
@@ -269,23 +254,14 @@ button.button:disabled {
   }
 }
 
-/* 4. MOBILE DRAWER ---------------------------------------------------------*/
-
-/* Below 760px the bar folds into a hamburger. No script: a <label> toggles a
-   hidden checkbox, and .menu-checkbox:checked ~ .bar-nav opens the panel. */
-
 .menu-checkbox {
   display: none;
 }
 
-/* display: contents lets the nav sit in the bar's row; below 760px it becomes
-   the drawer. */
 .bar-nav {
   display: contents;
 }
 
-/* Staff links are in the sidebar on wide screens, so the bar copy only shows
-   in the drawer. */
 .menu-staff {
   display: none;
 }
@@ -335,7 +311,6 @@ button.button:disabled {
   transform: translateY(6px);
 }
 
-/* Open: the middle bar fades and the outer two form an X. */
 .menu-checkbox:checked ~ .menu-toggle span {
   background-color: transparent;
 }
@@ -359,7 +334,6 @@ button.button:disabled {
     display: inline-flex;
   }
 
-  /* The drawer drops right under the sticky .top-bar. */
   .bar-nav {
     position: absolute;
     top: 100%;
@@ -388,7 +362,6 @@ button.button:disabled {
     display: flex;
   }
 
-  /* Text centred, in line with the buttons */
   .bar-nav .menu a {
     padding: 12px 14px;
     font-size: 15px;
@@ -411,8 +384,6 @@ button.button:disabled {
     text-align: center;
   }
 }
-
-/* 5. FOOTER ----------------------------------------------------------------*/
 
 .site-footer {
   background-color: var(--white);
@@ -443,8 +414,6 @@ button.button:disabled {
   color: var(--muted);
   font-size: 12px;
 }
-
-/* 6. HOME PAGE -------------------------------------------------------------*/
 
 .section {
   max-width: 1280px;
@@ -491,7 +460,6 @@ button.button:disabled {
   overflow: hidden;
 }
 
-/* All posters are 3:4; other shapes are cropped. */
 .movie-poster {
   position: relative;
   aspect-ratio: 3 / 4;
@@ -505,8 +473,6 @@ button.button:disabled {
   object-fit: cover;
 }
 
-/* Rating top right, running time bottom right, in dark pills (booking poster
-   too) */
 .tag-rated,
 .tag-time {
   position: absolute;
@@ -528,7 +494,6 @@ button.button:disabled {
   bottom: 12px;
 }
 
-/* Small phones: two cards a row, smaller tags */
 @media (max-width: 400px) {
   .movie-poster .tag-rated,
   .movie-poster .tag-time {
@@ -560,7 +525,6 @@ button.button:disabled {
   margin-bottom: 12px;
 }
 
-/* With the burger menu (760px), titles are centred */
 @media (max-width: 760px) {
   .movie-title {
     text-align: center;
@@ -582,12 +546,6 @@ button.button:disabled {
     grid-template-columns: 1fr 1fr;
   }
 }
-
-/* 7. BOOKING PAGE ----------------------------------------------------------*/
-
-/* Booking page styles are in booking.css. */
-
-/* 8. FORMS -----------------------------------------------------------------*/
 
 .form-page {
   padding: 56px 20px 80px 20px;
@@ -648,8 +606,6 @@ button.button:disabled {
   border-color: var(--red);
 }
 
-/* Password box with the show/hide eye (password.js). The browser's own eye is
-   hidden so there are not two. */
 .password-box {
   position: relative;
   display: block;
@@ -723,8 +679,6 @@ button.button:disabled {
   text-decoration: none;
 }
 
-/* 9. E-TICKET --------------------------------------------------------------*/
-
 .ticket-page {
   max-width: 448px;
   width: 92%;
@@ -785,7 +739,6 @@ button.button:disabled {
   font-size: 20px;
 }
 
-/* CINEMAX, with the cinema on the right */
 .ticket-brand-row {
   display: flex;
   align-items: baseline;
@@ -826,7 +779,6 @@ button.button:disabled {
   margin-bottom: 20px;
 }
 
-/* One detail across the full width */
 .ticket-row {
   margin-bottom: 20px;
 }
@@ -891,8 +843,6 @@ button.button:disabled {
   }
 }
 
-/* 10. TERMS ----------------------------------------------------------------*/
-
 .terms-page {
   max-width: 768px;
   width: 92%;
@@ -930,7 +880,6 @@ button.button:disabled {
   margin-bottom: 10px;
 }
 
-/* The clauses of a section */
 .terms-block ul {
   margin: 0 0 10px 0;
   padding-left: 18px;
@@ -941,8 +890,6 @@ button.button:disabled {
 .terms-block li {
   margin-bottom: 8px;
 }
-
-/* 11. STAFF PAGES ----------------------------------------------------------*/
 
 .admin-page {
   max-width: 900px;
@@ -961,9 +908,6 @@ button.button:disabled {
   font-size: 15px;
   margin-bottom: 20px;
 }
-
-/* Staff pages: links in a left sidebar, title and stat cards in a row above.
-   Below 760px the links move into the hamburger menu. */
 
 .admin-layout {
   display: grid;
@@ -988,17 +932,14 @@ button.button:disabled {
   margin-bottom: 6px;
 }
 
-/* Stat cards right under the heading keep the same gap */
 .admin-head h1 + .stat-row {
   margin-top: 20px;
 }
 
-/* The grid gap spaces the head from the box */
 .admin-head > :last-child {
   margin-bottom: 0;
 }
 
-/* Inside the layout, the grid does the centring */
 .admin-layout .admin-page {
   grid-area: main;
   max-width: none;
@@ -1007,7 +948,6 @@ button.button:disabled {
   padding: 0;
 }
 
-/* Sticks under the 64px top bar */
 .admin-sidebar {
   grid-area: side;
   position: sticky;
@@ -1068,8 +1008,6 @@ button.button:disabled {
   }
 }
 
-/* After a scanner account signs in on a phone: Ticket or Snack Scanner. Wide
-   screens go straight to the Ticket Scanner. */
 .scanner-choice {
   display: none;
 }
@@ -1134,7 +1072,6 @@ button.button:disabled {
   background-color: var(--red);
 }
 
-/* The arrow is two sides of a turned square, so it centres */
 .choice-arrow::before {
   content: "";
   width: 9px;
@@ -1145,7 +1082,6 @@ button.button:disabled {
   transform: rotate(45deg);
 }
 
-/* Panel title with a button on its right */
 .panel-head {
   display: flex;
   align-items: center;
@@ -1217,13 +1153,11 @@ button.button:disabled {
   font-size: 12px;
 }
 
-/* Total Revenue: white card, red words */
 .stat-money .stat-name,
 .stat-money .stat-figure {
   color: var(--red);
 }
 
-/* Phones: each stat card becomes one line, words left and number right. */
 @media (max-width: 620px) {
   .stat-row {
     gap: 12px;
@@ -1258,8 +1192,6 @@ button.button:disabled {
   }
 }
 
-/* 12. SNACK ORDER QUEUE ----------------------------------------------------*/
-
 .order-group {
   padding-top: 18px;
   margin-top: 18px;
@@ -1280,7 +1212,6 @@ button.button:disabled {
   font-size: 14px;
 }
 
-/* Every order has the same three columns, so prices and buttons line up. */
 .order-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 90px 110px;
@@ -1295,15 +1226,12 @@ button.button:disabled {
   grid-area: left;
 }
 
-/* Ready, Picked Up and Sold keep their size, centred in their column. */
 .order-row .button,
 .order-row .sold-tag {
   grid-area: action;
   justify-self: center;
 }
 
-/* Phones: button at the right with its price above, details centred beside
-   them. */
 @media (max-width: 620px) {
   .order-row {
     grid-template-columns: minmax(0, 1fr) auto;
@@ -1313,8 +1241,6 @@ button.button:disabled {
     column-gap: 12px;
   }
 
-  /* Each price gets the same small box at the right, about a button wide, so
-     prices line up. */
   .order-row .order-price {
     align-self: end;
     justify-self: end;
@@ -1347,13 +1273,10 @@ button.button:disabled {
   white-space: nowrap;
 }
 
-/* Sold label as tall as the buttons, so it lines up */
 .sold-tag {
   padding: 7px 14px;
   font-size: 13px;
 }
-
-/* 13. MOVIES TABLE ---------------------------------------------------------*/
 
 .movie-table {
   width: 100%;
@@ -1386,7 +1309,6 @@ button.button:disabled {
   text-align: right;
 }
 
-/* Override th text-align: left so PRICE and SOLD line up with their numbers. */
 .movie-table th.right {
   text-align: right;
 }
@@ -1429,8 +1351,6 @@ button.button:disabled {
   font-weight: 600;
 }
 
-/* Length is two number boxes, so it is always readable. */
-
 .length-pair {
   display: flex;
   gap: 10px;
@@ -1455,8 +1375,6 @@ button.button:disabled {
   font-weight: 700;
   pointer-events: none;
 }
-
-/* The opening day comes from a calendar, so it is always a real date. */
 
 .date-field {
   position: relative;
@@ -1575,7 +1493,6 @@ button.button:disabled {
   border-color: var(--red);
 }
 
-/* Past days cannot be picked */
 .calendar-date:disabled {
   background-color: var(--white);
   border-color: transparent;
@@ -1596,7 +1513,6 @@ button.button:disabled {
   color: var(--white);
 }
 
-/* Note under a calendar */
 .calendar-hint {
   margin-top: 10px;
   padding-top: 10px;
@@ -1620,8 +1536,6 @@ button.button:disabled {
     padding: 20px 18px;
   }
 
-  /* Phones: the table becomes a list like the snack orders, movie left, sold
-     count over Remove right. */
   .movie-table,
   .movie-table tbody {
     display: block;
@@ -1631,7 +1545,6 @@ button.button:disabled {
     display: none;
   }
 
-  /* Film left; sold count over Remove right */
   .movie-table tr {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -1657,7 +1570,6 @@ button.button:disabled {
     grid-area: movie;
   }
 
-  /* Centred over Remove */
   .movie-table .sold-cell {
     grid-area: sold;
     align-self: end;
@@ -1666,7 +1578,6 @@ button.button:disabled {
     white-space: nowrap;
   }
 
-  /* The heading is hidden, so the number says what it counts */
   .movie-table .sold-cell::after {
     content: " sold";
     color: var(--text-soft);
@@ -1674,7 +1585,6 @@ button.button:disabled {
     font-weight: 600;
   }
 
-  /* Let each button sit in the row grid itself (like .inline-form) */
   .movie-table .movie-row td:last-child,
   .movie-table .row-actions {
     display: contents;
@@ -1684,8 +1594,6 @@ button.button:disabled {
     grid-area: remove;
   }
 }
-
-/* 14. TICKET SCANNER -------------------------------------------------------*/
 
 .camera-panel {
   text-align: center;
@@ -1706,7 +1614,6 @@ button.button:disabled {
   margin-bottom: 16px;
 }
 
-/* Takes no room when empty (camera off) */
 .camera-message:empty {
   display: none;
 }
@@ -1739,7 +1646,6 @@ button.button:disabled {
   margin-top: 2px;
 }
 
-/* Snack Scanner order: one line per snack */
 .scan-items {
   margin: 10px 0 0 0;
   padding: 10px 0 0 0;
@@ -1760,15 +1666,11 @@ button.button:disabled {
   margin-bottom: 12px;
 }
 
-/* 15. SEARCH BOX -----------------------------------------------------------*/
-
-/* Search above the Dashboard's picked-up orders */
 .search-field {
   flex: 1;
   margin-bottom: 0;
 }
 
-/* Darker outline than other boxes */
 .search-field input {
   border-color: var(--text-soft);
   text-transform: uppercase;
@@ -1780,8 +1682,6 @@ button.button:disabled {
   letter-spacing: 0;
 }
 
-/* 16. MESSAGES AND EMPTY STATES --------------------------------------------*/
-
 .form-message {
   padding: 12px 14px;
   border-radius: 12px;
@@ -1790,8 +1690,6 @@ button.button:disabled {
   margin-bottom: 14px;
 }
 
-/* Error: red text (same red as the reference number), no background. .field-
-   error matches. */
 .form-message-error {
   padding: 0;
   color: var(--red);
@@ -1830,14 +1728,10 @@ button.button:disabled {
   margin-bottom: 4px;
 }
 
-/* 17. UTILITIES ------------------------------------------------------------*/
-
 .hidden {
   display: none !important;
 }
 
-/* Skeleton: a grey shimmer where a picture or part is still loading
-   (skeleton.js removes it from a picture once it is in) */
 @keyframes skeleton-shimmer {
   from {
     background-position: 100% 0;

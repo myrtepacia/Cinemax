@@ -1,19 +1,10 @@
 <?php
 declare(strict_types=1);
 
-// Snack counter (scanner.js). POST {"action": "check", "code": ...} shows the
-// order; {"action": "confirm", ...} sends a waiting order to the kitchen
-// (Preparing), once only. Staff only, CSRF-checked, rate-limited. Never
-// returns the QR secret or ids.
-
 require __DIR__ . '/../includes/bootstrap.php';
 
 [, $action, $code] = read_scan_request('snack-scan', ['check', 'confirm']);
 
-/**
- * An order's status, who it is for and what they ordered. Never the QR token
- * or ids.
- */
 function snack_scan_reply(string $status, ?array $booking, array $items): array
 {
     $reply = ['ok' => true, 'status' => $status];
@@ -36,7 +27,6 @@ function snack_scan_reply(string $status, ?array $booking, array $items): array
 $result = check_snack_order($code);
 
 if ($action === 'check' || $result['status'] !== 'waiting') {
-    // Just a look, or the order is not waiting: say what it is
     json_response(snack_scan_reply($result['status'], $result['booking'], $result['items']));
 }
 
@@ -46,7 +36,6 @@ if (confirm_snack_order($bookingId)) {
     json_response(snack_scan_reply('confirmed', $booking, booking_snacks($bookingId)));
 }
 
-// Another counter just confirmed it: say what it is now
 $again = check_snack_order($code);
 if ($again['status'] === 'waiting') {
     json_response(['ok' => false, 'error' => 'This order could not be confirmed. Scan it again.'], 409);

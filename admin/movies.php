@@ -1,9 +1,6 @@
 <?php
 declare(strict_types=1);
 
-// Staff Movies page: films, opening day, tickets sold, and Remove. Films have
-// no last day: one stays until removed here.
-
 require __DIR__ . '/../includes/bootstrap.php';
 
 $user = require_role('admin');
@@ -11,13 +8,11 @@ $user = require_role('admin');
 if (is_post()) {
     verify_csrf();
 
-    // remove_movie() checks the film is still listed
     $movieId = input_int($_POST, 'movie_id', 1);
     $movie = $movieId !== null ? find_movie($movieId) : null;
     $action = input_string($_POST, 'action', 10);
 
     if ($movie !== null && $action === 'remove') {
-        // Tickets already sold stay valid
         remove_movie((int) $movie['id']);
     }
     redirect('admin/movies.php');
@@ -25,7 +20,6 @@ if (is_post()) {
 
 $movies = active_movies();
 
-// Status labels
 $labels = [
     'showing' => ['class' => 'pill-green', 'text' => 'Now Showing'],
     'soon'    => ['class' => 'pill-indigo', 'text' => 'Upcoming'],
@@ -92,8 +86,6 @@ render_header(['staff' => true, 'current' => 'movies']);
               </td>
 
               <td class="hide-small"><span class="pill <?= e($label['class']) ?>"><?= e($label['text']) ?></span></td>
-              <!-- Starting films have no opening day: they were showing from
-                   the start -->
               <td class="hide-small opening-day-cell"><?= e($movie['opens_on'] !== null ? format_date_short((string) $movie['opens_on']) : '—') ?></td>
               <td class="right hide-small"><?= e(peso((int) $movie['price'])) ?></td>
               <td class="right sold-cell"><?= e(number_format(movie_tickets_sold((int) $movie['id']))) ?></td>

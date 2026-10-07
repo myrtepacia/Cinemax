@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-// Films, showtimes and the snacks menu.
-
 if (!defined('CINEMAX_BOOTSTRAPPED')) {
     http_response_code(404);
     exit;
@@ -11,27 +9,18 @@ if (!defined('CINEMAX_BOOTSTRAPPED')) {
 const MOVIE_RATINGS = ['G', 'PG', 'PG-13', 'R-13', 'R-16', 'R-18'];
 const SNACK_CATEGORIES = ['Popcorn', 'Drinks', 'Candy', 'Combos'];
 
-// Each cinema shows one film at a time, cleaned between shows. Shows start on
-// 5-minute steps from 10 AM and end by midnight.
 const CINEMA_COUNT = 2;
-const ROOM_FIRST_SHOW = 10 * 60;   // 10:00 AM
-const ROOM_LAST_END = 24 * 60;     // midnight
+const ROOM_FIRST_SHOW = 10 * 60;
+const ROOM_LAST_END = 24 * 60;
 const CLEANING_MINUTES = 10;
 const SHOWTIME_STEP = 5;
-// Daily shows a new film gets, if there is room
 const SHOWS_PER_NEW_FILM = 3;
-// How far ahead a film can be booked
 const OPEN_ENDED_BOOKING_DAYS = 30;
 
-/** A film's cinema has no free time for it. */
 class ScheduleException extends RuntimeException
 {
 }
 
-/**
- * The days a film can be booked now ['from', 'to'], or null if not open,
- * ended or removed.
- */
 function movie_booking_window(array $movie): ?array
 {
     if ((int) $movie['is_active'] !== 1) {
@@ -52,7 +41,6 @@ function movie_booking_window(array $movie): ?array
     return ['from' => $today, 'to' => $to];
 }
 
-/** 'showing', 'soon' or 'ended', for the home page. */
 function movie_listing_state(array $movie): string
 {
     if (movie_booking_window($movie) !== null) {
@@ -65,13 +53,11 @@ function movie_listing_state(array $movie): string
     return 'ended';
 }
 
-/** 'Opens Oct 17'. */
 function movie_opening_note(array $movie): string
 {
     return 'Opens ' . (new DateTimeImmutable($movie['opens_on']))->format('M j');
 }
 
-/** The home page lists: 'showing' and 'soon'. */
 function listing_movies(): array
 {
     $lists = ['showing' => [], 'soon' => []];
@@ -87,7 +73,6 @@ function listing_movies(): array
     return $lists;
 }
 
-/** Every film still listed. */
 function active_movies(): array
 {
     return db_all('SELECT * FROM movies WHERE is_active = 1 ORDER BY id');
@@ -98,7 +83,6 @@ function find_movie(int $id): ?array
     return db_one('SELECT * FROM movies WHERE id = ?', [$id]);
 }
 
-/** A listed film by its slug, e.g. 'the-reckoning'. */
 function find_movie_by_slug(string $slug): ?array
 {
     if (!preg_match('/^[a-z0-9-]{1,120}$/', $slug)) {
@@ -107,7 +91,6 @@ function find_movie_by_slug(string $slug): ?array
     return db_one('SELECT * FROM movies WHERE slug = ? AND is_active = 1', [$slug]);
 }
 
-/** A film's daily shows: 'HH:MM:SS' => cinema. */
 function movie_schedule(int $movieId): array
 {
     $schedule = [];
@@ -117,13 +100,11 @@ function movie_schedule(int $movieId): array
     return $schedule;
 }
 
-/** A film's daily showtimes, earliest first. */
 function movie_showtimes(int $movieId): array
 {
     return array_map('strval', array_keys(movie_schedule($movieId)));
 }
 
-/** The poster's address, or a placeholder. */
 function poster_url(array $movie): string
 {
     $path = (string) ($movie['poster_path'] ?? '');
@@ -133,13 +114,11 @@ function poster_url(array $movie): string
     return asset('assets/img/poster-placeholder.svg');
 }
 
-/** 'Crime, Thriller, 2h 2min, R-16'. */
 function movie_details_line(array $movie): string
 {
     return $movie['genre'] . ', ' . duration_tag((int) $movie['duration_minutes']) . ', ' . $movie['rating'];
 }
 
-/** Tickets sold for a film (paid only). */
 function movie_tickets_sold(int $movieId): int
 {
     return (int) db_value(
@@ -148,16 +127,12 @@ function movie_tickets_sold(int $movieId): int
     );
 }
 
-/**
- * A unique slug from a title: 'Broken [of] Love' becomes 'broken-of-love'.
- */
 function unique_movie_slug(string $title): string
 {
     $base = strtolower(trim((string) preg_replace('/[^A-Za-z0-9]+/', '-', $title), '-'));
     $base = substr($base !== '' ? $base : 'movie', 0, 100);
     $slug = $base;
     $n = 2;
-    // A film's page is /its-slug, so it may not take a page's name (/terms)
     while (db_value('SELECT 1 FROM movies WHERE slug = ?', [$slug]) !== null
         || is_file(APP_ROOT . '/' . $slug . '.php') || is_dir(APP_ROOT . '/' . $slug)) {
         $slug = $base . '-' . $n++;
@@ -165,7 +140,6 @@ function unique_movie_slug(string $title): string
     return $slug;
 }
 
-/** Whether two films run on at least one same day. */
 function movie_runs_overlap(array $a, array $b): bool
 {
     $aFrom = $a['opens_on'] ?? null;
@@ -176,14 +150,12 @@ function movie_runs_overlap(array $a, array $b): bool
         && ($bFrom === null || $aTo === null || $bFrom <= $aTo);
 }
 
-/** Minutes after midnight for 'HH:MM'. */
 function minutes_of_day(string $time): int
 {
     [$hours, $minutes] = array_map('intval', explode(':', $time));
     return $hours * 60 + $minutes;
 }
 
-/** Whether a show (plus cleaning) overlaps any of $shows. */
 function show_clashes(array $shows, int $start, int $length): bool
 {
     foreach ($shows as [$otherStart, $otherLength]) {
@@ -195,10 +167,6 @@ function show_clashes(array $shows, int $start, int $length): bool
     return false;
 }
 
-/**
- * Up to $count free daily shows for a film ['start', 'cinema'], avoiding
- * other films and tickets already sold. None when the cinema is full.
- */
 function free_showtimes(array $movie, int $count, ?int $onlyCinema = null): array
 {
     $today = today();
@@ -217,7 +185,6 @@ function free_showtimes(array $movie, int $count, ?int $onlyCinema = null): arra
             $taken[(int) $show['cinema']][] = [minutes_of_day((string) $show['start_time']), (int) $show['duration_minutes']];
         }
     }
-    // Tickets sold for a removed film still need their cinema
     $sold = db_all(
         "SELECT DISTINCT b.show_time, b.cinema, m.duration_minutes
          FROM bookings b JOIN movies m ON m.id = b.movie_id
@@ -250,14 +217,9 @@ function free_showtimes(array $movie, int $count, ?int $onlyCinema = null): arra
     return $picked;
 }
 
-/**
- * Adds a film with up to SHOWS_PER_NEW_FILM daily shows. Throws
- * ScheduleException if its cinema has no free time. Returns the new id.
- */
 function create_movie(array $movie): int
 {
     return (int) db_transaction(function (PDO $pdo) use ($movie): int {
-        // Lock, so two admins cannot take the same free time
         db_all('SELECT id FROM movies WHERE is_active = 1 FOR UPDATE');
         $shows = free_showtimes($movie, SHOWS_PER_NEW_FILM, (int) $movie['cinema']);
         if ($shows === []) {
@@ -292,13 +254,11 @@ function create_movie(array $movie): int
     });
 }
 
-/** Takes a film off the listings. Tickets already sold stay valid. */
 function remove_movie(int $movieId): bool
 {
     return db_exec('UPDATE movies SET is_active = 0 WHERE id = ? AND is_active = 1', [$movieId]) === 1;
 }
 
-/** The snacks on sale by category. */
 function snacks_by_category(): array
 {
     $groups = array_fill_keys(SNACK_CATEGORIES, []);

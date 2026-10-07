@@ -1,15 +1,12 @@
 <?php
 declare(strict_types=1);
 
-// Home page: films showing now and coming soon.
-
 require __DIR__ . '/includes/bootstrap.php';
 
 $lists = listing_movies();
 $showing = $lists['showing'];
 $soon = $lists['soon'];
 
-// The cheapest ticket, for the line under the title
 $lowestPrice = null;
 foreach ($showing as $movie) {
     $price = (int) $movie['price'];
@@ -18,7 +15,6 @@ foreach ($showing as $movie) {
     }
 }
 
-// The first row of posters loads first; the rest when scrolled near
 $eagerPosters = 4;
 $posterCount = 0;
 
@@ -33,7 +29,7 @@ render_header(['home' => true, 'current' => 'now-showing']);
         <h2 class="section-title">Now Showing</h2>
         <span class="film-count" id="showing-count"><?= e(count_label(count($showing), 'Film', 'Films')) ?></span>
       </div>
-      <p class="section-note">Reserve your seat and pre-order your snacks.<?php if ($lowestPrice !== null): ?> Tickets from <?= e(peso($lowestPrice)) ?>.<?php endif; ?></p>
+      <p class="section-note">Reserve your seat and pre-order your snacks.</p>
 
 <?php if ($showing === []): ?>
       <p class="empty-state">

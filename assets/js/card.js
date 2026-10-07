@@ -1,8 +1,3 @@
-// Card form on card.php. Card details go straight from the browser to
-// PayMongo with the public key, never to our server: a payment method is
-// made, then attached to the booking's card payment with the client key.
-// succeeded or processing goes back to card.php, awaiting_next_action opens
-// the bank's check, and an error is shown here so another card can be tried.
 (function () {
   var box = document.getElementById('card-pay');
   var form = document.getElementById('card-form');
@@ -34,12 +29,10 @@
     return value.replace(/\D/g, '');
   }
 
-  // 1234 5678 9012 3456 while typing
   number.addEventListener('input', function () {
     number.value = digits(number.value).slice(0, 19).replace(/(\d{4})(?=\d)/g, '$1 ');
   });
 
-  // MM / YY while typing, and backspace still works
   expiry.addEventListener('input', function (event) {
     var typed = digits(expiry.value).slice(0, 4);
     var deleting = (event.inputType || '').indexOf('delete') === 0;
@@ -56,7 +49,6 @@
     cvc.value = digits(cvc.value).slice(0, 4);
   });
 
-  // Luhn check digit: catches most typos before asking PayMongo
   function passesLuhn(cardNumber) {
     var sum = 0;
     var double = false;
@@ -87,7 +79,6 @@
     errorLine.textContent = '';
   }
 
-  // The card for PayMongo, or null (and the problem is shown)
   function readCard() {
     var cardNumber = digits(number.value);
     if (cardNumber.length < 13 || !passesLuhn(cardNumber)) {
@@ -130,7 +121,6 @@
     };
   }
 
-  // PayMongo's error as a message for the customer
   function payMongoError(detail, pointer) {
     var error = new Error(detail || 'Your card was not charged. Please try another card.');
     error.fromPayMongo = true;
@@ -138,8 +128,6 @@
     return error;
   }
 
-  // One PayMongo API call with the public key. Resolves with data; rejects
-  // with PayMongo's message.
   function askPayMongo(path, attributes) {
     return fetch(API + path, {
       method: 'POST',
@@ -191,8 +179,6 @@
 
     askPayMongo('payment_methods', card)
       .then(function (method) {
-        // bank=1 marks a return from the bank's check, so a failed one can be
-        // spotted
         return askPayMongo('payment_intents/' + intentId + '/attach', {
           payment_method: method.id,
           client_key: clientKey,
@@ -202,7 +188,6 @@
       .then(function (intent) {
         var attributes = intent.attributes || {};
         if (attributes.status === 'succeeded' || attributes.status === 'processing') {
-          // card.php checks with PayMongo before showing the ticket
           statusLine.textContent = 'Payment received! Opening your ticket…';
           window.location.href = returnUrl;
           return;
@@ -210,7 +195,6 @@
         var redirect = ((attributes.next_action || {}).redirect || {}).url || '';
         if (attributes.status === 'awaiting_next_action' && /^https:\/\//.test(redirect)) {
           statusLine.textContent = 'Opening your bank’s check…';
-          // Opened too soon, the bank page can say it does not exist yet
           window.setTimeout(function () {
             window.location.href = redirect;
           }, BANK_CHECK_DELAY_MS);

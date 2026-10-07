@@ -1,10 +1,6 @@
 <?php
 declare(strict_types=1);
 
-// Pay by card. card.js sends the card straight to PayMongo, never to this
-// server. A bank check (3-D Secure) comes back here.
-
-// Lets this page talk to PayMongo's API
 define('CINEMAX_CARD_FORM', true);
 
 require __DIR__ . '/includes/bootstrap.php';
@@ -32,8 +28,6 @@ if ($booking['status'] !== 'pending' || $secondsLeft <= 0) {
     redirect($elsewhere);
 }
 
-// One card payment per booking, reused for every try; made again if it
-// belongs to the other keys
 $intentId = (string) ($booking['paymongo_card_intent_id'] ?? '');
 $cardError = null;
 $confirming = false;
@@ -53,11 +47,9 @@ try {
     } else {
         $status = (string) ($intent['attributes']['status'] ?? '');
         if ($status === 'succeeded') {
-            // Paid: the payment page shows the ticket
             redirect($elsewhere);
         }
         $clientKey = (string) ($intent['attributes']['client_key'] ?? '');
-        // Back from the bank's check (bank=1): still confirming, or failed
         $confirming = $status === 'processing';
         $fromBank = input_string($_GET, 'bank', 1) === '1';
         if ($status === 'awaiting_payment_method' || ($fromBank && $status === 'awaiting_next_action')) {
@@ -69,12 +61,10 @@ try {
     error_log('[card] ' . $reference . ': ' . $e->getMessage());
     redirect($payPath . '&other=failed');
 }
-// pay.js reloads the page if the keys change
 remember_payment_keys();
 
 $amount = peso((int) $booking['total']);
 
-// Choose another payment: the QR code, then Maya (the card is this page)
 $otherMethods = (paymongo_uses_qrph() || !empty($booking['paymongo_intent_id']) ? ['qrph' => 'QR code'] : [])
     + array_diff_key(paymongo_other_methods(), ['card' => true]);
 
@@ -88,7 +78,6 @@ render_header(['current' => 'account']);
       <p>Enter your debit or credit card. The card details go straight to PayMongo, our payment provider.</p>
     </div>
 
-    <!-- Card on the left, booking on the right -->
     <div class="pay-layout">
 
       <div class="ticket card-pay" id="card-pay"
@@ -105,8 +94,6 @@ render_header(['current' => 'account']);
           <p class="ticket-label">Amount Due</p>
           <p class="pay-amount"><?= e($amount) ?></p>
 
-          <!-- No name on the card fields, so a card number can never reach
-               this server -->
           <form class="card-form" id="card-form" novalidate>
             <noscript>
               <p class="form-message form-message-notice">Paying by card needs JavaScript. Please turn it on, or pay with the QR code.</p>

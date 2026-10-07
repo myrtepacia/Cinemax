@@ -1,14 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// Is it paid yet? Asked every few seconds by pay.js: ?ref=CMX-XXXXXX. Each
-// check asks PayMongo. Status is waiting (with secondsLeft), paid (next = the
-// ticket), ended (next = payment-success.php) or refresh (the PayMongo keys
-// changed, so the page reloads). Own bookings only.
-
 require __DIR__ . '/../includes/bootstrap.php';
 
-// A page left open 10 minutes asks about 150 times
 const PAY_CHECKS_PER_MINUTE = 40;
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
@@ -40,13 +34,11 @@ $wasPaid = $booking['status'] === 'paid';
 try {
     $result = settle_booking($booking);
 } catch (PayMongoException $e) {
-    // PayMongo did not answer: ask again next time
     error_log('[payment-status] ' . $reference . ': ' . $e->getMessage());
     $result = 'unknown';
 }
 
 if ($result === 'paid') {
-    // Shows Booking Confirmed! on the ticket
     if (!$wasPaid) {
         $_SESSION['just_paid'] = $reference;
     }

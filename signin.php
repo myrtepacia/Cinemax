@@ -1,17 +1,12 @@
 <?php
 declare(strict_types=1);
 
-// Sign in. attempt_login() does the checking and lockout; this page shows the
-// form.
-
 require __DIR__ . '/includes/bootstrap.php';
 
 redirect_if_signed_in();
 
-// Longer than any allowed password: refused before the slow check
 const SIGNIN_PASSWORD_MAX = 128;
 
-/** The password as typed (not trimmed). */
 function signin_password(array $source): string
 {
     $value = $source['password'] ?? '';
@@ -21,7 +16,6 @@ function signin_password(array $source): string
     return $value;
 }
 
-// Where to go after signing in (only paths inside the site)
 $return = safe_return_path(input_string(is_post() ? $_POST : $_GET, 'return', 300));
 
 $email = '';
@@ -43,7 +37,6 @@ if (is_post()) {
             $error = 'That email and password do not match an account.';
         } else {
             login_user($result);
-            // Scanner accounts pick Ticket or Snack Scanner first (on phones)
             if ($return === null && $result['role'] === 'scanner') {
                 $_SESSION['choose_scanner'] = true;
             }

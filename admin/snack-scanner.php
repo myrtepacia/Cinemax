@@ -1,9 +1,6 @@
 <?php
 declare(strict_types=1);
 
-// Snack counter scanner: reads a ticket, shows the order
-// (api/snack-scan.php), and Confirm order sends it to Preparing.
-
 require __DIR__ . '/../includes/bootstrap.php';
 
 $user = require_role('admin', 'scanner');
@@ -31,7 +28,6 @@ render_header(['staff' => true, 'current' => 'snack-scanner']);
         <div class="scan-result scan-result-good hidden" id="scan-result" role="status" aria-live="polite">
           <span id="scan-result-title"></span>
           <span class="scan-result-who" id="scan-result-who"></span>
-          <!-- Filled in by scanner.js -->
           <ul class="scan-items hidden" id="scan-items"></ul>
         </div>
 

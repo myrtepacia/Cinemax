@@ -1,12 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// Terms and Conditions. The numbers come from the booking settings, so the
-// page always matches how the site works.
-
 require __DIR__ . '/includes/bootstrap.php';
 
-// The seat hold, worked out as the booking code does
 $holdMinutes = max(5, min(60, (int) config('booking_hold_minutes', 10)));
 
 render_head('Terms and Conditions');

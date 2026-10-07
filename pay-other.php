@@ -1,10 +1,6 @@
 <?php
 declare(strict_types=1);
 
-// "Choose another payment" on pay.php and card.php: the QR code goes back to
-// pay.php, card to card.php, Maya to Maya's own page. Checks first that the
-// booking is not already paid.
-
 require __DIR__ . '/includes/bootstrap.php';
 
 require_post();
@@ -27,7 +23,6 @@ if (!array_key_exists($method, $offered)) {
     redirect($payPath);
 }
 
-// With live keys, PayMongo refuses ways it has not turned on
 if (paymongo_is_live() && !in_array($method, paymongo_enabled_methods(), true)) {
     redirect($payPath . '&other=failed');
 }
@@ -36,7 +31,6 @@ if ($method === 'card') {
     redirect('card.php?ref=' . rawurlencode($reference));
 }
 
-// Shares the booking limit, since each press asks PayMongo
 if (too_many_attempts('checkout', 'user:' . $user['id'], 20, 3600, 60)) {
     redirect($payPath);
 }
@@ -45,7 +39,6 @@ record_attempt('checkout', 'user:' . $user['id']);
 $returnPath = $payPath . '&wallet=' . rawurlencode($method);
 
 try {
-    // Already paid: no second payment
     $result = settle_booking($booking);
     if ($result === 'paid') {
         $_SESSION['just_paid'] = $reference;
@@ -55,14 +48,11 @@ try {
         redirect('payment-success.php?ref=' . rawurlencode($reference));
     }
 
-    // Only a booking still held can be paid
     $booking = find_booking_by_id((int) $booking['id']);
     if ($booking === null || $booking['status'] !== 'pending' || booking_seconds_left($booking) <= 0) {
         redirect($payPath);
     }
 
-    // One Maya payment per booking, reused for every try; made again if it
-    // belongs to the other keys
     $intentId = (string) ($booking['paymongo_wallet_intent_id'] ?? '');
     $intent = null;
     if ($intentId !== '') {
@@ -78,7 +68,6 @@ try {
         $clientKey = $made['client_key'];
     } else {
         if (($intent['attributes']['status'] ?? '') === 'processing') {
-            // Paid; PayMongo is still confirming
             redirect($returnPath);
         }
         $clientKey = (string) ($intent['attributes']['client_key'] ?? '');
@@ -90,7 +79,6 @@ try {
         'mobile' => (string) ($user['mobile'] ?? ''),
     ], $returnPath));
 } catch (RuntimeException $e) {
-    // PayMongo refused or could not be reached; the QR code still works
     error_log('[pay-other] ' . $reference . ' (' . $method . '): ' . $e->getMessage());
     redirect($payPath . '&other=failed');
 }

@@ -1,4 +1,3 @@
-// Movies page: Remove asks before taking a film off the site.
 (function () {
   document.querySelectorAll('form.remove-form').forEach(function (form) {
     form.addEventListener('submit', function (event) {
@@ -10,7 +9,6 @@
         return;
       }
 
-      // Stop double presses
       var button = form.querySelector('button[type="submit"]');
       if (button) {
         button.disabled = true;
@@ -18,7 +16,6 @@
     });
   });
 
-  // The Back button can restore the page with the button still off
   window.addEventListener('pageshow', function () {
     document.querySelectorAll('form.remove-form button[type="submit"]').forEach(function (button) {
       button.disabled = false;

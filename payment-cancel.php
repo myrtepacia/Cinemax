@@ -1,14 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// PayMongo sends customers here when they back out: "Waiting for payment"
-// while the seats are still held, "Payment cancelled" after.
-
 require __DIR__ . '/includes/bootstrap.php';
 
-/**
- * Asks PayMongo once more, and leaves this page if the booking is settled.
- */
 function payment_cancel_settle(array $user, array $booking): void
 {
     $reference = (string) $booking['reference'];
@@ -27,7 +21,6 @@ function payment_cancel_settle(array $user, array $booking): void
 
     switch ($result) {
         case 'paid':
-            // "Booking Confirmed!" only when the payment just came in
             if (!$wasPaid) {
                 $_SESSION['just_paid'] = $reference;
             }
@@ -40,7 +33,6 @@ function payment_cancel_settle(array $user, array $booking): void
     }
 }
 
-/** The customer's own booking from $source['ref'], or a 404. */
 function payment_cancel_booking(array $user, array $source): array
 {
     $reference = normalize_reference(input_string($source, 'ref', 20));
@@ -82,7 +74,6 @@ render_header(['current' => 'account']);
 
 <?php if ($stillHeld): ?>
     <div class="ticket-actions">
-      <!-- Back to paying (checks for a payment first) -->
       <form class="inline-form" method="post" action="<?= e(url('pay-now.php')) ?>">
         <?= csrf_field() ?>
         <input type="hidden" name="ref" value="<?= e($reference) ?>">

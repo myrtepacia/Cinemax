@@ -1,9 +1,6 @@
 <?php
 declare(strict_types=1);
 
-// PayMongo sends customers here after paying. Arriving proves nothing, so
-// PayMongo is asked before a ticket is shown.
-
 require __DIR__ . '/includes/bootstrap.php';
 
 $user = require_login();
@@ -14,7 +11,6 @@ if ($booking === null) {
     abort(404, 'We could not find that booking.');
 }
 
-// Each visit asks PayMongo, so limit reloads
 if (too_many_attempts('settle', 'user:' . $user['id'], 30, 300)) {
     abort(429);
 }
@@ -38,7 +34,6 @@ switch ($result) {
         break;
 }
 
-// Not paid yet, or PayMongo could not be asked
 $stillHeld = $booking['status'] === 'pending' && strtotime((string) $booking['expires_at']) > time();
 $filmPath = booking_film_path($booking);
 
@@ -74,7 +69,6 @@ render_header(['current' => 'account']);
 
     <div class="ticket-actions">
 <?php if ($stillHeld): ?>
-      <!-- Back to paying (checks for a payment first) -->
       <form class="inline-form" method="post" action="<?= e(url('pay-now.php')) ?>">
         <?= csrf_field() ?>
         <input type="hidden" name="ref" value="<?= e($reference) ?>">

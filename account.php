@@ -1,22 +1,16 @@
 <?php
 declare(strict_types=1);
 
-// My Bookings: the customer's tickets, newest first.
-
 require __DIR__ . '/includes/bootstrap.php';
 
-// Seconds between PayMongo checks per visitor
 const ACCOUNT_SETTLE_EVERY_SECONDS = 60;
 
 $user = require_login();
 
-// Staff have no tickets: send them to their own home page
 if (is_staff($user)) {
     redirect(home_for($user));
 }
 
-// Check PayMongo first, in case they paid but never came back (at most once a
-// minute)
 $lastSettled = (int) ($_SESSION['account_settled_at'] ?? 0);
 if (time() - $lastSettled >= ACCOUNT_SETTLE_EVERY_SECONDS
     && !too_many_attempts('settle', 'user:' . $user['id'], 30, 300)) {
@@ -27,7 +21,6 @@ if (time() - $lastSettled >= ACCOUNT_SETTLE_EVERY_SECONDS
 
 $bookings = user_bookings((int) $user['id']);
 
-/** The small label beside a price [text, class], or null. */
 function account_status_label(array $booking): ?array
 {
     switch ($booking['status']) {

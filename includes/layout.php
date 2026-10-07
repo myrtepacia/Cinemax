@@ -1,16 +1,11 @@
 <?php
 declare(strict_types=1);
 
-// Shared page parts: <head>, top bar, staff sidebar, booking summary and
-// footer. No inline scripts or styles (the CSP blocks them): scripts go in
-// assets/js and are listed in 'js'.
-
 if (!defined('CINEMAX_BOOTSTRAPPED')) {
     http_response_code(404);
     exit;
 }
 
-/** Opens the page. $css lists extra style sheets. */
 function render_head(string $title, array $css = []): void
 {
     ?>
@@ -35,7 +30,6 @@ function render_head(string $title, array $css = []): void
 <?php
 }
 
-/** The staff links a user may see: [key, label, path]. */
 function staff_links(array $user): array
 {
     if ($user['role'] === 'admin') {
@@ -56,10 +50,6 @@ function staff_links(array $user): array
     return [];
 }
 
-/**
- * The top bar. Options: 'current' (highlighted link), 'staff' (staff pages),
- * 'home' (home page: links jump down the page).
- */
 function render_header(array $options = []): void
 {
     $user = current_user();
@@ -118,7 +108,6 @@ function render_header(array $options = []): void
 <?php
 }
 
-/** The staff sidebar. */
 function render_staff_sidebar(string $current): void
 {
     $user = current_user();
@@ -137,7 +126,6 @@ function render_staff_sidebar(string $current): void
 <?php
 }
 
-/** A booking's details for the payment pages. */
 function render_booking_summary(array $booking, string $amountLabel): void
 {
     ?>
@@ -174,24 +162,17 @@ function render_booking_summary(array $booking, string $amountLabel): void
 <?php
 }
 
-/**
- * "Choose another payment": one row per other way to pay ($methods: method =>
- * name), each sent to pay-other.php, with its symbol (or logo) and a
- * selection circle.
- */
 function render_other_payments(string $reference, array $methods): void
 {
     if ($methods === []) {
         return;
     }
-    // Line symbols in grey
     $symbols = [
         'qrph'    => '<rect x="3.5" y="3.5" width="6" height="6" rx="1"/><rect x="14.5" y="3.5" width="6" height="6" rx="1"/>'
             . '<rect x="3.5" y="14.5" width="6" height="6" rx="1"/><path d="M14.5 14.5h2.5v2.5"/><path d="M20.5 14.5v.01"/>'
             . '<path d="M14.5 20.5h.01"/><path d="M18 18h2.5v2.5H18z"/>',
         'card'    => '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/>',
     ];
-    // Ways to pay shown with their own logo instead
     $logos = ['paymaya' => 'assets/img/pay-maya.svg'];
     ?>
         <details class="pay-other">
@@ -217,11 +198,8 @@ function render_other_payments(string $reference, array $methods): void
 <?php
 }
 
-/** The footer and the page's scripts. Option 'js': scripts under assets/. */
 function render_footer(array $options = []): void
 {
-    // password.js adds the show / hide button to every password box
-    // skeleton.js takes the loading shimmer off each picture once it is in
     $scripts = array_merge(['assets/js/menu.js', 'assets/js/password.js', 'assets/js/skeleton.js'], $options['js'] ?? []);
     ?>
   <footer class="site-footer">

@@ -1,9 +1,5 @@
-// Add Movie page: pick the opening day from a calendar (saved in the hidden
-// opens_on box). The movie has no last day. Empty boxes are flagged here; the
-// server checks everything again.
 (function () {
 
-  // Shared date helpers (dates.js)
   var monthNames = window.CinemaxDates.monthNames;
   var readDate = window.CinemaxDates.readDate;
   var dateKey = window.CinemaxDates.dateKey;
@@ -27,7 +23,6 @@
   var hoursInput = document.getElementById('new-hours');
   var minutesInput = document.getElementById('new-minutes');
 
-  // Poster limit, read from the page so it matches the server
   var posterInput = document.getElementById('new-poster');
   var posterLimit = parseInt(posterInput.getAttribute('data-max-bytes'), 10);
   if (isNaN(posterLimit) || posterLimit <= 0) {
@@ -47,17 +42,13 @@
   var calendarNext = document.getElementById('run-calendar-next');
   var calendarHint = document.getElementById('run-calendar-hint');
 
-  // Today, day only
   var today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // A day picked before the server sent the form back is already in the
-  // hidden box
   var openDate = /^\d{4}-\d{2}-\d{2}$/.test(opensHolder.value) ? opensHolder.value : '';
   var viewYear = today.getFullYear();
   var viewMonth = today.getMonth();
 
-  // Cannot open on a past day
   function isAvailable(date) {
     return date >= today;
   }
@@ -72,7 +63,6 @@
     calendarMonth.textContent = monthNames[viewMonth] + ' ' + viewYear;
     clearDates();
 
-    // Blank boxes so the 1st lands on the right weekday
     var startsOn = new Date(viewYear, viewMonth, 1).getDay();
     var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
     var count;
@@ -110,7 +100,6 @@
 
     calendarHint.textContent = 'Pick the opening day';
 
-    // No going back to past months; forward has no limit
     calendarBack.disabled = (viewYear * 12 + viewMonth) <= monthNumber(today);
   }
 
@@ -141,18 +130,15 @@
     dateButton.setAttribute('aria-expanded', 'false');
   }
 
-  // Reads like Fri, Oct 9, 2026, same as the server
   function showDate() {
     dateText.textContent = openDate === '' ? 'Choose the opening day' : readableDate(openDate);
     opensHolder.value = openDate;
   }
 
-  // Both length boxes hold a number
   function lengthGiven() {
     return !isNaN(parseInt(hoursInput.value, 10)) && !isNaN(parseInt(minutesInput.value, 10));
   }
 
-  // Keep hours and minutes sensible
   function tidyNumber(input, lowest, highest) {
     var value = parseInt(input.value, 10);
     if (isNaN(value)) {
@@ -167,7 +153,6 @@
   }
 
   function showMessage(text, kind) {
-    // A new message replaces the old list
     if (serverErrors) {
       serverErrors.hidden = true;
     }
@@ -180,8 +165,6 @@
     addMessage.className = 'form-message hidden';
   }
 
-  // Stop a poster that is too big before sending; a huge one would also empty
-  // every other box
   function posterTooBig() {
     var file = posterInput.files && posterInput.files[0];
     return Boolean(file) && file.size > posterLimit;
@@ -195,7 +178,6 @@
     }
   });
 
-  // Clicking a day picks it
   calendarDates.addEventListener('click', function (event) {
     var box = event.target.closest('.calendar-date');
     if (!box || box.disabled) {
@@ -215,7 +197,6 @@
     moveMonth(1);
   });
 
-  // Click outside or press Escape to close the calendar
   document.addEventListener('click', function (event) {
     if (!dateField.contains(event.target)) {
       closeCalendar();
@@ -236,13 +217,10 @@
     tidyNumber(minutesInput, 0, 59);
   });
 
-  // Picking a cinema clears its red outline
   cinemaSelect.addEventListener('change', function () {
     cinemaSelect.classList.remove('invalid');
   });
 
-  // Warn at once if the poster is too big; clear it when a smaller one is
-  // picked
   posterInput.addEventListener('change', function () {
     var tooBig = posterTooBig();
     posterInput.classList.toggle('invalid', tooBig);
@@ -296,12 +274,10 @@
       return;
     }
 
-    // Stop double presses, which would add the movie twice
     addButton.disabled = true;
     addButton.textContent = 'Adding…';
   });
 
-  // The Back button can restore the page with the button still off
   window.addEventListener('pageshow', function () {
     addButton.disabled = false;
     addButton.textContent = 'Add movie';

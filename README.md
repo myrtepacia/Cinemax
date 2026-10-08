@@ -2,5 +2,3 @@
 - **Database:** MySQL / MariaDB via PDO
 - **Frontend:** HTML5, CSS3, Vanilla JavaScript
 - **Payment Processing:** PayMongo REST API & Webhooks[cite: 1]
-- **QR Utilities:** `qrcode.js` (Generation) & `jsQR.js` (Camera-based parsing)[cite: 1]
-- **Web Server:** Apache with `mod_rewrite` enabled[cite: 1]

@@ -1,4 +1,4 @@
-- **Backend:** PHP (Modular architecture)
-- **Database:** MySQL / MariaDB via PDO
+- **Backend:** PHP
+- **Database:** MySQL
 - **Frontend:** HTML5, CSS3, Vanilla JavaScript
-- **Payment Processing:** PayMongo REST API & Webhooks[cite: 1]
+- **Payment Processing:** PayMongo REST API 

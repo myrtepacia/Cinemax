@@ -9,11 +9,14 @@ if ($movie === null) {
 }
 
 $window = movie_booking_window($movie);
-$user = current_user();
+// Sign in before choosing seats, then back to this film
+$user = require_login();
 $slug = (string) $movie['slug'];
 $showtimes = movie_showtimes((int) $movie['id']);
+// No showtimes: nothing to book yet
 $bookable = $window !== null && $showtimes !== [];
 
+/** The poster with its rating and running time. */
 function book_poster(array $movie): void
 {
     ?>
@@ -25,6 +28,7 @@ function book_poster(array $movie): void
 <?php
 }
 
+// Bounced back from checkout: keep the date and showtime if still bookable
 $initialDate = '';
 $initialTime = '';
 if ($bookable) {
@@ -38,15 +42,23 @@ if ($bookable) {
     }
 }
 
-render_head((string) $movie['title'], ['assets/css/booking.css']);
+// Why checkout.php sent the customer back, shown once
+$bookingError = $_SESSION['booking_error'] ?? null;
+unset($_SESSION['booking_error']);
+
+render_head((string) $movie['title'], ['assets/css/booking.css'], movie_meta($movie));
 render_header();
 ?>
   <main class="booking">
 
     <a class="back-link" href="<?= e(url('index.php')) ?>">&larr; Back to movies</a>
+<?php if (is_string($bookingError) && $bookingError !== ''): ?>
+    <p class="form-message form-message-error" role="alert"><?= e($bookingError) ?></p>
+<?php endif; ?>
 
 <?php if (!$bookable): ?>
 <?php
+    // Not bookable: coming soon, ended, or no showtimes
     $opensLater = movie_listing_state($movie) === 'soon';
 ?>
     <div class="booking-layout">
@@ -165,6 +177,7 @@ render_header();
 
           <div class="booking-block">
             <label class="field-label" for="showtime">Showtime</label>
+            <!-- booking.js unlocks it once a date is picked -->
             <select class="dropdown" id="showtime" name="time" disabled>
               <option value="" selected disabled hidden>Choose a date first</option>
 <?php foreach ($showtimes as $time): ?>
@@ -181,6 +194,8 @@ render_header();
             Choose a date and a showtime to see the seats and the snacks
           </p>
 
+          <!-- Hidden until a date and showtime are picked, but keeps its
+               space -->
           <div id="seats-and-snacks" class="seats-waiting">
 
             <h3>Choose Your Seats</h3>
@@ -188,6 +203,7 @@ render_header();
             <div class="screen-curve"></div>
             <p class="screen-word">SCREEN</p>
 
+            <!-- Two aisles: seats 1-3 | 4-7 | 8-10 -->
             <div class="seat-map" id="seat-map">
 <?php foreach (SEAT_ROWS as $row): ?>
               <div class="seat-row">
@@ -208,17 +224,21 @@ render_header();
             <div class="snacks">
 
               <h3>Pre-order Your Snacks</h3>
-              <p class="snacks-note">
-                Add food and drinks now and skip the concession line. Show your QR code at the
-                counter and staff hand them over. Snacks must be ordered with your ticket, not after.
-              </p>
 
+<?php $groupNumber = 0; ?>
 <?php foreach ($snackGroups as $category => $snacks): ?>
-              <p class="snack-heading"><?= e($category) ?></p>
-              <div class="snack-list">
-<?php foreach ($snacks as $snack): ?>
+<?php $groupNumber++; $listId = 'snack-list-' . $groupNumber; $extra = count($snacks) - SNACKS_SHOWN; ?>
+              <div class="snack-heading-row">
+                <p class="snack-heading"><?= e($category) ?></p>
+<?php if ($extra > 0): ?>
+                <!-- The first <?= SNACKS_SHOWN ?> show; this shows the rest (booking.js) -->
+                <button class="snack-view-more" type="button" aria-expanded="false" aria-controls="<?= e($listId) ?>">View more</button>
+<?php endif; ?>
+              </div>
+              <div class="snack-list" id="<?= e($listId) ?>">
+<?php foreach ($snacks as $index => $snack): ?>
 
-                <div class="snack" data-price="<?= e((int) $snack['price']) ?>">
+                <div class="snack<?= $index >= SNACKS_SHOWN ? ' snack-extra' : '' ?>" data-price="<?= e((int) $snack['price']) ?>">
                   <div class="snack-box">
                     <span>
                       <span class="snack-name"><?= e($snack['name']) ?></span>
@@ -248,12 +268,12 @@ render_header();
 
               <div class="summary-line">
                 <span class="summary-name">Selected seats</span>
-                <span id="summary-seats">Tap the seats above</span>
+                <span id="summary-seats"></span>
               </div>
 
               <div class="summary-line">
                 <span class="summary-name">Snacks</span>
-                <span id="summary-snacks">Use + to add any items above</span>
+                <span id="summary-snacks"></span>
               </div>
 
               <div class="summary-line summary-total">
@@ -263,15 +283,11 @@ render_header();
 
               <p class="form-message form-message-error" id="booking-error" role="alert" hidden></p>
 
-<?php if ($user === null): ?>
-              <a class="button button-red" href="<?= e(url('signin.php?return=' . rawurlencode($slug))) ?>">Sign in to book</a>
-<?php elseif (is_staff($user)): ?>
+<?php if (is_staff($user)): ?>
               <button class="button button-grey" type="button" disabled>Confirm Booking</button>
               <p class="summary-note">Staff accounts cannot book tickets. Sign in with a customer account to book.</p>
 <?php else: ?>
-              <button class="button button-red" type="submit" id="confirm-button">Confirm Booking</button>
-              <p class="summary-note">Your seats are held for <?= e(max(5, min(60, (int) config('booking_hold_minutes', 10)))) ?> minutes while you pay. If payment is not finished by then, they go back on sale.</p>
-<?php endif; ?>
+              <button class="button button-red" type="submit" id="confirm-button">Confirm Booking</button><?php endif; ?>
 
             </div>
 

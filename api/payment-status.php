@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 require __DIR__ . '/../includes/bootstrap.php';
 
-const PAY_CHECKS_PER_MINUTE = 40;
-
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
     header('Allow: GET');
     json_response(['ok' => false, 'error' => 'Only GET requests are accepted here.'], 405);
@@ -21,16 +19,10 @@ if ($booking === null) {
     json_response(['ok' => false, 'error' => 'We could not find that booking.'], 404);
 }
 
-if (too_many_attempts('pay-check', 'user:' . $user['id'], PAY_CHECKS_PER_MINUTE, 60)) {
-    json_response(['ok' => false, 'error' => 'Checking too often. Please wait a moment.'], 429);
-}
-record_attempt('pay-check', 'user:' . $user['id']);
-
 if (payment_keys_changed()) {
     json_response(['ok' => true, 'status' => 'refresh']);
 }
 
-$wasPaid = $booking['status'] === 'paid';
 try {
     $result = settle_booking($booking);
 } catch (PayMongoException $e) {
@@ -39,9 +31,6 @@ try {
 }
 
 if ($result === 'paid') {
-    if (!$wasPaid) {
-        $_SESSION['just_paid'] = $reference;
-    }
     json_response(['ok' => true, 'status' => 'paid', 'next' => url('ticket.php?ref=' . rawurlencode($reference))]);
 }
 

@@ -9,22 +9,30 @@ const ADD_MOVIE_MAX_POSTER_BYTES = 5 * 1024 * 1024;
 const ADD_MOVIE_MIN_POSTER_SIDE = 50;
 const ADD_MOVIE_MAX_POSTER_SIDE = 6000;
 
+// Every poster is saved at this size (3:4)
 const ADD_MOVIE_POSTER_WIDTH = 900;
 const ADD_MOVIE_POSTER_HEIGHT = 1200;
 
+// Posters are saved here, named after the film
 const ADD_MOVIE_POSTER_DIR = 'assets/img/posters';
 
+// Allowed picture types, by the file's real contents
 const ADD_MOVIE_POSTER_TYPES = [
     'image/jpeg' => ['type' => IMAGETYPE_JPEG, 'ext' => 'jpg'],
     'image/png'  => ['type' => IMAGETYPE_PNG, 'ext' => 'png'],
     'image/webp' => ['type' => IMAGETYPE_WEBP, 'ext' => 'webp'],
 ];
 
+/** Text as one tidy line. */
 function add_movie_one_line(string $text): string
 {
     return trim((string) preg_replace('/\s+/u', ' ', $text));
 }
 
+/**
+ * Checks the uploaded poster. Returns ['error', 'file'] (both null when none
+ * was chosen).
+ */
 function add_movie_check_poster($upload): array
 {
     $none = ['error' => null, 'file' => null];
@@ -33,6 +41,7 @@ function add_movie_check_poster($upload): array
     }
     $unreadable = ['error' => 'The poster could not be read. Choose a JPG, PNG or WebP picture.', 'file' => null];
 
+    // poster[] arrives as lists, not one file
     if (!is_array($upload) || !isset($upload['error'], $upload['tmp_name']) || !is_int($upload['error']) || !is_string($upload['tmp_name'])) {
         return $unreadable;
     }
@@ -62,6 +71,7 @@ function add_movie_check_poster($upload): array
         return ['error' => 'The poster must be 5 MB or smaller.', 'file' => null];
     }
 
+    // The file's real type, from its contents
     try {
         $mime = (new finfo(FILEINFO_MIME_TYPE))->file($tmp);
         $info = getimagesize($tmp);
@@ -87,11 +97,13 @@ function add_movie_check_poster($upload): array
     return ['error' => null, 'file' => ['tmp' => $tmp, 'ext' => $kind['ext']]];
 }
 
+/** True when GD is on, so posters can be resized. */
 function add_movie_can_fit_posters(): bool
 {
     return function_exists('imagecreatetruecolor');
 }
 
+/** A file name from the title ('Broken-of-Love.jpg'), with '-2' if taken. */
 function add_movie_poster_name(string $title, string $ext): string
 {
     $base = trim((string) preg_replace('/[^A-Za-z0-9]+/', '-', $title), '-');
@@ -103,6 +115,7 @@ function add_movie_poster_name(string $title, string $ext): string
     return $name;
 }
 
+/** Saves the poster as a 900 x 1200 JPEG. Returns its path, or null. */
 function add_movie_save_poster(array $file, string $title): ?string
 {
     $fit = add_movie_can_fit_posters();
@@ -120,6 +133,7 @@ function add_movie_save_poster(array $file, string $title): ?string
     return $saved ? $path : null;
 }
 
+/** Crops the middle of the picture to 3:4 and saves it at 900 x 1200. */
 function add_movie_fit_poster(string $source, string $ext, string $target): bool
 {
     switch ($ext) {
@@ -136,13 +150,13 @@ function add_movie_fit_poster(string $source, string $ext, string $target): bool
         return false;
     }
 
+    // Turn phone photos the right way up
     if ($ext === 'jpg' && function_exists('exif_read_data')) {
         $exif = @exif_read_data($source);
         $turn = [3 => 180, 6 => 270, 8 => 90][(int) ($exif['Orientation'] ?? 1)] ?? 0;
         if ($turn !== 0) {
             $turned = imagerotate($picture, $turn, 0);
             if ($turned !== false) {
-                imagedestroy($picture);
                 $picture = $turned;
             }
         }
@@ -159,19 +173,19 @@ function add_movie_fit_poster(string $source, string $ext, string $target): bool
     }
 
     $poster = imagecreatetruecolor(ADD_MOVIE_POSTER_WIDTH, ADD_MOVIE_POSTER_HEIGHT);
+    // JPEGs cannot be see-through: use white
     imagefill($poster, 0, 0, imagecolorallocate($poster, 255, 255, 255));
     imagecopyresampled(
         $poster, $picture,
         0, 0, intdiv($width - $cropWidth, 2), intdiv($height - $cropHeight, 2),
         ADD_MOVIE_POSTER_WIDTH, ADD_MOVIE_POSTER_HEIGHT, $cropWidth, $cropHeight
     );
-    imagedestroy($picture);
 
     $saved = imagejpeg($poster, $target, 85);
-    imagedestroy($poster);
     return $saved;
 }
 
+/** Deletes a saved poster, quietly. */
 function add_movie_delete_poster(string $path): void
 {
     $file = APP_ROOT . '/' . $path;
@@ -184,16 +198,30 @@ function add_movie_delete_poster(string $path): void
     }
 }
 
+/** ' class="invalid"' on a refused box. */
 function add_movie_invalid(array $errors, string $field): string
 {
     return isset($errors[$field]) ? ' class="invalid"' : '';
 }
 
+/** What the date box says: 'Fri, Oct 9, 2026'. */
 function add_movie_date_text(string $opensOn): string
 {
     return $opensOn === '' ? 'Choose the opening day' : format_day($opensOn);
 }
 
+/** What the time box says: 'Select a time', or the chosen times. */
+function add_movie_times_text(array $times): string
+{
+    if ($times === []) {
+        return 'Select a time';
+    }
+    return implode(', ', array_map(static function (string $time): string {
+        return format_time($time . ':00');
+    }, $times));
+}
+
+// Blank at first, or what was typed after a problem
 $old = [
     'title'    => '',
     'genre'    => '',
@@ -203,6 +231,7 @@ $old = [
     'price'    => '',
     'opens_on' => '',
     'cinema'   => '',
+    'times'    => [],
 ];
 $errors = [];
 $posterWasChosen = false;
@@ -211,10 +240,12 @@ if (is_post()) {
     $contentLength = (int) ($_SERVER['CONTENT_LENGTH'] ?? 0);
 
     if (count($_POST) === 0 && count($_FILES) === 0 && $contentLength > 0) {
+        // Too big: PHP dropped the whole form, so just say why
         $errors['poster'] = 'The poster must be 5 MB or smaller.';
     } else {
         verify_csrf();
 
+        // Read a little extra, so a long title is refused, not cut
         $title = add_movie_one_line(input_string($_POST, 'title', 1000));
         $genre = add_movie_one_line(input_string($_POST, 'genre', 1000));
         $hours = input_int($_POST, 'hours', 0, 9);
@@ -223,6 +254,13 @@ if (is_post()) {
         $price = input_int($_POST, 'price', 1, 10000);
         $opensOn = input_date($_POST, 'opens_on');
         $cinema = input_int($_POST, 'cinema', 1, CINEMA_COUNT);
+
+        // Ticked times: only the listed ones count, each once, earliest first
+        $postedTimes = $_POST['showtimes'] ?? [];
+        $times = array_values(array_intersect(
+            showtime_choices(),
+            is_array($postedTimes) ? array_filter($postedTimes, 'is_string') : []
+        ));
 
         $old = [
             'title'    => $title,
@@ -233,6 +271,7 @@ if (is_post()) {
             'price'    => input_string($_POST, 'price', 10),
             'opens_on' => $opensOn ?? '',
             'cinema'   => $cinema !== null ? (string) $cinema : '',
+            'times'    => $times,
         ];
 
         if ($title === '') {
@@ -265,6 +304,7 @@ if (is_post()) {
             $errors['price'] = "Enter a ticket price from \u{20B1}1 to \u{20B1}10,000, in whole pesos.";
         }
 
+        // Upcoming until its opening day, then showing with no last day
         if ($opensOn === null) {
             $errors['opens_on'] = 'Choose the opening day.';
         } elseif ($opensOn < today()) {
@@ -273,6 +313,10 @@ if (is_post()) {
 
         if ($cinema === null) {
             $errors['cinema'] = 'Choose the cinema it shows in.';
+        }
+
+        if ($times === []) {
+            $errors['showtimes'] = 'Select at least one show time.';
         }
 
         $upload = $_FILES['poster'] ?? null;
@@ -304,13 +348,15 @@ if (is_post()) {
                         'ends_on'          => null,
                         'poster_path'      => $posterPath,
                         'cinema'           => $cinema,
+                        'showtimes'        => $times,
                     ]);
                     redirect('admin/movies.php');
                 } catch (ScheduleException $e) {
+                    // The times do not fit the cinema: nothing added
                     if ($posterPath !== null) {
                         add_movie_delete_poster($posterPath);
                     }
-                    $errors['cinema'] = $e->getMessage();
+                    $errors['showtimes'] = $e->getMessage();
                 } catch (Throwable $e) {
                     if ($posterPath !== null) {
                         add_movie_delete_poster($posterPath);
@@ -330,7 +376,6 @@ render_header(['staff' => true, 'current' => 'add-movie']);
 
     <div class="admin-head">
       <h1>Add a Movie</h1>
-      <p class="admin-intro">Fill in the details, choose a poster, and press Add movie.</p>
     </div>
 
     <main class="admin-page">
@@ -452,6 +497,30 @@ render_header(['staff' => true, 'current' => 'add-movie']);
                 <option value="<?= e((string) $number) ?>"<?= $old['cinema'] === (string) $number ? ' selected' : '' ?>><?= e(cinema_label($number)) ?></option>
 <?php endfor; ?>
               </select>
+            </div>
+
+            <div class="form-field">
+              <label id="show-time-label" for="show-time-button">Show time</label>
+
+              <div class="date-field" id="show-time-field">
+
+                <button class="date-button<?= isset($errors['showtimes']) ? ' invalid' : '' ?>" type="button" id="show-time-button"
+                        aria-haspopup="true" aria-expanded="false">
+                  <span id="show-time-text"><?= e(add_movie_times_text($old['times'])) ?></span>
+                  <span class="date-arrow">&#9662;</span>
+                </button>
+
+                <div class="time-menu" id="show-time-menu" role="group" aria-labelledby="show-time-label" hidden>
+<?php foreach (showtime_choices() as $choice): ?>
+                  <label class="time-option">
+                    <input type="checkbox" name="showtimes[]" value="<?= e($choice) ?>"<?= in_array($choice, $old['times'], true) ? ' checked' : '' ?>>
+                    <span><?= e(format_time($choice . ':00')) ?></span>
+                  </label>
+<?php endforeach; ?>
+                  <p class="time-hint" id="show-time-hint">Tick every time the movie will air each day</p>
+                </div>
+
+              </div>
             </div>
 
             <div class="form-field">

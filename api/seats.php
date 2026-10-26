@@ -8,11 +8,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') {
     json_response(['ok' => false, 'error' => 'Only GET is allowed here.'], 405);
 }
 
-if (too_many_attempts('seats', '', 240, 60)) {
-    json_response(['ok' => false, 'error' => 'Too many requests. Please wait a moment and try again.'], 429);
-}
-record_attempt('seats');
-
 $movieId = input_int($_GET, 'movie', 1);
 $date = input_date($_GET, 'date');
 $time = input_string($_GET, 'time', 8);

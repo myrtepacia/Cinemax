@@ -1,19 +1,9 @@
-.sold-search {
-  margin: 10px 0 4px 0;
-}
+/* Staff pages: Dashboard, Movies, Add Movie and Snacks. Shared styles are in
+   csflix.css. */
 
-.sold-search-note {
-  padding: 10px 0 2px 0;
-  color: var(--text-soft);
-  font-size: 14px;
-}
+/* 1. MOVIES TABLE ----------------------------------------------------------*/
 
-.order-time {
-  margin-top: 2px;
-  color: var(--text-soft);
-  font-size: 12px;
-}
-
+/* Remove button on each row */
 .row-actions {
   display: inline-flex;
   align-items: center;
@@ -28,6 +18,9 @@
   border-bottom: none;
 }
 
+/* 3. ADD MOVIE FORM --------------------------------------------------------*/
+
+/* The server's list of fixes inside the red message */
 .form-error-list {
   margin: 6px 0 0 0;
   padding-left: 20px;
@@ -35,4 +28,243 @@
 
 .form-error-list li + li {
   margin-top: 2px;
+}
+
+/* 3. SNACKS ----------------------------------------------------------------*/
+
+/* Back to all categories, above a category's name */
+.admin-head .back-link {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.admin-head .back-link:hover {
+  color: var(--text);
+}
+
+/* Add a category / a snack: the boxes in a row, the button at their foot */
+.snack-admin-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.snack-admin-form-wide {
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.4fr) minmax(0, 0.6fr) auto;
+  margin-bottom: 0;
+}
+
+.snack-admin-form .form-field {
+  margin-bottom: 0;
+}
+
+.snack-admin-form .button {
+  height: 44px;
+}
+
+.label-optional {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* One row per category or snack */
+.snack-admin-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.snack-admin-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.snack-admin-open {
+  flex: 1;
+  min-width: 0;
+  color: var(--text);
+  text-decoration: none;
+}
+
+a.snack-admin-open:hover .snack-admin-name {
+  color: var(--red);
+}
+
+/* A category opens: show it is a link */
+a.snack-admin-open .snack-admin-name::after {
+  content: " \203A";
+  color: var(--muted);
+}
+
+.snack-admin-name {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.snack-admin-sub {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+.snack-admin-price {
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  .snack-admin-form,
+  .snack-admin-form-wide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A movie's status (Movies page): a white button showing Active or Inactive;
+   it opens a small white menu with the other one */
+.status-menu {
+  position: relative;
+  display: inline-block;
+  text-align: left;
+}
+
+.status-current {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 104px;
+  padding: 7px 12px;
+  background-color: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+.status-current::-webkit-details-marker {
+  display: none;
+}
+
+.status-current:hover,
+.status-menu[open] .status-current {
+  border-color: var(--text-soft);
+}
+
+/* The arrow: down when shut, up when open */
+.status-current::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  margin: -3px 0 0 auto;
+  border-right: 1.5px solid var(--text-soft);
+  border-bottom: 1.5px solid var(--text-soft);
+  transform: rotate(45deg);
+}
+
+.status-menu[open] .status-current::after {
+  margin-top: 3px;
+  transform: rotate(-135deg);
+}
+
+.status-menu-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 5;
+  min-width: 100%;
+  padding: 4px;
+  background-color: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.1);
+}
+
+.status-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 7px;
+  background-color: var(--white);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.status-menu-item:hover {
+  background-color: var(--page);
+}
+
+/* Inactive movies look switched off */
+.movie-row-off td:not(:last-child) {
+  opacity: 0.55;
+}
+
+/* Movies table: the status as coloured words, centred in its column */
+.movie-table .status-cell {
+  text-align: center;
+}
+
+.movie-table .status-cell .pill {
+  padding: 0;
+  background-color: transparent;
+}
+
+/* Actions column: the trash button sits in the middle of it */
+.movie-table td:last-child,
+.movie-table th:last-child {
+  text-align: center;
+}
+
+/* Inactive movies: the trash button beside the status, to delete for good */
+.trash-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background-color: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text-soft);
+  cursor: pointer;
+}
+
+.trash-button:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* A film with bookings cannot be deleted */
+.trash-button:disabled,
+.trash-button:disabled:hover {
+  background-color: var(--page);
+  border-color: var(--line-soft);
+  color: var(--line);
+  cursor: not-allowed;
+}
+
+/* Snack orders: the count badges and the Sold tag have no background */
+#snack-orders .pill {
+  background-color: transparent;
 }

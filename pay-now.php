@@ -13,23 +13,19 @@ if ($booking === null) {
     abort(404, 'We could not find that booking.');
 }
 
-if (too_many_attempts('settle', 'user:' . $user['id'], 30, 300)) {
-    abort(429);
-}
-record_attempt('settle', 'user:' . $user['id']);
-
 $filmPath = booking_film_path($booking);
 
 try {
+    // Already paid: no second payment
     $result = settle_booking($booking);
     if ($result === 'paid') {
-        $_SESSION['just_paid'] = $reference;
         redirect('ticket.php?ref=' . rawurlencode($reference));
     }
     if ($result === 'refunded' || $result === 'review') {
         redirect('payment-success.php?ref=' . rawurlencode($reference));
     }
 
+    // Only a booking still held can be paid
     $booking = find_booking_by_id((int) $booking['id']);
     $stillHeld = $booking !== null && $booking['status'] === 'pending'
         && strtotime((string) $booking['expires_at']) > time();
@@ -37,10 +33,12 @@ try {
         redirect($filmPath);
     }
 
+    // QR Ph: back to the code and countdown
     if (paymongo_uses_qrph() || !empty($booking['paymongo_intent_id'])) {
         redirect('pay.php?ref=' . rawurlencode($reference));
     }
 
+    // Its PayMongo page, if still open
     $checkoutId = (string) ($booking['paymongo_checkout_id'] ?? '');
     if ($checkoutId !== '') {
         $checkout = paymongo_get_checkout($checkoutId);
@@ -50,6 +48,7 @@ try {
         }
     }
 
+    // Otherwise a new one
     $fresh = paymongo_create_checkout($booking, booking_line_items($booking), [
         'name'   => (string) $user['name'],
         'email'  => (string) $user['email'],

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 26 306 276" width="49" height="44" role="img" aria-label="CSFlix">
+  <!-- A waving film strip, drawn along one curve: the strip, its two rows
+       of holes and the frame lines. The ends fold back as outlines. -->
+  <defs>
+    <path id="strip" d="M60 162 C90 188 124 172 162 140 S232 84 266 100"/>
+    <path id="left-fold" d="M80 148 C54 126 60 96 102 104"/>
+    <path id="left-holes" d="M71 152 C44 128 49 86 101 94"/>
+    <path id="right-fold" d="M240 96 C272 100 282 140 258 176"/>
+    <path id="right-holes" d="M247 89 C284 94 294 142 267 182"/>
+  </defs>
+  <g fill="none">
+    <!-- The folded-back ends, behind the strip -->
+    <use href="#left-fold" stroke="#9b1018" stroke-width="36"/>
+    <use href="#left-fold" stroke="#ffffff" stroke-width="28"/>
+    <use href="#left-holes" stroke="#9b1018" stroke-width="6" stroke-dasharray="6 7"/>
+    <use href="#right-fold" stroke="#9b1018" stroke-width="36"/>
+    <use href="#right-fold" stroke="#ffffff" stroke-width="28"/>
+    <use href="#right-holes" stroke="#9b1018" stroke-width="6" stroke-dasharray="6 7"/>
+
+    <!-- The strip -->
+    <use href="#strip" stroke="#9b1018" stroke-width="56"/>
+    <!-- Holes: white dashes, then the middle painted over again, leaving a
+         row of holes along each edge -->
+    <use href="#strip" stroke="#ffffff" stroke-width="44" stroke-dasharray="7 7"/>
+    <use href="#strip" stroke="#9b1018" stroke-width="32"/>
+    <!-- Frame lines across the middle -->
+    <use href="#strip" stroke="#7a0a10" stroke-width="32" stroke-dasharray="2.5 40"/>
+  </g>
+</svg>

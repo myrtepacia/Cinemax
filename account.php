@@ -11,25 +11,26 @@ if (is_staff($user)) {
     redirect(home_for($user));
 }
 
+// Check PayMongo first, in case they paid but never came back (at most once a
+// minute)
 $lastSettled = (int) ($_SESSION['account_settled_at'] ?? 0);
-if (time() - $lastSettled >= ACCOUNT_SETTLE_EVERY_SECONDS
-    && !too_many_attempts('settle', 'user:' . $user['id'], 30, 300)) {
+if (time() - $lastSettled >= ACCOUNT_SETTLE_EVERY_SECONDS) {
     $_SESSION['account_settled_at'] = time();
-    record_attempt('settle', 'user:' . $user['id']);
     settle_recent_bookings((int) $user['id']);
 }
 
 $bookings = user_bookings((int) $user['id']);
 
+/** The small label beside a price [text, class], or null. */
 function account_status_label(array $booking): ?array
 {
     switch ($booking['status']) {
         case 'pending':
-            return ['Awaiting payment', 'pill-amber'];
+            return ['Awaiting payment', 'pill-amber pill-plain'];
         case 'refunded':
             return ['Refunded', 'pill-red'];
         case 'paid':
-            return $booking['scanned_at'] !== null ? ['Used', 'pill-grey'] : null;
+            return $booking['scanned_at'] !== null ? ['Already Scanned', 'pill-grey pill-plain'] : null;
         default:
             return null;
     }

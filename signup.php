@@ -1,15 +1,13 @@
 <?php
 declare(strict_types=1);
 
+
 require __DIR__ . '/includes/bootstrap.php';
 
 redirect_if_signed_in();
 
-const SIGNUP_MAX_PER_IP = 10;
-const SIGNUP_WINDOW_SECONDS = 3600;
-
-const SIGNUP_PASSWORD_MIN = 8;
-const SIGNUP_PASSWORD_MAX = 128;
+const SIGNUP_PASSWORD_MIN = PASSWORD_MIN_LENGTH;
+const SIGNUP_PASSWORD_MAX = PASSWORD_MAX_LENGTH;
 
 function signup_password(array $source, string $key): string
 {
@@ -17,10 +15,12 @@ function signup_password(array $source, string $key): string
     return is_string($value) ? $value : '';
 }
 
+/** Checks the form. Returns [clean values, errors by field]. */
 function signup_validate(array $post): array
 {
     $errors = [];
 
+    // Names: letters in any language, spaces and . ' -
     $name = (string) preg_replace('/\s+/u', ' ', input_string($post, 'fullname', 200));
     $nameLength = mb_strlen($name);
     if ($name === '') {
@@ -38,6 +38,7 @@ function signup_validate(array $post): array
         $errors['email'] = 'Enter a valid email address, like juandelacruz@gmail.com.';
     }
 
+    // Mobile is optional; stored as digits
     $mobileTyped = input_string($post, 'mobile', 30);
     $mobile = null;
     if ($mobileTyped !== '') {
@@ -50,24 +51,10 @@ function signup_validate(array $post): array
     }
 
     $password = signup_password($post, 'password');
-    $confirm = signup_password($post, 'confirm');
-    $passwordLength = mb_strlen($password);
-    if ($password === '') {
-        $errors['password'] = 'Choose a password.';
-    } elseif (!preg_match('//u', $password)) {
-        $errors['password'] = 'Your password has characters we cannot read. Please choose another.';
-    } elseif ($passwordLength < SIGNUP_PASSWORD_MIN || $passwordLength > SIGNUP_PASSWORD_MAX) {
-        $errors['password'] = 'Your password should be ' . SIGNUP_PASSWORD_MIN . ' to ' . SIGNUP_PASSWORD_MAX . ' characters long.';
-    } elseif (!preg_match('/\p{L}/u', $password) || !preg_match('/[0-9]/', $password)) {
-        $errors['password'] = 'Your password needs at least one letter and one number.';
-    } elseif ($confirm === '') {
-        $errors['confirm'] = 'Type your password again.';
-    } elseif (!hash_equals($password, $confirm)) {
-        $errors['confirm'] = 'The two passwords do not match.';
-    }
+    $errors += password_problems($password, signup_password($post, 'confirm'));
 
     if (input_string($post, 'agree', 5) === '') {
-        $errors['agree'] = 'Please agree to the Terms and Conditions.';
+        $errors['agree'] = 'Please agree to the Terms and Conditions and the Privacy Policy.';
     }
 
     return [
@@ -81,6 +68,7 @@ function signup_email_taken(string $email): bool
     return db_value('SELECT 1 FROM users WHERE email = ?', [$email]) !== null;
 }
 
+/** Extra attributes for a field with an error. */
 function signup_invalid_attrs(array $errors, string $field): string
 {
     if (!isset($errors[$field])) {
@@ -89,6 +77,7 @@ function signup_invalid_attrs(array $errors, string $field): string
     return ' class="invalid" aria-invalid="true" aria-describedby="' . e($field . '-error') . '"';
 }
 
+/** The error line under a field. */
 function signup_field_error(array $errors, string $field): string
 {
     if (!isset($errors[$field])) {
@@ -97,8 +86,10 @@ function signup_field_error(array $errors, string $field): string
     return '<span class="field-error" id="' . e($field . '-error') . '">' . e($errors[$field]) . '</span>';
 }
 
-$return = safe_return_path(input_string(is_post() ? $_POST : $_GET, 'return', 300));
+// Where to go after signing up (only paths inside the site)
+$return = signin_return_path();
 
+// Shown again if the form comes back (never the password)
 $typed = ['fullname' => '', 'email' => '', 'mobile' => ''];
 $agreed = false;
 $errors = [];
@@ -115,60 +106,61 @@ if (is_post()) {
     ];
     $agreed = input_string($_POST, 'agree', 5) !== '';
 
-    $limited = too_many_attempts('signup', '', SIGNUP_MAX_PER_IP, SIGNUP_WINDOW_SECONDS);
-    record_attempt('signup');
+    [$clean, $errors] = signup_validate($_POST);
 
-    if ($limited) {
-        $formError = 'Too many accounts have been made from your connection recently. Please try again in an hour.';
-    } else {
-        [$clean, $errors] = signup_validate($_POST);
+    // The email must be proved with the emailed code first
+    if (!isset($errors['email']) && !signup_email_verified($clean['email'])) {
+        $errors['email'] = 'Verify this email first: press Verify and enter the 6-digit code.';
+    }
 
-        if ($errors === [] && signup_email_taken($clean['email'])) {
+    if ($errors === [] && signup_email_taken($clean['email'])) {
+        $emailTaken = true;
+    }
+
+    if ($errors === [] && !$emailTaken) {
+        try {
+            db_exec(
+                "INSERT INTO users (name, email, mobile, password_hash, role) VALUES (?, ?, ?, ?, 'customer')",
+                [$clean['name'], $clean['email'], $clean['mobile'], hash_password($clean['password'])]
+            );
+            $userId = (int) db()->lastInsertId();
+        } catch (PDOException $e) {
+            // Same email at the same moment: the unique key lets only one
+            // through
+            if (!is_duplicate_key($e)) {
+                throw $e;
+            }
             $emailTaken = true;
         }
 
-        if ($errors === [] && !$emailTaken) {
-            try {
-                db_exec(
-                    "INSERT INTO users (name, email, mobile, password_hash, role) VALUES (?, ?, ?, ?, 'customer')",
-                    [$clean['name'], $clean['email'], $clean['mobile'], hash_password($clean['password'])]
-                );
-                $userId = (int) db()->lastInsertId();
-            } catch (PDOException $e) {
-                if (!is_duplicate_key($e)) {
-                    throw $e;
-                }
-                $emailTaken = true;
-            }
-
-            if (!$emailTaken) {
-                login_user(['id' => $userId]);
-                redirect($return ?? 'index.php');
-            }
+        if (!$emailTaken) {
+            login_user(['id' => $userId]);
+            redirect($return ?? 'index.php');
         }
+    }
 
-        if ($emailTaken) {
-            $errors['email'] = 'This email is already registered.';
-        } elseif ($errors !== []) {
-            $formError = 'Please check the details below.';
-        }
+    if ($emailTaken) {
+        $errors['email'] = 'This email is already registered.';
+    } elseif ($errors !== []) {
+        $formError = 'Please check the details below.';
     }
 }
 
-$signinLink = 'signin.php' . ($return !== null ? '?return=' . rawurlencode($return) : '');
-
-render_head('Sign Up');
+render_head('Sign Up', [], [
+    'description' => 'Create a free CSFlix account to book cinema seats and pre-order snacks.',
+    'index'       => true,
+]);
 render_header();
 ?>
   <main class="form-page">
     <div class="form-card">
 
-      <h1>Join CINEMAX</h1>
+      <h1>Join CSFLIX</h1>
       <p class="form-intro">Create an account to start booking.</p>
 
 <?php if ($emailTaken): ?>
       <p class="form-message form-message-error" id="form-message" role="alert">
-        An account with that email already exists. <a href="<?= e(url($signinLink)) ?>">Sign in</a> instead.
+        An account with that email already exists. <a href="<?= e(url('signin.php')) ?>">Sign in</a> instead.
       </p>
 <?php elseif ($formError !== ''): ?>
       <p class="form-message form-message-error" id="form-message" role="alert"><?= e($formError) ?></p>
@@ -176,9 +168,6 @@ render_header();
 
       <form id="signup-form" method="post" action="<?= e(url('signup.php')) ?>">
         <?= csrf_field() ?>
-<?php if ($return !== null): ?>
-        <input type="hidden" name="return" value="<?= e($return) ?>">
-<?php endif; ?>
 
         <div class="form-field">
           <label for="fullname">Full name</label>
@@ -187,11 +176,42 @@ render_header();
           <?= signup_field_error($errors, 'fullname') ?>
         </div>
 
-        <div class="form-field">
-          <label for="email">Email address</label>
-          <input id="email" name="email" type="email" value="<?= e($typed['email']) ?>"
-                 placeholder="juandelacruz@gmail.com" autocomplete="email" maxlength="190" required<?= signup_invalid_attrs($errors, 'email') ?>>
+        <!-- Email, proved with a 6-digit code (signup-otp.js): Verify swaps the
+             email box for six code boxes, then a "verified" line -->
+        <div class="form-field" id="email-step"
+             data-otp-url="<?= e(url('api/signup-otp.php')) ?>"
+             data-verified-email="<?= e(signup_email_verified($typed['email']) ? mb_strtolower($typed['email']) : '') ?>">
+          <label for="email" id="email-label">Email address</label>
+
+          <div class="email-row" id="email-row">
+            <input id="email" name="email" type="email" value="<?= e($typed['email']) ?>"
+                   placeholder="juandelacruz@gmail.com" autocomplete="email" maxlength="190" required<?= signup_invalid_attrs($errors, 'email') ?>>
+            <button class="otp-verify" type="button" id="otp-send">Verify</button>
+          </div>
+
+          <div class="otp-area" id="otp-area" hidden>
+            <p class="otp-note">Enter the 6-digit code we sent to <strong id="otp-email"></strong>.</p>
+            <div class="otp-boxes" id="otp-boxes" role="group" aria-label="6-digit code">
+<?php for ($digit = 1; $digit <= 6; $digit++): ?>
+              <input class="otp-box" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1"
+                     autocomplete="<?= $digit === 1 ? 'one-time-code' : 'off' ?>" aria-label="<?= e('Digit ' . $digit) ?>">
+<?php endfor; ?>
+            </div>
+            <p class="otp-actions">
+              <button class="link-button" type="button" id="otp-change">Change email</button>
+              <span aria-hidden="true">&middot;</span>
+              <button class="link-button" type="button" id="otp-resend" disabled>Resend code</button>
+            </p>
+          </div>
+
+          <p class="otp-verified" id="otp-verified" hidden>
+            &#10003; <span id="otp-verified-email"></span> verified
+            <button class="link-button" type="button" id="otp-verified-change">Change</button>
+          </p>
+
+          <span class="field-error" id="otp-error" role="alert" hidden></span>
           <?= signup_field_error($errors, 'email') ?>
+          <noscript><span class="field-error">Checking your email needs JavaScript. Please turn it on.</span></noscript>
         </div>
 
         <div class="form-field">
@@ -219,16 +239,16 @@ render_header();
 
         <label class="agree-line">
           <input type="checkbox" id="agree" name="agree" value="1" required<?= $agreed ? ' checked' : '' ?><?= isset($errors['agree']) ? ' aria-invalid="true" aria-describedby="agree-error"' : '' ?>>
-          <span>I agree to the <a href="<?= e(url('terms.php')) ?>" target="_blank" rel="noopener">Terms and Conditions</a>.<?= signup_field_error($errors, 'agree') ?></span>
+          <span>I have read and agree to the <a href="<?= e(url('terms.php')) ?>" target="_blank" rel="noopener">Terms and Conditions</a>, and I agree to CSFlix using my personal data as described in the <a href="<?= e(url('privacy.php')) ?>" target="_blank" rel="noopener">Privacy Policy</a>.<?= signup_field_error($errors, 'agree') ?></span>
         </label>
 
         <button class="button button-red" type="submit" id="submit">Create Account</button>
 
       </form>
 
-      <p class="form-switch">Already have an account? <a href="<?= e(url($signinLink)) ?>" id="signin-link">Sign In</a></p>
+      <p class="form-switch">Already have an account? <a href="<?= e(url('signin.php')) ?>" id="signin-link">Sign In</a></p>
 
     </div>
   </main>
 
-<?php render_footer();
+<?php render_footer(['js' => ['assets/js/signup-otp.js']]);

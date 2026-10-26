@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>No connection</title>
+  <!-- Shown by sw.js when there is no internet: self-contained, no other files -->
+  <style>
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+           background: #f9fafb; color: #101828; font-family: Arial, Helvetica, sans-serif; text-align: center; }
+    main { padding: 24px; max-width: 320px; }
+    .brand { color: #fb2c36; font-weight: 900; letter-spacing: .2em; margin: 0 0 20px; }
+    h1 { font-size: 22px; margin: 0 0 8px; }
+    p { color: #6a7282; font-size: 15px; line-height: 1.5; margin: 0 0 24px; }
+    button { background: #fb2c36; color: #ffffff; border: 0; border-radius: 10px; padding: 12px 24px;
+             font-size: 15px; font-weight: 700; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="brand">CSFLIX</p>
+    <h1>You're offline</h1>
+    <p>Check your internet connection, then try again.</p>
+    <button type="button" onclick="location.reload()">Try again</button>
+  </main>
+</body>
+</html>

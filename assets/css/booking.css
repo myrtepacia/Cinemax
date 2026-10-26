@@ -314,6 +314,62 @@
   gap: 10px;
 }
 
+/* A category's heading, then "- View more" in the same lettering */
+.snack-heading-row {
+  display: flex;
+  align-items: baseline;
+  margin: 16px 0 8px 0;
+}
+
+.snack-heading-row .snack-heading {
+  margin: 0;
+}
+
+.snack-view-more {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.snack-view-more:hover {
+  color: var(--text);
+}
+
+.snack-view-more::before {
+  content: "-";
+  margin: 0 8px;
+}
+
+/* A small arrow: down to open, up to close */
+.snack-view-more::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  margin: -3px 0 0 4px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.snack-view-more[aria-expanded="true"]::after {
+  margin-top: 3px;
+  transform: rotate(-135deg);
+}
+
+/* Snacks past the first row wait for View more */
+.snack-list:not(.snack-list-open) .snack-extra {
+  display: none;
+}
+
 .snack-box {
   display: flex;
   align-items: center;
@@ -548,8 +604,13 @@
   display: contents;
 }
 
+/* On a phone: the booking details first, then the QR code (or card form) */
 .pay-details > .ticket {
   order: 1;
+}
+
+.pay-layout > .ticket {
+  order: 2;
   margin-top: 20px;
 }
 
@@ -577,7 +638,9 @@
     display: block;
   }
 
-  .pay-details > .ticket {
+  /* Side by side again: the code on the left, the details on the right */
+  .pay-layout > .ticket {
+    order: 0;
     margin-top: 0;
   }
 }
@@ -780,3 +843,4 @@
   opacity: 0.4;
   pointer-events: none;
 }
+

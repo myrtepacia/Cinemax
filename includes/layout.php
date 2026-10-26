@@ -1,27 +1,125 @@
 <?php
 declare(strict_types=1);
 
-if (!defined('CINEMAX_BOOTSTRAPPED')) {
+// Shared page parts: <head>, top bar, staff sidebar, booking summary and
+// footer. No inline scripts or styles (the CSP blocks them): scripts go in
+// assets/js and are listed in 'js'.
+
+if (!defined('CSFLIX_BOOTSTRAPPED')) {
     http_response_code(404);
     exit;
 }
 
-function render_head(string $title, array $css = []): void
+/**
+ * A full address on the site's own configured domain (config app_url), for
+ * search engines and link previews. Never built from the request's Host
+ * header, which a visitor can fake.
+ */
+function public_url(string $path): string
 {
+    return site_origin() . url($path);
+}
+
+const SITE_DESCRIPTION = 'Book cinema seats and pre-order snacks online with CSFlix, a student project cinema booking website.';
+
+/** A film as schema.org structured data, for search engines. */
+function movie_schema(array $movie): array
+{
+    $minutes = (int) $movie['duration_minutes'];
+    return [
+        '@type'         => 'Movie',
+        'name'          => (string) $movie['title'],
+        'url'           => public_url('book.php?movie=' . rawurlencode((string) $movie['slug'])),
+        'image'         => site_origin() . poster_url($movie),
+        'genre'         => array_map('trim', explode(',', (string) $movie['genre'])),
+        'duration'      => 'PT' . intdiv($minutes, 60) . 'H' . ($minutes % 60) . 'M',
+        'contentRating' => (string) $movie['rating'],
+    ];
+}
+
+/** The tags a link preview shows when a film's page is shared. */
+function movie_meta(array $movie, bool $index = true): array
+{
+    return [
+        'share_title' => $movie['title'] . ' · ' . config('site.name', 'CSFlix'),
+        'description' => 'Book seats for ' . $movie['title'] . ' (' . movie_details_line($movie) . ') at CSFlix, and pre-order your snacks.',
+        'image'       => site_origin() . poster_url($movie),
+        'image_alt'   => $movie['title'] . ' poster',
+        'type'        => 'video.movie',
+        'index'       => $index,
+        'canonical'   => 'book.php?movie=' . rawurlencode((string) $movie['slug']),
+        'schema'      => ['@context' => 'https://schema.org'] + movie_schema($movie),
+    ];
+}
+
+/**
+ * Opens the page. $css lists extra style sheets. $meta, all optional:
+ * 'description', 'image' (a full URL) and 'image_alt', 'type' (Open Graph,
+ * default 'website'), 'index' (true lets search engines list the page; off by
+ * default, so private pages stay out), 'canonical' (the page's own path) and
+ * 'schema' (structured data for search engines).
+ */
+function render_head(string $title, array $css = [], array $meta = []): void
+{
+    $siteName = (string) config('site.name', 'CSFlix');
+    $fullTitle = $title === $siteName ? $title : $title . ' · ' . $siteName;
+    // A link preview may name something else, like the film a sign-in is for
+    $shareTitle = (string) ($meta['share_title'] ?? $fullTitle);
+    $description = (string) ($meta['description'] ?? SITE_DESCRIPTION);
+    $index = !empty($meta['index']);
+    $canonical = public_url((string) ($meta['canonical'] ?? strtok(current_path(), '?')));
+    $image = (string) ($meta['image'] ?? site_origin() . asset('assets/img/icons/icon-512.png'));
+    $imageAlt = (string) ($meta['image_alt'] ?? $siteName . ' logo');
     ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= e($title) ?></title>
+  <title><?= e($fullTitle) ?></title>
+  <meta name="description" content="<?= e($description) ?>">
+  <meta name="robots" content="<?= $index ? 'index, follow' : 'noindex, nofollow' ?>">
+<?php if ($index): ?>
+  <link rel="canonical" href="<?= e($canonical) ?>">
+<?php endif; ?>
+  <meta name="author" content="<?= e($siteName) ?> project team">
+  <meta name="color-scheme" content="light">
+  <meta name="format-detection" content="telephone=no">
+
+  <!-- Link previews (Facebook, Messenger, Viber, X) -->
+  <meta property="og:site_name" content="<?= e($siteName) ?>">
+  <meta property="og:locale" content="en_PH">
+  <meta property="og:type" content="<?= e((string) ($meta['type'] ?? 'website')) ?>">
+  <meta property="og:title" content="<?= e($shareTitle) ?>">
+  <meta property="og:description" content="<?= e($description) ?>">
+  <meta property="og:url" content="<?= e($canonical) ?>">
+  <meta property="og:image" content="<?= e($image) ?>">
+  <meta property="og:image:alt" content="<?= e($imageAlt) ?>">
+  <meta name="twitter:card" content="<?= isset($meta['image']) ? 'summary_large_image' : 'summary' ?>">
+  <meta name="twitter:title" content="<?= e($shareTitle) ?>">
+  <meta name="twitter:description" content="<?= e($description) ?>">
+  <meta name="twitter:image" content="<?= e($image) ?>">
+  <meta name="twitter:image:alt" content="<?= e($imageAlt) ?>">
+<?php if (!empty($meta['schema'])): ?>
+  <!-- Structured data for search engines (data only, never run as a script) -->
+  <script type="application/ld+json"><?= json_encode($meta['schema'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_INVALID_UTF8_SUBSTITUTE) ?></script>
+<?php endif; ?>
+
+  <link rel="icon" type="image/svg+xml" href="<?= e(asset('assets/img/logo.svg')) ?>">
   <link rel="icon" type="image/png" href="<?= e(asset('assets/img/logo.png')) ?>">
+  <!-- Installable on phones: manifest, home-screen icon, app colours -->
+  <link rel="manifest" href="<?= e(url('manifest.webmanifest')) ?>">
+  <link rel="apple-touch-icon" href="<?= e(asset('assets/img/icons/apple-touch-icon.png')) ?>">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="CSFlix">
   <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="<?= e(asset('assets/css/cinemax.css')) ?>">
+  <link rel="stylesheet" href="<?= e(asset('assets/css/csflix.css')) ?>">
 <?php foreach ($css as $sheet): ?>
   <link rel="stylesheet" href="<?= e(asset($sheet)) ?>">
 <?php endforeach; ?>
@@ -30,6 +128,62 @@ function render_head(string $title, array $css = []): void
 <?php
 }
 
+/** The policy pages, linked from the footer and from each other: [label, path]. */
+function policy_links(): array
+{
+    return [
+        ['Terms and Conditions', 'terms.php'],
+        ['Privacy Policy', 'privacy.php'],
+        ['Refund Policy', 'refunds.php'],
+    ];
+}
+
+/** Where customers write about privacy, refunds and complaints, or ''. */
+function site_contact_email(): string
+{
+    return (string) config('site.contact_email', '');
+}
+
+/** True while CSFlix is a school project rather than a registered business. */
+function is_student_project(): bool
+{
+    return (bool) config('site.student_project', true);
+}
+
+/** The opening of a policy page: title, last-updated date ('2026-09-22') and intro. */
+function render_policy_intro(string $title, string $intro, string $updated = ''): void
+{
+    ?>
+    <h1><?= e($title) ?></h1>
+<?php if ($updated !== ''): ?>
+    <p class="terms-updated">Last updated <?= e(format_date_long($updated)) ?></p>
+<?php endif; ?>
+    <p class="terms-intro"><?= $intro ?></p>
+<?php
+}
+
+/** The "Questions?" block that ends each policy page. */
+function render_policy_contact(): void
+{
+    $email = site_contact_email();
+    ?>
+    <div class="terms-block">
+      <h2>Contact us</h2>
+<?php if ($email !== ''): ?>
+      <p>For questions about this page, your personal data, a refund or a complaint, email <a href="mailto:<?= e($email) ?>"><?= e($email) ?></a>. Tell us the email on your account and, for a booking, its reference number.</p>
+<?php else: ?>
+      <p>For questions about this page, your personal data, a refund or a complaint, contact the CSFlix project team.</p>
+<?php endif; ?>
+      <p>See also:
+<?php foreach (policy_links() as $i => [$label, $path]): ?>
+        <?= $i > 0 ? '&middot; ' : '' ?><a href="<?= e(url($path)) ?>"><?= e($label) ?></a>
+<?php endforeach; ?>
+      </p>
+    </div>
+<?php
+}
+
+/** The staff links a user may see: [key, label, path]. */
 function staff_links(array $user): array
 {
     if ($user['role'] === 'admin') {
@@ -37,19 +191,22 @@ function staff_links(array $user): array
             ['dashboard', 'Dashboard', 'admin/index.php'],
             ['movies', 'Movies', 'admin/movies.php'],
             ['add-movie', 'Add Movie', 'admin/add-movie.php'],
-            ['scanner', 'Ticket Scanner', 'admin/scanner.php'],
-            ['snack-scanner', 'Snack Scanner', 'admin/snack-scanner.php'],
+            ['snacks', 'Snacks', 'admin/snacks.php'],
+            ['scanner', 'Scanner', 'admin/scanner.php'],
         ];
     }
     if ($user['role'] === 'scanner') {
         return [
-            ['scanner', 'Ticket Scanner', 'admin/scanner.php'],
-            ['snack-scanner', 'Snack Scanner', 'admin/snack-scanner.php'],
+            ['scanner', 'Scanner', 'admin/scanner.php'],
         ];
     }
     return [];
 }
 
+/**
+ * The top bar. Options: 'current' (highlighted link), 'staff' (staff pages),
+ * 'home' (home page: links jump down the page).
+ */
 function render_header(array $options = []): void
 {
     $user = current_user();
@@ -75,10 +232,13 @@ function render_header(array $options = []): void
         }
     }
     ?>
+<?php if (is_student_project() && !$onStaffPage): ?>
+  <p class="school-banner" role="note"><strong>For school purposes only.</strong> CSFlix is a student project, not a real cinema.</p>
+<?php endif; ?>
   <header class="top-bar">
     <div class="top-bar-inner">
 
-      <a class="logo" href="<?= e(url('index.php')) ?>"><img class="logo-mark" src="<?= e(asset('assets/img/logo.png')) ?>" alt="" width="49" height="44">CINEMAX</a>
+      <a class="logo" href="<?= e(url('index.php')) ?>"><img class="logo-mark" src="<?= e(asset('assets/img/logo.svg')) ?>" alt="" width="49" height="44">CSFLIX</a>
 
       <input class="menu-checkbox" type="checkbox" id="menu-open" aria-label="Menu">
       <label class="menu-toggle" for="menu-open"><span></span></label>
@@ -86,12 +246,13 @@ function render_header(array $options = []): void
       <div class="bar-nav">
         <nav class="<?= e($menuClass) ?>">
 <?php foreach ($links as [$key, $label, $href]): ?>
-          <a href="<?= e($href) ?>"<?= $key === $current ? ' class="current"' : '' ?>><?= e($label) ?></a>
+          <a href="<?= e($href) ?>"<?= $key === $current ? ' class="current"' : '' ?>><span class="menu-label"><?= e($label) ?></span></a>
 <?php endforeach; ?>
         </nav>
 
         <div class="auth-buttons">
 <?php if ($user === null): ?>
+<?php // Signing in or up comes back to this page (signin_return_path) ?>
           <a class="button button-outline" href="<?= e(url('signin.php')) ?>">Sign In</a>
           <a class="button button-red" href="<?= e(url('signup.php')) ?>">Sign Up</a>
 <?php else: ?>
@@ -108,24 +269,47 @@ function render_header(array $options = []): void
 <?php
 }
 
+/**
+ * The staff sidebar: a rail of icons on the left; the hamburger at its top
+ * shows the names too, over the page (sidebar.js).
+ */
 function render_staff_sidebar(string $current): void
 {
     $user = current_user();
     if (!is_staff($user)) {
         return;
     }
+    // Line icons, one per staff page
+    $icons = [
+        'dashboard' => '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/>'
+            . '<rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+        'movies'    => '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 12h18M3 7.5h4M3 16.5h4M17 7.5h4M17 16.5h4"/>',
+        'add-movie' => '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/>',
+        'snacks'    => '<path d="M5 8h14l-1.6 12.2a1 1 0 0 1-1 .8H7.6a1 1 0 0 1-1-.8z"/><path d="M4 8h16M12 8l2.5-5"/>',
+        'scanner'   => '<path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
+    ];
+    $svg = '<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">';
     ?>
-    <aside class="admin-sidebar">
-      <nav class="sidebar-menu">
+    <aside class="admin-sidebar" id="staff-sidebar">
+      <div class="sidebar-top">
+        <button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-controls="staff-sidebar" aria-expanded="false" aria-label="Show menu names">
+          <?= $svg ?><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
         <p class="sidebar-title">Staff</p>
+      </div>
+      <nav class="sidebar-menu" aria-label="Staff">
 <?php foreach (staff_links($user) as [$key, $label, $path]): ?>
-        <a href="<?= e(url($path)) ?>"<?= $key === $current ? ' class="current"' : '' ?>><?= e($label) ?></a>
+        <a href="<?= e(url($path)) ?>" title="<?= e($label) ?>"<?= $key === $current ? ' class="current" aria-current="page"' : '' ?>>
+          <?= $svg . ($icons[$key] ?? '<circle cx="12" cy="12" r="8"/>') ?></svg>
+          <span class="sidebar-label"><?= e($label) ?></span>
+        </a>
 <?php endforeach; ?>
       </nav>
     </aside>
 <?php
 }
 
+/** A booking's details for the payment pages. */
 function render_booking_summary(array $booking, string $amountLabel): void
 {
     ?>
@@ -162,18 +346,25 @@ function render_booking_summary(array $booking, string $amountLabel): void
 <?php
 }
 
+/**
+ * "Choose another payment": one row per other way to pay ($methods: method =>
+ * name), each sent to pay-other.php, with its symbol (or logo) and a
+ * selection circle.
+ */
 function render_other_payments(string $reference, array $methods): void
 {
     if ($methods === []) {
         return;
     }
+    // Line symbols in grey
     $symbols = [
         'qrph'    => '<rect x="3.5" y="3.5" width="6" height="6" rx="1"/><rect x="14.5" y="3.5" width="6" height="6" rx="1"/>'
             . '<rect x="3.5" y="14.5" width="6" height="6" rx="1"/><path d="M14.5 14.5h2.5v2.5"/><path d="M20.5 14.5v.01"/>'
             . '<path d="M14.5 20.5h.01"/><path d="M18 18h2.5v2.5H18z"/>',
         'card'    => '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/>',
     ];
-    $logos = ['paymaya' => 'assets/img/pay-maya.svg'];
+    // Ways to pay shown with their own logo instead
+    $logos = ['gcash' => 'assets/img/pay-gcash.svg'];
     ?>
         <details class="pay-other">
           <summary>Choose another payment</summary>
@@ -198,18 +389,47 @@ function render_other_payments(string $reference, array $methods): void
 <?php
 }
 
+/** The footer and the page's scripts. Option 'js': scripts under assets/. */
 function render_footer(array $options = []): void
 {
-    $scripts = array_merge(['assets/js/menu.js', 'assets/js/password.js', 'assets/js/skeleton.js'], $options['js'] ?? []);
+    // sidebar.js opens and closes the staff sidebar
+    // password.js adds the show / hide button to every password box
+    // skeleton.js takes the loading shimmer off each picture once it is in
+    // pwa.js makes the site installable on phones
+    $scripts = array_merge(['assets/js/menu.js', 'assets/js/sidebar.js', 'assets/js/password.js', 'assets/js/skeleton.js', 'assets/js/pwa.js'], $options['js'] ?? []);
+    $email = site_contact_email();
     ?>
+  <!-- About on the left, the brand and contact in the centre, the policy
+       links down the right; below, the copyright. One column on phones -->
   <footer class="site-footer">
     <div class="footer-inner">
-      <a class="logo" href="<?= e(url('index.php')) ?>"><img class="logo-mark" src="<?= e(asset('assets/img/logo.png')) ?>" alt="" width="49" height="44">CINEMAX</a>
-      <p class="footer-text">
-        Your next movie experience starts here. <br>
-        Book your seats, enjoy your snacks, and let the show begin.
-      </p>
-      <p class="footer-copyright">&copy; <?= e(date('Y')) ?> Cinemax. All rights reserved.</p>
+      <div class="footer-col">
+        <h2 class="footer-heading">About CSFlix</h2>
+<?php if (is_student_project()): ?>
+        <p class="footer-about">A student project for school. It is not a registered business and does not sell real cinema tickets.</p>
+<?php endif; ?>
+        <p class="footer-about">Film titles, posters and logos belong to their owners and are shown only to identify the films.</p>
+      </div>
+      <div class="footer-brand">
+        <a class="logo" href="<?= e(url('index.php')) ?>"><img class="logo-mark" src="<?= e(asset('assets/img/logo.svg')) ?>" alt="" width="49" height="44">CSFLIX</a>
+        <p class="footer-text">
+          Your next movie experience starts here. Book your seats, enjoy your snacks, and let the show begin.
+        </p>
+<?php if ($email !== ''): ?>
+        <p class="footer-text footer-contact">Contact: <a href="mailto:<?= e($email) ?>"><?= e($email) ?></a></p>
+<?php endif; ?>
+      </div>
+      <nav class="footer-policies" aria-labelledby="footer-policies-heading">
+        <h2 class="footer-heading" id="footer-policies-heading">Policies</h2>
+        <ul class="footer-links">
+<?php foreach (policy_links() as [$label, $path]): ?>
+          <li><a href="<?= e(url($path)) ?>"><?= e($label) ?></a></li>
+<?php endforeach; ?>
+        </ul>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; <?= e(date('Y')) ?> CSFlix. All rights reserved.</p>
     </div>
   </footer>
 

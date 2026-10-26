@@ -43,6 +43,8 @@
     problem.hidden = text === '';
   }
 
+  // Keep asking while signed out, so it carries on once the admin signs in
+  // again
   function check() {
     if (checking) {
       return;
@@ -82,12 +84,14 @@
 
   window.setInterval(check, CHECK_EVERY_MS);
 
+  // Full-screen button, where the browser allows it; hidden while full screen
   var fullButton = document.getElementById('claim-fullscreen');
   var page = document.documentElement;
   if (fullButton && page.requestFullscreen) {
     fullButton.hidden = false;
     fullButton.addEventListener('click', function () {
       page.requestFullscreen().catch(function () {
+        // Refused by the browser: ignore
       });
     });
     document.addEventListener('fullscreenchange', function () {

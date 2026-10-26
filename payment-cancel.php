@@ -3,15 +3,12 @@ declare(strict_types=1);
 
 require __DIR__ . '/includes/bootstrap.php';
 
+/**
+ * Asks PayMongo once more, and leaves this page if the booking is settled.
+ */
 function payment_cancel_settle(array $user, array $booking): void
 {
     $reference = (string) $booking['reference'];
-    if (too_many_attempts('settle', 'user:' . $user['id'], 30, 300)) {
-        return;
-    }
-    record_attempt('settle', 'user:' . $user['id']);
-
-    $wasPaid = $booking['status'] === 'paid';
     try {
         $result = settle_booking($booking);
     } catch (PayMongoException $e) {
@@ -21,9 +18,6 @@ function payment_cancel_settle(array $user, array $booking): void
 
     switch ($result) {
         case 'paid':
-            if (!$wasPaid) {
-                $_SESSION['just_paid'] = $reference;
-            }
             redirect('ticket.php?ref=' . rawurlencode($reference));
             break;
         case 'refunded':
@@ -33,6 +27,7 @@ function payment_cancel_settle(array $user, array $booking): void
     }
 }
 
+/** The customer's own booking from $source['ref'], or a 404. */
 function payment_cancel_booking(array $user, array $source): array
 {
     $reference = normalize_reference(input_string($source, 'ref', 20));
@@ -74,6 +69,7 @@ render_header(['current' => 'account']);
 
 <?php if ($stillHeld): ?>
     <div class="ticket-actions">
+      <!-- Back to paying (checks for a payment first) -->
       <form class="inline-form" method="post" action="<?= e(url('pay-now.php')) ?>">
         <?= csrf_field() ?>
         <input type="hidden" name="ref" value="<?= e($reference) ?>">

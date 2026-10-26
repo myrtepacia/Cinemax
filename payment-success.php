@@ -11,11 +11,6 @@ if ($booking === null) {
     abort(404, 'We could not find that booking.');
 }
 
-if (too_many_attempts('settle', 'user:' . $user['id'], 30, 300)) {
-    abort(429);
-}
-record_attempt('settle', 'user:' . $user['id']);
-
 try {
     $result = settle_booking($booking);
 } catch (PayMongoException $e) {
@@ -25,7 +20,6 @@ try {
 
 switch ($result) {
     case 'paid':
-        $_SESSION['just_paid'] = $reference;
         redirect('ticket.php?ref=' . rawurlencode($reference));
         break;
     case 'refunded':
@@ -34,6 +28,7 @@ switch ($result) {
         break;
 }
 
+// Not paid yet, or PayMongo could not be asked
 $stillHeld = $booking['status'] === 'pending' && strtotime((string) $booking['expires_at']) > time();
 $filmPath = booking_film_path($booking);
 
@@ -69,6 +64,7 @@ render_header(['current' => 'account']);
 
     <div class="ticket-actions">
 <?php if ($stillHeld): ?>
+      <!-- Back to paying (checks for a payment first) -->
       <form class="inline-form" method="post" action="<?= e(url('pay-now.php')) ?>">
         <?= csrf_field() ?>
         <input type="hidden" name="ref" value="<?= e($reference) ?>">

@@ -1,10 +1,12 @@
+
 (function () {
 
-  var monthNames = window.CinemaxDates.monthNames;
-  var readDate = window.CinemaxDates.readDate;
-  var dateKey = window.CinemaxDates.dateKey;
-  var monthNumber = window.CinemaxDates.monthNumber;
-  var readableDate = window.CinemaxDates.readableDate;
+  // Shared date helpers (dates.js)
+  var monthNames = window.CSFlixDates.monthNames;
+  var readDate = window.CSFlixDates.readDate;
+  var dateKey = window.CSFlixDates.dateKey;
+  var monthNumber = window.CSFlixDates.monthNumber;
+  var readableDate = window.CSFlixDates.readableDate;
 
   var addForm = document.getElementById('add-form');
   if (!addForm) {
@@ -23,6 +25,7 @@
   var hoursInput = document.getElementById('new-hours');
   var minutesInput = document.getElementById('new-minutes');
 
+  // Poster limit, read from the page so it matches the server
   var posterInput = document.getElementById('new-poster');
   var posterLimit = parseInt(posterInput.getAttribute('data-max-bytes'), 10);
   if (isNaN(posterLimit) || posterLimit <= 0) {
@@ -42,13 +45,26 @@
   var calendarNext = document.getElementById('run-calendar-next');
   var calendarHint = document.getElementById('run-calendar-hint');
 
+  // Show times: a drop-down of tick boxes
+  var timeField = document.getElementById('show-time-field');
+  var timeButton = document.getElementById('show-time-button');
+  var timeText = document.getElementById('show-time-text');
+  var timeMenu = document.getElementById('show-time-menu');
+  var timeHint = document.getElementById('show-time-hint');
+  var timeBoxes = timeMenu.querySelectorAll('input[type="checkbox"]');
+  var LAST_END = 24 * 60;
+
+  // Today, day only
   var today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // A day picked before the server sent the form back is already in the
+  // hidden box
   var openDate = /^\d{4}-\d{2}-\d{2}$/.test(opensHolder.value) ? opensHolder.value : '';
   var viewYear = today.getFullYear();
   var viewMonth = today.getMonth();
 
+  // Cannot open on a past day
   function isAvailable(date) {
     return date >= today;
   }
@@ -63,6 +79,7 @@
     calendarMonth.textContent = monthNames[viewMonth] + ' ' + viewYear;
     clearDates();
 
+    // Blank boxes so the 1st lands on the right weekday
     var startsOn = new Date(viewYear, viewMonth, 1).getDay();
     var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
     var count;
@@ -100,6 +117,7 @@
 
     calendarHint.textContent = 'Pick the opening day';
 
+    // No going back to past months; forward has no limit
     calendarBack.disabled = (viewYear * 12 + viewMonth) <= monthNumber(today);
   }
 
@@ -130,15 +148,77 @@
     dateButton.setAttribute('aria-expanded', 'false');
   }
 
+  // Reads like Fri, Oct 9, 2026, same as the server
   function showDate() {
     dateText.textContent = openDate === '' ? 'Choose the opening day' : readableDate(openDate);
     opensHolder.value = openDate;
   }
 
+  // 10:30 becomes 10:30 AM, 14:00 becomes 2:00 PM
+  function timeLabel(value) {
+    var parts = value.split(':');
+    var hour = parseInt(parts[0], 10);
+    var suffix = hour >= 12 ? 'PM' : 'AM';
+    return (hour % 12 === 0 ? 12 : hour % 12) + ':' + parts[1] + ' ' + suffix;
+  }
+
+  function chosenTimes() {
+    return Array.prototype.filter.call(timeBoxes, function (box) {
+      return box.checked;
+    });
+  }
+
+  // The button says Select a time, or lists the ticked times
+  function showTimes() {
+    var chosen = chosenTimes();
+    timeText.textContent = chosen.length === 0
+      ? 'Select a time'
+      : chosen.map(function (box) {
+        return timeLabel(box.value);
+      }).join(', ');
+  }
+
+  // A show must end by midnight, so late times are greyed out for a long movie
+  function limitTimes() {
+    var length = lengthGiven() ? parseInt(hoursInput.value, 10) * 60 + parseInt(minutesInput.value, 10) : 0;
+    var blocked = false;
+
+    Array.prototype.forEach.call(timeBoxes, function (box) {
+      var parts = box.value.split(':');
+      var start = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+      var tooLate = length > 0 && start + length > LAST_END;
+      if (tooLate && box.checked) {
+        box.checked = false;
+        blocked = true;
+      }
+      box.disabled = tooLate;
+      box.parentNode.classList.toggle('time-option-off', tooLate);
+    });
+
+    timeHint.textContent = length > 0
+      ? 'Tick every time the movie will air each day. Times that end after midnight are greyed out.'
+      : 'Tick every time the movie will air each day';
+    if (blocked) {
+      showTimes();
+    }
+  }
+
+  function openTimes() {
+    timeMenu.hidden = false;
+    timeButton.setAttribute('aria-expanded', 'true');
+  }
+
+  function closeTimes() {
+    timeMenu.hidden = true;
+    timeButton.setAttribute('aria-expanded', 'false');
+  }
+
+  // Both length boxes hold a number
   function lengthGiven() {
     return !isNaN(parseInt(hoursInput.value, 10)) && !isNaN(parseInt(minutesInput.value, 10));
   }
 
+  // Keep hours and minutes sensible
   function tidyNumber(input, lowest, highest) {
     var value = parseInt(input.value, 10);
     if (isNaN(value)) {
@@ -153,6 +233,7 @@
   }
 
   function showMessage(text, kind) {
+    // A new message replaces the old list
     if (serverErrors) {
       serverErrors.hidden = true;
     }
@@ -165,6 +246,8 @@
     addMessage.className = 'form-message hidden';
   }
 
+  // Stop a poster that is too big before sending; a huge one would also empty
+  // every other box
   function posterTooBig() {
     var file = posterInput.files && posterInput.files[0];
     return Boolean(file) && file.size > posterLimit;
@@ -178,6 +261,7 @@
     }
   });
 
+  // Clicking a day picks it
   calendarDates.addEventListener('click', function (event) {
     var box = event.target.closest('.calendar-date');
     if (!box || box.disabled) {
@@ -197,6 +281,7 @@
     moveMonth(1);
   });
 
+  // Click outside or press Escape to close the calendar
   document.addEventListener('click', function (event) {
     if (!dateField.contains(event.target)) {
       closeCalendar();
@@ -206,21 +291,46 @@
   document.addEventListener('keydown', function (event) {
     if (event.key === 'Escape') {
       closeCalendar();
+      closeTimes();
     }
   });
 
   hoursInput.addEventListener('input', function () {
     tidyNumber(hoursInput, 0, 9);
+    limitTimes();
   });
 
   minutesInput.addEventListener('input', function () {
     tidyNumber(minutesInput, 0, 59);
+    limitTimes();
   });
 
+  timeButton.addEventListener('click', function () {
+    if (timeMenu.hidden) {
+      openTimes();
+    } else {
+      closeTimes();
+    }
+  });
+
+  timeMenu.addEventListener('change', function () {
+    timeButton.classList.remove('invalid');
+    showTimes();
+  });
+
+  document.addEventListener('click', function (event) {
+    if (!timeField.contains(event.target)) {
+      closeTimes();
+    }
+  });
+
+  // Picking a cinema clears its red outline
   cinemaSelect.addEventListener('change', function () {
     cinemaSelect.classList.remove('invalid');
   });
 
+  // Warn at once if the poster is too big; clear it when a smaller one is
+  // picked
   posterInput.addEventListener('change', function () {
     var tooBig = posterTooBig();
     posterInput.classList.toggle('invalid', tooBig);
@@ -268,16 +378,24 @@
       missing.push('the cinema');
     }
 
+    var noTimes = chosenTimes().length === 0;
+    timeButton.classList.toggle('invalid', noTimes);
+    if (noTimes) {
+      missing.push('a show time');
+    }
+
     if (missing.length > 0) {
       event.preventDefault();
       showMessage('Still missing ' + missing.join(', ') + '.', 'error');
       return;
     }
 
+    // Stop double presses, which would add the movie twice
     addButton.disabled = true;
     addButton.textContent = 'Adding…';
   });
 
+  // The Back button can restore the page with the button still off
   window.addEventListener('pageshow', function () {
     addButton.disabled = false;
     addButton.textContent = 'Add movie';
@@ -285,4 +403,6 @@
 
   showDate();
   drawCalendar();
+  limitTimes();
+  showTimes();
 })();

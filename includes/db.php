@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-if (!defined('CINEMAX_BOOTSTRAPPED')) {
+if (!defined('CSFLIX_BOOTSTRAPPED')) {
     http_response_code(404);
     exit;
 }
@@ -17,7 +17,7 @@ function db(): PDO
         'mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4',
         (string) config('db.host', '127.0.0.1'),
         (int) config('db.port', 3306),
-        (string) config('db.name', 'cinemax')
+        (string) config('db.name', 'csflix')
     );
 
     $pdo = new PDO($dsn, (string) config('db.user'), (string) config('db.pass'), [
@@ -25,15 +25,17 @@ function db(): PDO
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => false,
         PDO::ATTR_STRINGIFY_FETCHES  => false,
-        PDO::MYSQL_ATTR_MULTI_STATEMENTS => false,
+        (PHP_VERSION_ID >= 80400 ? \Pdo\Mysql::ATTR_MULTI_STATEMENTS : PDO::MYSQL_ATTR_MULTI_STATEMENTS) => false,
     ]);
 
+    // Philippine time, and strict mode so bad data is refused
     $pdo->exec("SET time_zone = '+08:00'");
     $pdo->exec("SET SESSION sql_mode = 'STRICT_ALL_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'");
 
     return $pdo;
 }
 
+/** Runs a query with its values bound. */
 function db_query(string $sql, array $params = []): PDOStatement
 {
     $statement = db()->prepare($sql);
@@ -53,28 +55,35 @@ function db_query(string $sql, array $params = []): PDOStatement
     return $statement;
 }
 
+/** The first row, or null. */
 function db_one(string $sql, array $params = []): ?array
 {
     $row = db_query($sql, $params)->fetch();
     return $row === false ? null : $row;
 }
 
+/** Every row. */
 function db_all(string $sql, array $params = []): array
 {
     return db_query($sql, $params)->fetchAll();
 }
 
+/** The first column of the first row, or null. */
 function db_value(string $sql, array $params = [])
 {
     $value = db_query($sql, $params)->fetchColumn();
     return $value === false ? null : $value;
 }
 
+/** Runs an INSERT, UPDATE or DELETE; returns the rows changed. */
 function db_exec(string $sql, array $params = []): int
 {
     return db_query($sql, $params)->rowCount();
 }
 
+/**
+ * Runs $work in a transaction: all or nothing. Returns what $work returns.
+ */
 function db_transaction(callable $work)
 {
     $pdo = db();
@@ -91,6 +100,7 @@ function db_transaction(callable $work)
     }
 }
 
+/** True for a duplicate unique key, e.g. two bookings for the same seat. */
 function is_duplicate_key(Throwable $e): bool
 {
     return $e instanceof PDOException

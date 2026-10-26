@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-if (!defined('CINEMAX_BOOTSTRAPPED')) {
+if (!defined('CSFLIX_BOOTSTRAPPED')) {
     http_response_code(404);
     exit;
 }
@@ -9,6 +9,9 @@ if (!defined('CINEMAX_BOOTSTRAPPED')) {
 const SESSION_IDLE_SECONDS = 7200;
 const SESSION_ROTATE_SECONDS = 900;
 
+/**
+ * Security headers. No inline scripts or styles, so the CSP can be strict.
+ */
 function send_security_headers(): void
 {
     if (headers_sent()) {
@@ -21,7 +24,8 @@ function send_security_headers(): void
     header('Cross-Origin-Opener-Policy: same-origin');
     header('Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=()');
     header('Cache-Control: no-store, max-age=0');
-    $connect = defined('CINEMAX_CARD_FORM') ? "'self' https://api.paymongo.com" : "'self'";
+    // Only the card page may talk to PayMongo's API (card.js)
+    $connect = defined('CSFLIX_CARD_FORM') ? "'self' https://api.paymongo.com" : "'self'";
     header("Content-Security-Policy: default-src 'self'; "
         . "script-src 'self'; "
         . "style-src 'self' https://fonts.googleapis.com; "
@@ -31,8 +35,10 @@ function send_security_headers(): void
         . "media-src 'self' blob:; "
         . "object-src 'none'; "
         . "base-uri 'self'; "
+        // Forms may send the browser on to PayMongo's checkout
         . "form-action 'self' https://checkout.paymongo.com https://*.paymongo.com; "
         . "frame-ancestors 'none'");
+    // HSTS only on a real domain, never on localhost or an IP address
     $host = strtolower((string) parse_url(request_origin(), PHP_URL_HOST));
     $isDomain = $host !== 'localhost' && filter_var(trim($host, '[]'), FILTER_VALIDATE_IP) === false;
     if (is_https() && $isDomain) {
@@ -40,6 +46,10 @@ function send_security_headers(): void
     }
 }
 
+/**
+ * Starts the session with a safe cookie, signs out when idle and rotates the
+ * id.
+ */
 function start_session(): void
 {
     if (session_status() === PHP_SESSION_ACTIVE) {
@@ -50,16 +60,21 @@ function start_session(): void
     ini_set('session.use_only_cookies', '1');
     ini_set('session.use_trans_sid', '0');
     ini_set('session.cookie_httponly', '1');
-    ini_set('session.sid_length', '48');
-    ini_set('session.sid_bits_per_character', '6');
+    // Longer session ids; PHP 8.4 dropped these settings (its ids are already
+    // long enough) and warns on every page if they are set
+    if (PHP_VERSION_ID < 80400) {
+        ini_set('session.sid_length', '48');
+        ini_set('session.sid_bits_per_character', '6');
+    }
     ini_set('session.gc_maxlifetime', (string) SESSION_IDLE_SECONDS);
 
-    session_name('CINEMAXSESSID');
+    session_name('CSFLIXSESSID');
     session_set_cookie_params([
         'lifetime' => 0,
         'path'     => app_path() === '' ? '/' : app_path() . '/',
         'secure'   => is_https(),
         'httponly' => true,
+        // Lax, so customers are still signed in when PayMongo sends them back
         'samesite' => 'Lax',
     ]);
     session_start();
@@ -79,6 +94,7 @@ function start_session(): void
     }
 }
 
+/** The session's CSRF token, carried by every form that changes data. */
 function csrf_token(): string
 {
     if (empty($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token'])) {
@@ -87,11 +103,16 @@ function csrf_token(): string
     return $_SESSION['csrf_token'];
 }
 
+/** The hidden CSRF field for a form. */
 function csrf_field(): string
 {
     return '<input type="hidden" name="csrf_token" value="' . e(csrf_token()) . '">';
 }
 
+/**
+ * Checks the CSRF token and that the request came from this site; stops if
+ * not.
+ */
 function verify_csrf(bool $json = false): void
 {
     $sent = $_POST['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
@@ -99,6 +120,7 @@ function verify_csrf(bool $json = false): void
     $tokenOk = is_string($sent) && is_string($expected) && $expected !== '' && hash_equals($expected, $sent);
 
     if (!$tokenOk || !same_origin_request()) {
+        // 403, since Apache turns 419 into 500
         if ($json) {
             json_response(['ok' => false, 'error' => 'This page has expired. Refresh it and try again.'], 403);
         }
@@ -106,8 +128,11 @@ function verify_csrf(bool $json = false): void
     }
 }
 
+/** True if the request came from this site (Origin, or else Referer). */
 function same_origin_request(): bool
 {
+    // The configured address, or the one actually used (127.0.0.1 or
+    // localhost)
     $allowed = [strtolower(site_origin()), strtolower(request_origin())];
 
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
@@ -123,9 +148,11 @@ function same_origin_request(): bool
         $refOrigin = strtolower($parts['scheme'] . '://' . $parts['host'] . (isset($parts['port']) ? ':' . $parts['port'] : ''));
         return in_array($refOrigin, $allowed, true);
     }
+    // Neither header sent: the token still has to match
     return true;
 }
 
+/** The scheme and host of this request, e.g. 'http://127.0.0.1'. */
 function request_origin(): string
 {
     $host = (string) ($_SERVER['HTTP_HOST'] ?? '');
@@ -135,6 +162,7 @@ function request_origin(): string
     return (is_https() ? 'https' : 'http') . '://' . $host;
 }
 
+/** The scheme and host from the configured address. */
 function site_origin(): string
 {
     $parts = parse_url((string) config('app_url'));
@@ -145,53 +173,15 @@ function site_origin(): string
     return $origin;
 }
 
-function record_attempt(string $bucket, string $identifier = ''): void
-{
-    db_exec(
-        'INSERT INTO login_attempts (bucket, identifier, ip_address) VALUES (?, ?, ?)',
-        [$bucket, mb_strtolower(mb_substr($identifier, 0, 190)), client_ip()]
-    );
-    if (random_int(1, 50) === 1) {
-        db_exec('DELETE FROM login_attempts WHERE attempted_at < NOW() - INTERVAL 1 DAY');
-    }
-}
-
-function too_many_attempts(string $bucket, string $identifier, int $max, int $windowSeconds, ?int $maxPerIp = null): bool
-{
-    if ($identifier !== '') {
-        $count = (int) db_value(
-            'SELECT COUNT(*) FROM login_attempts
-             WHERE bucket = ? AND identifier = ? AND attempted_at > NOW() - INTERVAL ? SECOND',
-            [$bucket, mb_strtolower($identifier), $windowSeconds]
-        );
-        if ($count >= $max) {
-            return true;
-        }
-    }
-    $ipLimit = $maxPerIp ?? ($identifier === '' ? $max : null);
-    if ($ipLimit !== null) {
-        $count = (int) db_value(
-            'SELECT COUNT(*) FROM login_attempts
-             WHERE bucket = ? AND ip_address = ? AND attempted_at > NOW() - INTERVAL ? SECOND',
-            [$bucket, client_ip(), $windowSeconds]
-        );
-        if ($count >= $ipLimit) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function clear_attempts(string $bucket, string $identifier): void
-{
-    db_exec('DELETE FROM login_attempts WHERE bucket = ? AND identifier = ?', [$bucket, mb_strtolower($identifier)]);
-}
-
+// A scanner request is a small JSON body, and a code no longer than a QR code
 const SCAN_MAX_BODY_BYTES = 4096;
 const SCAN_MAX_CODE_LENGTH = 300;
-const SCAN_MAX_PER_MINUTE = 120;
 
-function read_scan_request(string $bucket, array $actions): array
+/**
+ * Reads a scanner request (staff only, CSRF-checked). Returns
+ * [staff member, action, code].
+ */
+function read_scan_request(array $actions): array
 {
     if (!is_post()) {
         header('Allow: POST');
@@ -205,11 +195,7 @@ function read_scan_request(string $bucket, array $actions): array
 
     verify_csrf(true);
 
-    record_attempt($bucket);
-    if (too_many_attempts($bucket, '', SCAN_MAX_PER_MINUTE, 60)) {
-        json_response(['ok' => false, 'error' => 'Too many scans in a short time. Wait a minute, then try again.'], 429);
-    }
-
+    // Small JSON only; one extra byte shows an oversized body
     $contentType = strtolower((string) ($_SERVER['CONTENT_TYPE'] ?? ''));
     if (strpos($contentType, 'application/json') !== 0) {
         json_response(['ok' => false, 'error' => 'That request was not understood.'], 415);

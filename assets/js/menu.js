@@ -1,4 +1,6 @@
+// On every page.
 (function () {
+  // Close the phone menu after a link that jumps down the same page
   var toggle = document.getElementById('menu-open');
   if (toggle) {
     document.querySelectorAll('.menu a').forEach(function (link) {
@@ -8,6 +10,8 @@
     });
   }
 
+  // Home page: highlight the header link for the part being read (Now Showing
+  // or Upcoming Shows)
   var parts = [];
   document.querySelectorAll('.menu a[href^="#"]').forEach(function (link) {
     var section = document.getElementById(link.getAttribute('href').slice(1));
@@ -19,6 +23,7 @@
     var bar = document.querySelector('.top-bar');
 
     var highlight = function () {
+      // The last part whose top passed a line just under the header
       var line = (bar ? bar.offsetHeight : 0) + 80;
       var reading = parts[0];
       parts.forEach(function (part) {
@@ -26,6 +31,7 @@
           reading = part;
         }
       });
+      // At the very bottom, the last part counts
       var page = document.documentElement;
       if (window.innerHeight + window.scrollY >= page.scrollHeight - 2) {
         reading = parts[parts.length - 1];
@@ -48,6 +54,8 @@
     window.addEventListener('resize', highlight);
     highlight();
 
+    // Scroll to a part, just under the header, without putting #now-showing
+    // in the address
     var goTo = function (section, smooth) {
       var top = section.getBoundingClientRect().top + window.scrollY - (bar ? bar.offsetHeight : 0);
       window.scrollTo({ top: Math.max(0, top), behavior: smooth ? 'smooth' : 'auto' });
@@ -60,6 +68,8 @@
       });
     });
 
+    // Came from another page's Now Showing or Upcoming Shows link (or the
+    // address was typed with #): go to that part, then show the plain address
     var askedPart = function () {
       return parts.filter(function (part) {
         return '#' + part.section.id === window.location.hash;

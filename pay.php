@@ -18,11 +18,13 @@ if ($booking['status'] !== 'pending' || $secondsLeft <= 0 || ($intentId === '' &
     redirect($elsewhere);
 }
 
+// A message under Choose another payment, or null
 $notice = null;
 if (input_string($_GET, 'other', 10) === 'failed') {
     $notice = ['error', 'That way to pay is not available right now. Please scan the QR code instead.'];
 }
 
+// Back from GCash: paid, still confirming, or not done
 $wallet = input_string($_GET, 'wallet', 20);
 $walletIntent = (string) ($booking['paymongo_wallet_intent_id'] ?? '');
 if (in_array($wallet, PAYMONGO_WALLETS, true) && $walletIntent !== '') {
@@ -36,7 +38,9 @@ if (in_array($wallet, PAYMONGO_WALLETS, true) && $walletIntent !== '') {
             ? ['notice', $walletName . ' is confirming your payment. Your ticket opens as soon as it is done.']
             : ['error', 'Your ' . $walletName . ' payment did not go through, so nothing was charged. Please try again or scan the QR code instead.'];
     } catch (PayMongoNotFoundException $e) {
+        // Made with the other keys
     } catch (PayMongoException $e) {
+        // pay.js keeps checking
         error_log('[pay] ' . $reference . ' (' . $wallet . '): ' . $e->getMessage());
     }
 }
@@ -47,6 +51,8 @@ $customer = [
     'mobile' => (string) ($user['mobile'] ?? ''),
 ];
 
+// The code: kept from before, or fetched again; made again if it belongs to
+// the other keys
 $qr = remembered_qr($reference);
 if ($qr === null) {
     try {
@@ -74,7 +80,9 @@ if ($qr === null) {
         redirect($elsewhere);
     }
 }
+// pay.js reloads the page if the keys change
 remember_payment_keys();
+
 
 render_head('Scan to pay', ['assets/css/booking.css']);
 render_header(['current' => 'account']);
@@ -83,9 +91,9 @@ render_header(['current' => 'account']);
 
     <div class="confirm-box confirm-box-tight">
       <h1>Scan to pay</h1>
-      <p>Open GCash, Maya or your bank&rsquo;s app, choose Scan or QR Ph, and scan this code.</p>
     </div>
 
+    <!-- Code on the left, booking on the right -->
     <div class="pay-layout">
 
       <div class="ticket qr-pay" id="qr-pay"
@@ -100,7 +108,7 @@ render_header(['current' => 'account']);
           <p class="pay-timer">Time left to pay <strong id="pay-countdown"><?= e(sprintf('%d:%02d', intdiv($secondsLeft, 60), $secondsLeft % 60)) ?></strong></p>
           <p class="pay-status" id="pay-status" role="status" aria-live="polite">Waiting for your payment&hellip;</p>
           <div class="qr-pay-save">
-            <a class="button button-outline button-small" href="<?= e($qr) ?>" download="<?= e('cinemax-' . $reference . '-qrph.png') ?>">Save QR code</a>
+            <a class="button button-outline button-small" href="<?= e($qr) ?>" download="<?= e('csflix-' . $reference . '-qrph.png') ?>">Save QR code</a>
             <p>Paying on this phone? Save the code, then choose Upload QR in your app.</p>
           </div>
         </div>

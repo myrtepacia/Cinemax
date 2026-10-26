@@ -1,7 +1,17 @@
-[05-Oct-2026 15:09:00 Asia/Manila] [refund] CMX-C8XZWA: PayMongo refused the request (HTTP 400): livemode_mismatched: Payment with id pay_HAeVuBjB7c2rnyiizLqYCWTe passed should also be in testmode.
-[05-Oct-2026 15:09:03 Asia/Manila] [refund] CMX-C8XZWA: PayMongo refused the request (HTTP 400): livemode_mismatched: Payment with id pay_HAeVuBjB7c2rnyiizLqYCWTe passed should also be in testmode.
-[05-Oct-2026 15:48:34 Asia/Manila] [2026-10-05T15:48:34+08:00] TypeError: booking_seconds_left(): Argument #1 ($booking) must be of type array, null given, called in C:\xampp\htdocs\cinemax\api\payment-status.php on line 66 in C:\xampp\htdocs\cinemax\includes\bookings.php:323
-#0 C:\xampp\htdocs\cinemax\api\payment-status.php(66): booking_seconds_left()
-#1 {main}
-[05-Oct-2026 21:49:27 Asia/Manila] [hold] could not check CMX-M2L46Z: Could not reach PayMongo: Resolving timed out after 5002 milliseconds
-[05-Oct-2026 21:50:32 Asia/Manila] [payment-status] CMX-PZCRRP: Could not reach PayMongo: Resolving timed out after 10009 milliseconds
+[23-Oct-2026 14:13:24 Asia/Manila] [pay-other] CSF-E2LJZ8 (paymaya): Refusing to redirect to https://payments.maya.ph/paymaya/payment?id=5d3c4f66-3f70-4107-afb0-18f7b1fe9d08
+[26-Oct-2026 15:59:22 Asia/Manila] PHP Deprecated:  Constant PDO::MYSQL_ATTR_MULTI_STATEMENTS is deprecated since 8.5, use Pdo\Mysql::ATTR_MULTI_STATEMENTS instead in C:\xampp\htdocs\csflix\includes\db.php on line 28
+[26-Oct-2026 15:59:24 Asia/Manila] [2026-10-26T15:59:24+08:00] PDOException: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it in C:\xampp\htdocs\csflix\includes\db.php:23
+#0 C:\xampp\htdocs\csflix\includes\db.php(23): PDO->__construct()
+#1 C:\xampp\htdocs\csflix\includes\db.php(41): db()
+#2 C:\xampp\htdocs\csflix\includes\db.php(68): db_query()
+#3 C:\xampp\htdocs\csflix\includes\movies.php(77): db_all()
+#4 C:\xampp\htdocs\csflix\index.php(9): listing_movies()
+#5 {main}
+[26-Oct-2026 15:59:47 Asia/Manila] PHP Deprecated:  Constant PDO::MYSQL_ATTR_MULTI_STATEMENTS is deprecated since 8.5, use Pdo\Mysql::ATTR_MULTI_STATEMENTS instead in C:\xampp\htdocs\csflix\includes\db.php on line 28
+[26-Oct-2026 15:59:49 Asia/Manila] [2026-10-26T15:59:49+08:00] PDOException: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it in C:\xampp\htdocs\csflix\includes\db.php:23
+#0 C:\xampp\htdocs\csflix\includes\db.php(23): PDO->__construct()
+#1 C:\xampp\htdocs\csflix\includes\db.php(41): db()
+#2 C:\xampp\htdocs\csflix\includes\db.php(68): db_query()
+#3 C:\xampp\htdocs\csflix\includes\movies.php(77): db_all()
+#4 C:\xampp\htdocs\csflix\index.php(9): listing_movies()
+#5 {main}

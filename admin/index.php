@@ -11,6 +11,7 @@ if (is_post()) {
     $bookingId = input_int($_POST, 'booking_id', 1);
     $from = input_string($_POST, 'from', 20);
 
+    // Already moved on: leave it
     if ($bookingId !== null && in_array($from, ['preparing', 'ready'], true)) {
         advance_snack_order($bookingId, $from);
     }
@@ -29,6 +30,7 @@ foreach ($queue as $orders) {
     }
 }
 
+// The three stages, in counter order
 $groups = [
     'preparing' => ['title' => 'Preparing', 'empty' => 'Nothing being prepared', 'pill' => 'pill-red'],
     'ready'     => ['title' => 'Ready', 'empty' => 'Nothing waiting at the counter', 'pill' => 'pill-green'],
@@ -84,18 +86,6 @@ render_header(['staff' => true, 'current' => 'dashboard']);
 
             <span class="pill <?= e($group['pill']) ?>"><?= e(count($queue[$stage])) ?></span>
           </h3>
-
-<?php if ($stage === 'sold'): ?>
-          <div class="sold-search" id="sold-search" data-url="<?= e(url('api/snack-search.php')) ?>">
-            <div class="form-field search-field">
-              <input id="sold-search-input" type="search" maxlength="40"
-                     placeholder="Search by reference number" autocomplete="off" spellcheck="false"
-                     aria-label="Search picked-up snack orders by reference number">
-            </div>
-            <p class="sold-search-note" id="sold-search-note" role="status" hidden></p>
-            <div id="sold-search-results"></div>
-          </div>
-<?php endif; ?>
 
 <?php if (count($queue[$stage]) === 0): ?>
           <p class="empty-note"><?= e($group['empty']) ?></p>

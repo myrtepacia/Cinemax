@@ -9,6 +9,7 @@
     return element;
   }
 
+  // An eye, crossed out while the password is showing
   function eye(crossed) {
     var icon = shape('svg', {
       viewBox: '0 0 24 24', width: '20', height: '20', fill: 'none', stroke: 'currentColor',
@@ -48,6 +49,8 @@
       input.focus();
     });
 
+    // Hide it again before sending, so the browser does not save it as plain
+    // text
     if (input.form) {
       input.form.addEventListener('submit', function () {
         showPassword(false);

@@ -105,8 +105,7 @@ function render_head(string $title, array $css = [], array $meta = []): void
   <script type="application/ld+json"><?= json_encode($meta['schema'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_INVALID_UTF8_SUBSTITUTE) ?></script>
 <?php endif; ?>
 
-  <link rel="icon" type="image/svg+xml" href="<?= e(asset('assets/img/logo.svg')) ?>">
-  <link rel="icon" type="image/png" href="<?= e(asset('assets/img/logo.png')) ?>">
+  <link rel="icon" type="image/png" href="<?= e(asset('assets/img/icons/icon-192.png')) ?>">
   <!-- Installable on phones: manifest, home-screen icon, app colours -->
   <link rel="manifest" href="<?= e(url('manifest.webmanifest')) ?>">
   <link rel="apple-touch-icon" href="<?= e(asset('assets/img/icons/apple-touch-icon.png')) ?>">
@@ -238,7 +237,7 @@ function render_header(array $options = []): void
   <header class="top-bar">
     <div class="top-bar-inner">
 
-      <a class="logo" href="<?= e(url('index.php')) ?>"><img class="logo-mark" src="<?= e(asset('assets/img/logo.svg')) ?>" alt="" width="49" height="44">CSFLIX</a>
+      <a class="logo" href="<?= e(url('index.php')) ?>"><img class="logo-image" src="<?= e(asset('assets/img/logo.png')) ?>" alt="CSFlix" width="280" height="120"></a>
 
       <input class="menu-checkbox" type="checkbox" id="menu-open" aria-label="Menu">
       <label class="menu-toggle" for="menu-open"><span></span></label>
@@ -279,21 +278,25 @@ function render_staff_sidebar(string $current): void
     if (!is_staff($user)) {
         return;
     }
-    // Line icons, one per staff page
+    // One icon per staff page, from Lucide (lucide.dev, ISC licence):
+    // layout-dashboard, film, square-plus, popcorn, scan-line
     $icons = [
-        'dashboard' => '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/>'
-            . '<rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
-        'movies'    => '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 12h18M3 7.5h4M3 16.5h4M17 7.5h4M17 16.5h4"/>',
-        'add-movie' => '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/>',
-        'snacks'    => '<path d="M5 8h14l-1.6 12.2a1 1 0 0 1-1 .8H7.6a1 1 0 0 1-1-.8z"/><path d="M4 8h16M12 8l2.5-5"/>',
-        'scanner'   => '<path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
+        'dashboard' => '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/>'
+            . '<rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+        'movies'    => '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/>'
+            . '<path d="M3 16.5h4"/><path d="M17 3v18"/><path d="M17 7.5h4"/><path d="M17 16.5h4"/>',
+        'add-movie' => '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 12h8"/><path d="M12 8v8"/>',
+        'snacks'    => '<path d="M18 8a2 2 0 0 0 0-4 2 2 0 0 0-4 0 2 2 0 0 0-4 0 2 2 0 0 0-4 0 2 2 0 0 0 0 4"/><path d="M10 22 9 8"/>'
+            . '<path d="m14 22 1-14"/><path d="M20 8c.5 0 .9.4.8 1l-2.6 12c-.1.5-.7 1-1.2 1H7c-.6 0-1.1-.4-1.2-1L3.2 9c-.1-.6.3-1 .8-1Z"/>',
+        'scanner'   => '<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/>'
+            . '<path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
     ];
-    $svg = '<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">';
+    $svg = '<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">';
     ?>
     <aside class="admin-sidebar" id="staff-sidebar">
       <div class="sidebar-top">
         <button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-controls="staff-sidebar" aria-expanded="false" aria-label="Show menu names">
-          <?= $svg ?><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          <?= $svg ?><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg>
         </button>
         <p class="sidebar-title">Staff</p>
       </div>
@@ -358,10 +361,12 @@ function render_other_payments(string $reference, array $methods): void
     }
     // Line symbols in grey
     $symbols = [
-        'qrph'    => '<rect x="3.5" y="3.5" width="6" height="6" rx="1"/><rect x="14.5" y="3.5" width="6" height="6" rx="1"/>'
-            . '<rect x="3.5" y="14.5" width="6" height="6" rx="1"/><path d="M14.5 14.5h2.5v2.5"/><path d="M20.5 14.5v.01"/>'
-            . '<path d="M14.5 20.5h.01"/><path d="M18 18h2.5v2.5H18z"/>',
-        'card'    => '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/>',
+        // Lucide qr-code and credit-card (lucide.dev, ISC licence)
+        'qrph'    => '<rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/>'
+            . '<rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/>'
+            . '<path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/>'
+            . '<path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/>',
+        'card'    => '<rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/>',
     ];
     // Ways to pay shown with their own logo instead
     $logos = ['gcash' => 'assets/img/pay-gcash.svg'];
@@ -378,7 +383,7 @@ function render_other_payments(string $reference, array $methods): void
 <?php if (isset($logos[$method])): ?>
                 <img class="pay-other-logo" src="<?= e(asset($logos[$method])) ?>" alt="" width="45" height="18">
 <?php elseif (isset($symbols[$method])): ?>
-                <svg class="pay-other-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><?= $symbols[$method] ?></svg>
+                <svg class="pay-other-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><?= $symbols[$method] ?></svg>
 <?php endif; ?>
               </span>
               <span class="pay-other-dot" aria-hidden="true"></span>
@@ -411,7 +416,7 @@ function render_footer(array $options = []): void
         <p class="footer-about">Film titles, posters and logos belong to their owners and are shown only to identify the films.</p>
       </div>
       <div class="footer-brand">
-        <a class="logo" href="<?= e(url('index.php')) ?>"><img class="logo-mark" src="<?= e(asset('assets/img/logo.svg')) ?>" alt="" width="49" height="44">CSFLIX</a>
+        <a class="logo" href="<?= e(url('index.php')) ?>"><img class="logo-image" src="<?= e(asset('assets/img/logo.png')) ?>" alt="CSFlix" width="280" height="120"></a>
         <p class="footer-text">
           Your next movie experience starts here. Book your seats, enjoy your snacks, and let the show begin.
         </p>

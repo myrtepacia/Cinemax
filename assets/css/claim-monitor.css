@@ -25,8 +25,8 @@
 }
 
 .claim-brand img {
-  width: clamp(32px, 3vw, 56px);
-  height: auto;
+  width: auto;
+  height: clamp(32px, 3vw, 56px);
 }
 
 .claim-head h1 {

@@ -1,34 +1,33 @@
 <?php
 
+require_once dirname(__DIR__) . '/includes/env.php';
+
 return [
-    'app_url' => 'http://localhost/csflix',
-    'debug' => false,
+    'app_url' => env('APP_URL', 'http://localhost/csflix'),
+    'debug' => env_bool('APP_DEBUG'),
 
     'db' => [
-        'host' => '127.0.0.1',
-        'port' => 3306,
-        'name' => 'csflix',
-        'user' => 'csflix_app',
-        'pass' => '7105552b047eeecfddc9145abf12b839587df5e6d155986d',
+        'host' => env('DB_HOST', '127.0.0.1'),
+        'port' => (int) env('DB_PORT', '3306'),
+        'name' => env('DB_NAME', 'csflix'),
+        'user' => env('DB_USER', 'root'),
+        'pass' => env('DB_PASS'),
     ],
 
     'paymongo' => [
-        'secret_key' => 'sk_test_KwcB8do5Z1Lbd5NLvsXBFKbY',
-        'public_key' => 'pk_test_G53BQpjfiSnQebhPrHNgXV5b',
+        'secret_key' => env('PAYMONGO_SECRET_KEY'),
+        'public_key' => env('PAYMONGO_PUBLIC_KEY'),
         'payment_methods' => ['qrph', 'card', 'gcash'],
     ],
 
     'mail' => [
-        'resend_api_key' => 're_GdLfqUxK_ETdjCrZWKrENZR72cgaBzw1o',
-        'from' => 'CSFlix Cinema <no-reply@csflix.app>',
-        'support_email' => 'csflixsupport@gmail.com',
+        'resend_api_key' => env('RESEND_API_KEY'),
+        'from' => env('MAIL_FROM', 'CSFlix Cinema <onboarding@resend.dev>'),
+        'support_email' => env('SUPPORT_EMAIL'),
     ],
 
+    // Minutes seats are held while paying
     'booking_hold_minutes' => 10,
-
-    // Who runs CSFlix, shown on the policy pages and in the footer.
-    // 'student_project' => true shows the "school project, demo only" notice
-    // on every page: keep it on unless CSFlix becomes a registered business.
     'site' => [
         'name' => 'CSFlix',
         'contact_email' => 'csflixsupport@gmail.com',

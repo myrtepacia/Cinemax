@@ -37,6 +37,11 @@ $bookAnother = ($movie !== null && movie_booking_window($movie) !== null)
 
 $hasTicket = in_array($status, ['paid', 'refunded'], true);
 
+// Straight from paying (payment-success.php, api/payment-status.php): a
+// loading circle first, then the ticket. Once only, not on a reload.
+$justPaid = $status === 'paid' && ($_SESSION['just_paid'] ?? null) === $ref;
+unset($_SESSION['just_paid']);
+
 
 if ($hasTicket) {
     $snackLines = booking_snacks((int) $booking['id']);
@@ -64,6 +69,23 @@ render_head($hasTicket ? 'Your E-Ticket' : 'Booking ' . $ref, ['assets/css/publi
 render_header();
 ?>
   <main class="ticket-page">
+<?php if ($justPaid): ?>
+    <!-- Covers the page: the circle spins, turns into a check mark, then
+         everything fades away to the ticket (CSS only) -->
+    <div class="ticket-loading" role="status">
+      <div class="ticket-loading-mark">
+        <div class="ticket-loading-circle"></div>
+        <svg class="ticket-loading-check" viewBox="0 0 56 56" aria-hidden="true">
+          <circle cx="28" cy="28" r="25.5"/>
+          <path d="M17 29l7.5 7.5L39 22"/>
+        </svg>
+      </div>
+      <p class="ticket-loading-text">
+        <span class="ticket-loading-wait" aria-hidden="true">Confirming your payment&hellip;</span>
+        <span class="ticket-loading-done">Payment successful!</span>
+      </p>
+    </div>
+<?php endif; ?>
 
 <?php if (!$hasTicket): ?>
     <div class="confirm-box">

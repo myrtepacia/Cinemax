@@ -20,6 +20,8 @@ try {
 
 switch ($result) {
     case 'paid':
+        // ticket.php shows a loading circle first
+        $_SESSION['just_paid'] = $reference;
         redirect('ticket.php?ref=' . rawurlencode($reference));
         break;
     case 'refunded':

@@ -15,3 +15,5 @@
 #3 C:\xampp\htdocs\csflix\includes\movies.php(77): db_all()
 #4 C:\xampp\htdocs\csflix\index.php(9): listing_movies()
 #5 {main}
+[27-Oct-2026 11:46:00 Asia/Manila] [receipt] booking 361: Resend refused the email (HTTP 401): API key is invalid
+[27-Oct-2026 11:49:29 Asia/Manila] [receipt] booking 362: Resend refused the email (HTTP 401): API key is invalid

@@ -193,7 +193,7 @@ function send_password_reset_email(array $user, string $link): void
 {
     $settings = (array) config('mail', []);
     if ((string) ($settings['resend_api_key'] ?? '') === '') {
-        throw new RuntimeException('Email is not set up: add the Resend key to config.php.');
+        throw new RuntimeException('Email is not set up: add RESEND_API_KEY to .env.');
     }
     $email = password_reset_email($user, $link);
     resend_send_email($settings, (string) $user['email'], $email['subject'], $email['html'], $email['text']);
@@ -238,7 +238,7 @@ function send_signup_code_email(string $email, string $code): void
 {
     $settings = (array) config('mail', []);
     if ((string) ($settings['resend_api_key'] ?? '') === '') {
-        throw new RuntimeException('Email is not set up: add the Resend key to config.php.');
+        throw new RuntimeException('Email is not set up: add RESEND_API_KEY to .env.');
     }
     $message = signup_code_email($code);
     resend_send_email($settings, $email, $message['subject'], $message['html'], $message['text']);

@@ -209,10 +209,10 @@ button.button:disabled {
   text-decoration: none;
 }
 
-.logo-mark {
-  width: 49px;
-  height: 44px;
-  margin-left: -6px;
+/* The CSFlix logo picture (it has the name in it) */
+.logo-image {
+  width: auto;
+  height: 40px;
 }
 
 .menu {
@@ -303,10 +303,8 @@ button.button:disabled {
     font-size: 15px;
   }
 
-  .logo-mark {
-    width: 40px;
-    height: 36px;
-    margin-left: -5px;
+  .logo-image {
+    height: 32px;
   }
 
   .menu a {
@@ -898,6 +896,117 @@ body:has(> .site-footer) > .site-footer {
   width: 92%;
   margin: 0 auto;
   padding: 48px 0 48px 0;
+}
+
+/* Straight after paying, over the whole page (ticket.php): the circle spins,
+   turns into a check mark at 1.2s, and at 2.6s it all fades away to the
+   ticket */
+.ticket-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 24px;
+  background-color: var(--page);
+  text-align: center;
+  animation: ticket-loading-out 0.4s ease-in 2.6s forwards;
+}
+
+.ticket-loading-mark {
+  position: relative;
+  width: 56px;
+  height: 56px;
+}
+
+.ticket-loading-circle {
+  position: absolute;
+  inset: 0;
+  border: 5px solid var(--line);
+  border-top-color: var(--red);
+  border-radius: 50%;
+  animation:
+    ticket-loading-spin 0.8s linear infinite,
+    ticket-loading-out 0.2s ease-in 1.2s forwards;
+}
+
+/* The ring draws itself from the top, then the tick */
+.ticket-loading-check {
+  position: absolute;
+  inset: 0;
+  width: 56px;
+  height: 56px;
+  fill: none;
+  stroke: var(--green);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ticket-loading-check circle {
+  stroke-dasharray: 161;
+  stroke-dashoffset: 161;
+  transform: rotate(-90deg);
+  transform-origin: 28px 28px;
+  animation: ticket-loading-draw 0.4s ease-out 1.3s forwards;
+}
+
+.ticket-loading-check path {
+  stroke-dasharray: 32;
+  stroke-dashoffset: 32;
+  animation: ticket-loading-draw 0.3s ease-out 1.65s forwards;
+}
+
+/* The two lines take the same place: the first gives way to the second */
+.ticket-loading-text {
+  display: grid;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.ticket-loading-text span {
+  grid-area: 1 / 1;
+}
+
+.ticket-loading-wait {
+  animation: ticket-loading-out 0.2s ease-in 1.2s forwards;
+}
+
+.ticket-loading-done {
+  opacity: 0;
+  color: var(--text);
+  font-weight: 700;
+  animation: ticket-loading-in 0.3s ease-out 1.4s forwards;
+}
+
+@keyframes ticket-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ticket-loading-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes ticket-loading-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ticket-loading-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
 }
 
 .confirm-box {

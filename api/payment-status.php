@@ -31,6 +31,8 @@ try {
 }
 
 if ($result === 'paid') {
+    // ticket.php shows a loading circle first
+    $_SESSION['just_paid'] = $reference;
     json_response(['ok' => true, 'status' => 'paid', 'next' => url('ticket.php?ref=' . rawurlencode($reference))]);
 }
 

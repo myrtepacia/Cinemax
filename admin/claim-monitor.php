@@ -16,7 +16,7 @@ render_head('Snacks Claim', ['assets/css/claim-monitor.css']);
   <div class="claim-screen" id="claim-screen" data-live-url="<?= e(url('api/claim-monitor.php')) ?>">
 
     <header class="claim-head">
-      <p class="claim-brand"><img src="<?= e(asset('assets/img/logo.svg')) ?>" alt="" width="49" height="44">CSFLIX</p>
+      <p class="claim-brand"><img src="<?= e(asset('assets/img/logo.png')) ?>" alt="CSFlix" width="280" height="120"></p>
       <h1>Snacks Claim</h1>
       <button class="button button-outline button-small claim-fullscreen" id="claim-fullscreen" type="button" hidden>Full screen</button>
     </header>

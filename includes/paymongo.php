@@ -23,7 +23,7 @@ function paymongo_request(string $method, string $path, ?array $body = null, int
 {
     $secret = (string) config('paymongo.secret_key');
     if ($secret === '') {
-        throw new PayMongoException('PayMongo is not set up: add the secret key to config/config.php.');
+        throw new PayMongoException('PayMongo is not set up: add PAYMONGO_SECRET_KEY to .env.');
     }
 
     $curl = curl_init('https://api.paymongo.com/v1/' . ltrim($path, '/'));

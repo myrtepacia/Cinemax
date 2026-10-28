@@ -86,8 +86,10 @@ $movieRow = static function (array $movie, bool $active) use ($labels): void {
                     <button class="trash-button" type="submit"<?= $deletable ? '' : ' disabled' ?>
                             title="<?= e($deletable ? 'Delete ' . $movie['title'] : $movie['title'] . ' has bookings, so it cannot be deleted') ?>"
                             aria-label="<?= e($deletable ? 'Delete ' . $movie['title'] : $movie['title'] . ' has bookings, so it cannot be deleted') ?>">
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                        <path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>
+                      <!-- Lucide trash-2 (lucide.dev, ISC licence) -->
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                        <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                        <path d="M10 11v6"/><path d="M14 11v6"/>
                       </svg>
                     </button>
                   </form>
